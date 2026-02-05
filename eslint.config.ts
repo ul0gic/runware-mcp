@@ -353,4 +353,170 @@ export default tseslint.config(
       '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },
+
+  // Prompt template files have special allowances for descriptor record keys
+  {
+    files: ['src/prompts/**/*.ts'],
+    rules: {
+      // Allow hyphenated object keys (e.g., 'pixel-art', 'studio-ghibli', 'zoom-in')
+      // These match user-facing argument values in prompt templates
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'default',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'forbid',
+        },
+        {
+          selector: 'variable',
+          format: ['camelCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'function',
+          format: ['camelCase'],
+        },
+        {
+          selector: 'parameter',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          // Allow any format for quoted object literal properties
+          // This permits hyphenated keys like 'studio-ghibli', 'pixel-art'
+          selector: 'objectLiteralProperty',
+          format: null,
+          modifiers: ['requiresQuotes'],
+        },
+        {
+          selector: 'property',
+          format: ['camelCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'enum',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'enumMember',
+          format: ['UPPER_CASE', 'PascalCase'],
+        },
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+          custom: {
+            regex: '^I[A-Z]',
+            match: false,
+          },
+        },
+        {
+          selector: 'typeAlias',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'typeParameter',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'import',
+          format: null,
+        },
+      ],
+
+      // Allow object injection for descriptor record lookups
+      // These are safe because values come from a fixed set of known keys
+      'security/detect-object-injection': 'off',
+
+      // Allow duplicate strings in prompt templates (repeated style/mood names)
+      'sonarjs/no-duplicate-string': 'off',
+    },
+  },
+
+  // Constants files have special allowances for AIR format model IDs
+  {
+    files: ['src/constants/**/*.ts'],
+    rules: {
+      // Allow AIR format object keys (e.g., 'klingai:1@1', 'runware:35@1')
+      // These are required by the Runware API specification
+      '@typescript-eslint/naming-convention': [
+        'error',
+        {
+          selector: 'default',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+          trailingUnderscore: 'forbid',
+        },
+        {
+          selector: 'variable',
+          format: ['camelCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'function',
+          format: ['camelCase'],
+        },
+        {
+          selector: 'parameter',
+          format: ['camelCase'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          // Allow any format for object literal properties with quotes
+          // This permits AIR format keys like 'klingai:1@1'
+          selector: 'objectLiteralProperty',
+          format: null,
+          modifiers: ['requiresQuotes'],
+        },
+        {
+          selector: 'property',
+          format: ['camelCase', 'UPPER_CASE'],
+          leadingUnderscore: 'allow',
+        },
+        {
+          selector: 'typeLike',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'enum',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'enumMember',
+          format: ['UPPER_CASE', 'PascalCase'],
+        },
+        {
+          selector: 'interface',
+          format: ['PascalCase'],
+          custom: {
+            regex: '^I[A-Z]',
+            match: false,
+          },
+        },
+        {
+          selector: 'typeAlias',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'typeParameter',
+          format: ['PascalCase'],
+        },
+        {
+          selector: 'import',
+          format: null,
+        },
+      ],
+
+      // Allow duplicate strings in constants files (model IDs, feature names)
+      'sonarjs/no-duplicate-string': 'off',
+
+      // Allow object injection for model lookup functions
+      // These are safe because model IDs are validated before lookup
+      'security/detect-object-injection': 'off',
+    },
+  },
 );
