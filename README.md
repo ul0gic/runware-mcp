@@ -103,10 +103,10 @@ That's it. No `pip install`. No virtual environments. No Python version conflict
 ## Capabilities at a Glance
 
 ```mermaid
-%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#2563eb', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#60a5fa', 'lineColor': '#60a5fa', 'secondaryColor': '#1e40af', 'tertiaryColor': '#3b82f6', 'noteTextColor': '#ffffff', 'noteBkgColor': '#2563eb'}}}%%
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#3b82f6', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#60a5fa', 'lineColor': '#60a5fa', 'secondaryColor': '#3b82f6', 'tertiaryColor': '#3b82f6', 'background': '#1e293b', 'mainBkg': '#3b82f6', 'nodeBkg': '#3b82f6', 'clusterBkg': '#3b82f6', 'titleColor': '#ffffff', 'edgeLabelBackground': '#3b82f6'}}}%%
 mindmap
   root((Runware MCP))
-    Images
+    🖼️ Images
       Text to Image
       Image to Image
       Inpainting
@@ -116,21 +116,21 @@ mindmap
       Captioning
       Masking
       Vectorization
-    Video
+    🎬 Video
       Text to Video
       Image to Video
       Lip Sync
       9 Providers
-    Audio
+    🎵 Audio
       Music Generation
       Sound Effects
       Text to Speech
       Transcription
-    Batch Ops
+    📁 Batch Ops
       Folder Processing
       Batch Generation
       Folder Watching
-    Intelligence
+    🧠 Intelligence
       Prompt Enhancement
       ControlNet Preprocessing
       Model Search
