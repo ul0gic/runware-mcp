@@ -1,0 +1,58 @@
+{
+  "name": "@runware/mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Runware AI image and video generation",
+  "type": "module",
+  "bin": {
+    "runware-mcp": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts --clean",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest --coverage",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --max-warnings 0"
+  },
+  "engines": {
+    "node": ">=25"
+  },
+  "license": "MIT",
+  "keywords": [
+    "mcp",
+    "runware",
+    "ai",
+    "image-generation",
+    "video-generation",
+    "claude"
+  ],
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "latest",
+    "zod": "latest",
+    "zod-to-json-schema": "latest"
+  },
+  "devDependencies": {
+    "@eslint/js": "latest",
+    "@stylistic/eslint-plugin": "^5.7.1",
+    "@types/node": "latest",
+    "eslint": "latest",
+    "eslint-plugin-import-x": "^4.16.1",
+    "eslint-plugin-promise": "^7.2.1",
+    "eslint-plugin-security": "^3.0.1",
+    "eslint-plugin-sonarjs": "^3.0.6",
+    "eslint-plugin-unicorn": "^62.0.0",
+    "jiti": "^2.6.1",
+    "tsup": "latest",
+    "tsx": "latest",
+    "typescript": "latest",
+    "typescript-eslint": "latest",
+    "vitest": "latest"
+  }
+}
