@@ -23,7 +23,7 @@ import type { ControlNetPreprocessInput, ControlNetPreprocessOutput } from './sc
 // ============================================================================
 
 interface ControlNetPreprocessApiResponse {
-  readonly taskType: 'controlNetPreprocess';
+  readonly taskType: 'imageControlNetPreProcess';
   readonly taskUUID: string;
   readonly guideImageUUID?: string;
   readonly inputImageUUID?: string;
@@ -162,7 +162,7 @@ export async function controlNetPreprocess(
 
     // Build request
     const requestParams = buildApiRequest(input);
-    const task = createTaskRequest('controlNetPreprocess', requestParams);
+    const task = createTaskRequest('imageControlNetPreProcess', requestParams);
 
     // Make API call (synchronous)
     const response = await runwareClient.requestSingle<ControlNetPreprocessApiResponse>(task, {
@@ -177,7 +177,7 @@ export async function controlNetPreprocess(
 
     // Save to database if enabled
     saveGeneration({
-      taskType: 'controlNetPreprocess',
+      taskType: 'imageControlNetPreProcess',
       taskUUID: task.taskUUID,
       prompt: `ControlNet ${input.preprocessor} preprocessing`,
       model: null,
@@ -200,7 +200,7 @@ export async function controlNetPreprocess(
 
     // Record analytics
     if (output.cost !== undefined) {
-      recordAnalytics('controlNetPreprocess', 'runware', output.cost);
+      recordAnalytics('imageControlNetPreProcess', 'runware', output.cost);
     }
 
     // Return result

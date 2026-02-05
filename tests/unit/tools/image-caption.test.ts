@@ -166,7 +166,7 @@ describe('imageCaption', () => {
 
       expect(result.success).toBe(true);
       if (result.success) {
-        expect(result.data.model).toBe('runware:150@2');
+        expect(result.data.model).toBe('runware:152@2');
         expect(result.data.includeCost).toBe(true);
       }
     });

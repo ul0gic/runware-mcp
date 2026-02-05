@@ -53,7 +53,7 @@ export async function accountBalance(
     await defaultRateLimiter.waitForToken(context?.signal);
 
     // Build request - no additional parameters needed
-    const task = createTaskRequest('accountBalance', {});
+    const task = createTaskRequest('accountManagement', { operation: 'getDetails' });
 
     // Make API call (synchronous)
     const response = await runwareClient.requestSingle<AccountBalanceApiResponse>(task, {

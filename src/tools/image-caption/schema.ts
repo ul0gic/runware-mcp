@@ -25,12 +25,11 @@ export const imageCaptionInputSchema = z.object({
   /**
    * Caption model identifier.
    * Available models:
-   * - runware:150@2 (LLaVA-1.6-Mistral-7B) - detailed descriptions
+   * - runware:152@2 (Qwen2.5-VL-7B-Instruct) - default, detailed descriptions
    * - runware:151@1 (OpenAI CLIP ViT-L/14) - semantic understanding
    * - runware:152@1 (Qwen2.5-VL-3B-Instruct)
-   * - runware:152@2 (Qwen2.5-VL-7B-Instruct)
    */
-  model: z.string().optional().default('runware:150@2'),
+  model: z.string().optional().default('runware:152@2'),
 
   /**
    * Optional prompt to guide the analysis.

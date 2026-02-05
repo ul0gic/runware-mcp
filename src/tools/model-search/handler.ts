@@ -18,7 +18,10 @@ import type { z } from 'zod';
 
 type ModelSearchInput = z.infer<typeof modelSearchInputSchema>;
 
-interface ModelSearchApiResult {
+/**
+ * Individual model result from the API.
+ */
+interface ModelSearchApiModel {
   readonly air: string;
   readonly name?: string;
   readonly version?: string;
@@ -34,8 +37,38 @@ interface ModelSearchApiResult {
   readonly defaultScheduler?: string;
   readonly defaultCFG?: number;
   readonly defaultStrength?: number;
-  readonly positiveTriggerWords?: readonly string[];
+  readonly positiveTriggerWords?: string | readonly string[];
+}
+
+/**
+ * Raw API response item for model search.
+ *
+ * The API returns a single data item containing totalResults and
+ * an array of model objects, rather than returning models directly
+ * in the data array.
+ */
+interface ModelSearchApiResult {
+  readonly taskType?: string;
+  readonly taskUUID?: string;
   readonly totalResults?: number;
+  readonly results?: readonly ModelSearchApiModel[];
+  // Flat model fields (for backwards compatibility if API returns flat items)
+  readonly air?: string;
+  readonly name?: string;
+  readonly version?: string;
+  readonly category?: string;
+  readonly architecture?: string;
+  readonly type?: string;
+  readonly tags?: readonly string[];
+  readonly heroImage?: string;
+  readonly private?: boolean;
+  readonly defaultWidth?: number;
+  readonly defaultHeight?: number;
+  readonly defaultSteps?: number;
+  readonly defaultScheduler?: string;
+  readonly defaultCFG?: number;
+  readonly defaultStrength?: number;
+  readonly positiveTriggerWords?: string | readonly string[];
 }
 
 // ============================================================================
@@ -78,16 +111,11 @@ function buildApiRequest(input: ModelSearchInput): Record<string, unknown> {
 // Response Processing
 // ============================================================================
 
-function processResponse(
-  results: readonly ModelSearchApiResult[],
-  input: ModelSearchInput,
-): ModelSearchOutput {
-  // Get total results from first item if available
-  const totalResults = results.length > 0 && results[0]?.totalResults !== undefined
-    ? results[0].totalResults
-    : results.length;
-
-  const models = results.map((result) => ({
+/**
+ * Maps a single model API result to the output format.
+ */
+function mapModelResult(result: ModelSearchApiModel): ModelSearchOutput['models'][number] {
+  return {
     air: result.air,
     name: result.name ?? result.air,
     ...(result.version !== undefined && { version: result.version }),
@@ -103,15 +131,57 @@ function processResponse(
     ...(result.defaultScheduler !== undefined && { defaultScheduler: result.defaultScheduler }),
     ...(result.defaultCFG !== undefined && { defaultCFG: result.defaultCFG }),
     ...(result.defaultStrength !== undefined && { defaultStrength: result.defaultStrength }),
-    ...(result.positiveTriggerWords !== undefined && { positiveTriggerWords: [...result.positiveTriggerWords] }),
-  }));
+    ...(result.positiveTriggerWords !== undefined && {
+      positiveTriggerWords: typeof result.positiveTriggerWords === 'string'
+        ? [result.positiveTriggerWords]
+        : [...result.positiveTriggerWords],
+    }),
+  };
+}
 
-  // limit and offset always have default values from schema
+/**
+ * Extracts model data from the API response.
+ *
+ * The API can return results in two formats:
+ * 1. Wrapper format: data contains a single item with `totalResults` and nested `models` array
+ * 2. Flat format: data contains model objects directly (each with `air`, `name`, etc.)
+ *
+ * This function handles both transparently.
+ */
+function processResponse(
+  results: readonly ModelSearchApiResult[],
+  input: ModelSearchInput,
+): ModelSearchOutput {
+  const limit = input.limit;
+  const offset = input.offset;
+
+  // Check if the API returned a wrapper format (single item with nested models array)
+  const firstResult = results.length > 0 ? results[0] : undefined;
+
+  const nestedModels = firstResult?.results;
+  if (nestedModels !== undefined) {
+    // Wrapper format: extract models from the nested array
+    const totalResults = firstResult?.totalResults ?? nestedModels.length;
+    const models = nestedModels.map((m) => mapModelResult(m));
+
+    return {
+      models,
+      totalResults,
+      offset,
+      limit,
+    };
+  }
+
+  // Flat format: each item in data is a model (filter out items without 'air' field)
+  const flatModels = results.filter((r): r is ModelSearchApiResult & { readonly air: string } => r.air !== undefined);
+  const totalResults = firstResult?.totalResults ?? flatModels.length;
+  const models = flatModels.map((m) => mapModelResult(m));
+
   return {
     models,
     totalResults,
-    offset: input.offset,
-    limit: input.limit,
+    offset,
+    limit,
   };
 }
 

@@ -43,7 +43,7 @@ import {
 import { setupDatabase, teardownDatabase } from './server/database-integration.js';
 import { createProgressReporter } from './server/progress.js';
 import { config } from './shared/config.js';
-import { toolDefinitions, toolHandlers } from './tools/index.js';
+import { toolDefinitions, toolHandlers, toolInputSchemas } from './tools/index.js';
 import { stopAllWatchers } from './tools/watch-folder/index.js';
 
 import type { ToolResult } from './shared/types.js';
@@ -95,6 +95,51 @@ function findToolHandler(name: string): ToolHandlerFunction | undefined {
     }
   }
   return undefined;
+}
+
+/**
+ * Finds a tool input schema by name.
+ *
+ * Iterates over toolInputSchemas entries to avoid object injection
+ * from dynamic property access (security/detect-object-injection).
+ *
+ * @param name - The tool name to look up
+ * @returns The Zod schema, or undefined if not found
+ */
+function findToolSchema(name: string): (typeof toolInputSchemas)[string] | undefined {
+  for (const [key, schema] of Object.entries(toolInputSchemas)) {
+    if (key === name) {
+      return schema;
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Validates and transforms raw MCP arguments through the tool's Zod schema.
+ *
+ * This ensures that Zod defaults are applied and input is validated before
+ * reaching the handler. Without this step, optional fields with Zod defaults
+ * would be undefined when the MCP client omits them.
+ *
+ * @param name - The tool name
+ * @param args - Raw arguments from the MCP client
+ * @returns Validated arguments with defaults applied, or the original args if no schema found
+ */
+function validateToolInput(name: string, args: Record<string, unknown>): unknown {
+  const schema = findToolSchema(name);
+  if (schema === undefined) {
+    return args;
+  }
+
+  const result = schema.safeParse(args);
+  if (result.success) {
+    return result.data;
+  }
+
+  // If validation fails, return the raw args and let the handler deal with it.
+  // This preserves existing error handling behavior.
+  return args;
 }
 
 // ============================================================================
@@ -188,8 +233,12 @@ async function main(): Promise<void> {
     const effectiveSignal = extra.signal;
 
     try {
+      // Validate input through Zod schema to apply defaults and constraints.
+      // Raw MCP arguments bypass Zod defaults, so we parse here at the boundary.
+      const validatedArgs = validateToolInput(name, args ?? {});
+
       const result: ToolResult = await handler(
-        (args ?? {}) as never, // Handler validates its own input via Zod
+        validatedArgs as never,
         client,
         { signal: effectiveSignal, progress },
       );

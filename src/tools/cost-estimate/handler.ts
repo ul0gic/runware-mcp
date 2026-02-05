@@ -87,7 +87,6 @@ function estimateImageInference(input: CostEstimateInput): CostEstimateOutput {
   const width = input.width ?? DEFAULT_DIMENSION;
   const height = input.height ?? DEFAULT_DIMENSION;
   const megapixels = (width * height) / 1_000_000;
-  // numberResults always has a default value from schema
   const numberResults = input.numberResults;
 
   // Steps affect cost slightly
@@ -112,7 +111,6 @@ function estimateImageInference(input: CostEstimateInput): CostEstimateOutput {
  * Estimates PhotoMaker cost.
  */
 function estimatePhotoMaker(input: CostEstimateInput): CostEstimateOutput {
-  // numberResults always has a default value from schema
   const numberResults = input.numberResults;
   const costPerUnit = PHOTO_MAKER_BASE_COST;
   const totalCost = costPerUnit * numberResults;
@@ -132,7 +130,6 @@ function estimatePhotoMaker(input: CostEstimateInput): CostEstimateOutput {
  * Estimates upscale cost.
  */
 function estimateUpscale(input: CostEstimateInput): CostEstimateOutput {
-  // numberResults always has a default value from schema
   const numberResults = input.numberResults;
   const costPerUnit = UPSCALE_BASE_COST;
   const totalCost = costPerUnit * numberResults;
@@ -152,7 +149,6 @@ function estimateUpscale(input: CostEstimateInput): CostEstimateOutput {
  * Estimates background removal cost.
  */
 function estimateRemoveBackground(input: CostEstimateInput): CostEstimateOutput {
-  // numberResults always has a default value from schema
   const numberResults = input.numberResults;
   const costPerUnit = REMOVE_BACKGROUND_BASE_COST;
   const totalCost = costPerUnit * numberResults;
@@ -172,7 +168,6 @@ function estimateRemoveBackground(input: CostEstimateInput): CostEstimateOutput 
  * Estimates caption cost.
  */
 function estimateCaption(input: CostEstimateInput): CostEstimateOutput {
-  // numberResults always has a default value from schema
   const numberResults = input.numberResults;
   const costPerUnit = CAPTION_BASE_COST;
   const totalCost = costPerUnit * numberResults;
@@ -192,7 +187,6 @@ function estimateCaption(input: CostEstimateInput): CostEstimateOutput {
  * Estimates masking cost.
  */
 function estimateMasking(input: CostEstimateInput): CostEstimateOutput {
-  // numberResults always has a default value from schema
   const numberResults = input.numberResults;
   const costPerUnit = MASKING_BASE_COST;
   const totalCost = costPerUnit * numberResults;

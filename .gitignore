@@ -37,3 +37,4 @@ temp/
 # Project internals (private)
 .claude/
 .project/
+.mcp.json

@@ -180,7 +180,7 @@ async function captionImage(
   const captionResult = await imageCaption(
     {
       inputImage,
-      model: 'runware:150@2',
+      model: 'runware:152@2',
       includeCost: true,
     },
     client,
@@ -384,8 +384,8 @@ export const styleTransferToolDefinition = {
       },
       model: {
         type: 'string',
-        description: 'Model identifier for generation (default: civitai:943001@1055701)',
-        default: 'civitai:943001@1055701',
+        description: 'Model identifier for generation (default: runware:100@1)',
+        default: 'runware:100@1',
       },
       width: {
         type: 'number',

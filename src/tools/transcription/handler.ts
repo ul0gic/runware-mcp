@@ -36,7 +36,7 @@ interface TranscriptionSegment {
 }
 
 interface TranscriptionApiResponse {
-  readonly taskType: 'transcription';
+  readonly taskType: 'audioTranscription';
   readonly taskUUID: string;
   readonly status?: 'processing' | 'success' | 'error';
   readonly text?: string;
@@ -123,7 +123,7 @@ export async function transcription(
 
     // Build request
     const requestParams = buildApiRequest(input);
-    const task = createTaskRequest('transcription', requestParams);
+    const task = createTaskRequest('audioTranscription', requestParams);
 
     // Submit the task
     await runwareClient.requestSingle<TranscriptionApiResponse>(task, {
@@ -150,7 +150,7 @@ export async function transcription(
     // Save to database if enabled
     const provider = detectProvider(input.model);
     saveGeneration({
-      taskType: 'transcription',
+      taskType: 'audioTranscription',
       taskUUID: task.taskUUID,
       prompt: `Transcribe media (${input.language ?? 'auto-detect'})`,
       model: input.model,
@@ -173,7 +173,7 @@ export async function transcription(
 
     // Record analytics
     if (output.cost !== undefined) {
-      recordAnalytics('transcription', provider ?? 'memories', output.cost);
+      recordAnalytics('audioTranscription', provider ?? 'memories', output.cost);
     }
 
     // Report progress: complete

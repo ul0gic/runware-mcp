@@ -58,7 +58,7 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 
 - `modelSearch` -- search 100,000+ models by name, type, architecture, and AIR identifier
 - `costEstimate` -- estimate generation cost before running
-- `getAccountBalance` -- check Runware credit balance
+- `accountBalance` -- check Runware credit balance
 
 #### Batch Operations (3)
 
@@ -116,11 +116,35 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 
 #### Testing
 
-- 1,378 tests across 47 test files
+- 1,437 tests across 49 test files
 - 82%+ line, statement, and function coverage
 - 67%+ branch coverage
 - Unit tests for all 22 tools, shared modules, and resource providers
 - Integration tests for MCP protocol handlers and database operations
+
+### Fixed
+
+#### Dispatch-Layer Input Validation
+
+- Added Zod schema parsing at the MCP dispatch boundary (`src/index.ts`) -- all tool inputs now go through `safeParse()` before reaching handlers, applying defaults and validating at the system boundary
+- Added `toolInputSchemas` registry mapping all 22 tools to their Zod schemas
+
+#### Wrong taskTypes (3 tools)
+
+- `accountBalance` -- fixed taskType from `accountBalance` to `accountManagement`, added missing required `operation: 'getDetails'` parameter
+- `transcription` -- fixed taskType from `transcription` to `audioTranscription`
+- `controlNetPreprocess` -- fixed taskType from `controlNetPreprocess` to `imageControlNetPreProcess`
+
+#### Invalid Default Values (4 tools)
+
+- `promptEnhance` -- API requires `promptMaxLength`; added default of 200, changed min from 12 to 5
+- `imageCaption` -- default model `runware:150@2` does not exist; changed to `runware:152@2` (Qwen2.5-VL-7B)
+- `styleTransfer` -- default model `civitai:943001@1055701` invalid; changed to `runware:100@1`, caption model to `runware:152@2`
+- `costEstimate`, `vectorize`, `batchImageInference` -- Zod defaults now applied via dispatch-layer validation
+
+#### Response Parsing (1 tool)
+
+- `modelSearch` -- API returns results in `data[0].results[]` not `data[0].models[]`; fixed field mapping. Also fixed `positiveTriggerWords` being split into individual characters when API returns a string instead of an array.
 
 ### Removed
 

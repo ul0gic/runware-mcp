@@ -30,7 +30,7 @@ export const promptEnhanceInputSchema = z.object({
    * Maximum length of enhanced prompts in tokens.
    * Approximately 100 tokens equals 75 words.
    */
-  promptMaxLength: z.number().int().min(12).max(400).optional(),
+  promptMaxLength: z.number().int().min(5).max(400).optional().default(200),
 
   /**
    * Include cost information in response.

@@ -37,17 +37,12 @@ interface PromptEnhanceApiResponse {
  * Builds the API request from validated input.
  */
 function buildApiRequest(input: PromptEnhanceInput): Record<string, unknown> {
-  const request: Record<string, unknown> = {
+  return {
     prompt: input.prompt,
     promptVersions: input.promptVersions,
+    promptMaxLength: input.promptMaxLength,
     includeCost: input.includeCost,
   };
-
-  if (input.promptMaxLength !== undefined) {
-    request.promptMaxLength = input.promptMaxLength;
-  }
-
-  return request;
 }
 
 // ============================================================================
@@ -86,7 +81,7 @@ export async function promptEnhance(
     const requestParams = buildApiRequest(input);
 
     // Make requests for each version
-    // promptVersions has a default of 1, so it's always defined
+    // promptVersions always has a default value from schema
     const versionsToGenerate = input.promptVersions;
 
     for (let i = 0; i < versionsToGenerate; i++) {
@@ -173,7 +168,8 @@ export const promptEnhanceToolDefinition = {
       },
       promptMaxLength: {
         type: 'number',
-        description: 'Maximum length in tokens (12-400, ~100 tokens = 75 words)',
+        description: 'Maximum length in tokens (5-400, ~100 tokens = 75 words)',
+        default: 200,
       },
       includeCost: {
         type: 'boolean',

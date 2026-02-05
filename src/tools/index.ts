@@ -11,91 +11,115 @@
 import {
   accountBalance,
   accountBalanceToolDefinition,
+  accountBalanceInputSchema,
 } from './account-balance/index.js';
 import {
   audioInference,
   audioInferenceToolDefinition,
+  audioInferenceInputSchema,
 } from './audio-inference/index.js';
 import {
   batchImageInference,
   batchImageInferenceToolDefinition,
+  batchImageInferenceInputSchema,
 } from './batch-image-inference/index.js';
 import {
   controlNetPreprocess,
   controlNetPreprocessToolDefinition,
+  controlNetPreprocessInputSchema,
 } from './controlnet-preprocess/index.js';
 import {
   costEstimate,
   costEstimateToolDefinition,
+  costEstimateInputSchema,
 } from './cost-estimate/index.js';
 import {
   getVideoModelInfo,
   getVideoModelInfoToolDefinition,
+  getVideoModelInfoInputSchema,
 } from './get-video-model-info/index.js';
 import {
   imageBackgroundRemoval,
   imageBackgroundRemovalToolDefinition,
+  imageBackgroundRemovalInputSchema,
 } from './image-background-removal/index.js';
 import {
   imageCaption,
   imageCaptionToolDefinition,
+  imageCaptionInputSchema,
 } from './image-caption/index.js';
 import {
   imageInference,
   imageInferenceToolDefinition,
+  imageInferenceInputSchema,
 } from './image-inference/index.js';
 import {
   imageMasking,
   imageMaskingToolDefinition,
+  imageMaskingInputSchema,
 } from './image-masking/index.js';
 import {
   imageUpload,
   imageUploadToolDefinition,
+  imageUploadInputSchema,
 } from './image-upload/index.js';
 import {
   imageUpscale,
   imageUpscaleToolDefinition,
+  imageUpscaleInputSchema,
 } from './image-upscale/index.js';
 import {
   listVideoModels,
   listVideoModelsToolDefinition,
+  listVideoModelsInputSchema,
 } from './list-video-models/index.js';
 import {
   modelSearch,
   modelSearchToolDefinition,
+  modelSearchInputSchema,
 } from './model-search/index.js';
 import {
   photoMaker,
   photoMakerToolDefinition,
+  photoMakerInputSchema,
 } from './photo-maker/index.js';
 import {
   processFolder,
   processFolderToolDefinition,
+  processFolderInputSchema,
 } from './process-folder/index.js';
 import {
   promptEnhance,
   promptEnhanceToolDefinition,
+  promptEnhanceInputSchema,
 } from './prompt-enhance/index.js';
 import {
   styleTransfer,
   styleTransferToolDefinition,
+  styleTransferInputSchema,
 } from './style-transfer/index.js';
 import {
   transcription,
   transcriptionToolDefinition,
+  transcriptionInputSchema,
 } from './transcription/index.js';
 import {
   vectorize,
   vectorizeToolDefinition,
+  vectorizeInputSchema,
 } from './vectorize/index.js';
 import {
   videoInference,
   videoInferenceToolDefinition,
+  videoInferenceInputSchema,
 } from './video-inference/index.js';
 import {
   watchFolder,
   watchFolderToolDefinition,
+  watchFolderInputSchema,
 } from './watch-folder/index.js';
+
+import type { z } from 'zod';
 
 // ============================================================================
 // Re-exports - Core Image Tools
@@ -383,6 +407,43 @@ export const toolHandlers = {
   batchImageInference,
   watchFolder,
 } as const;
+
+/**
+ * Map of all tool input schemas by name.
+ *
+ * Used by the MCP dispatch layer to validate and apply Zod defaults
+ * to raw JSON arguments before passing them to handlers.
+ */
+export const toolInputSchemas: Record<string, z.ZodType> = {
+  // Core Image Tools
+  imageInference: imageInferenceInputSchema,
+  photoMaker: photoMakerInputSchema,
+  imageUpscale: imageUpscaleInputSchema,
+  imageBackgroundRemoval: imageBackgroundRemovalInputSchema,
+  imageCaption: imageCaptionInputSchema,
+  imageMasking: imageMaskingInputSchema,
+  imageUpload: imageUploadInputSchema,
+  // Video Tools
+  videoInference: videoInferenceInputSchema,
+  listVideoModels: listVideoModelsInputSchema,
+  getVideoModelInfo: getVideoModelInfoInputSchema,
+  // Audio Tools
+  audioInference: audioInferenceInputSchema,
+  transcription: transcriptionInputSchema,
+  // Creative Tools
+  vectorize: vectorizeInputSchema,
+  promptEnhance: promptEnhanceInputSchema,
+  controlNetPreprocess: controlNetPreprocessInputSchema,
+  styleTransfer: styleTransferInputSchema,
+  // Utility Tools
+  modelSearch: modelSearchInputSchema,
+  costEstimate: costEstimateInputSchema,
+  accountBalance: accountBalanceInputSchema,
+  // Batch & Folder Tools
+  processFolder: processFolderInputSchema,
+  batchImageInference: batchImageInferenceInputSchema,
+  watchFolder: watchFolderInputSchema,
+};
 
 /**
  * Array of all tool definitions for MCP registration.

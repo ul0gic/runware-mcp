@@ -123,9 +123,9 @@ export const styleTransferInputSchema = z.object({
 
   /**
    * Model identifier for image generation.
-   * Default: civitai:943001@1055701
+   * Default: runware:100@1
    */
-  model: z.string().optional().default('civitai:943001@1055701'),
+  model: z.string().optional().default('runware:100@1'),
 
   /**
    * Output image width in pixels (512-2048, multiple of 64).

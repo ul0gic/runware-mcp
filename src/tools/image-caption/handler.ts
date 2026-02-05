@@ -130,8 +130,8 @@ export const imageCaptionToolDefinition = {
       },
       model: {
         type: 'string',
-        description: 'Caption model (default: LLaVA-1.6)',
-        default: 'runware:150@2',
+        description: 'Caption model (default: Qwen2.5-VL-7B)',
+        default: 'runware:152@2',
       },
       prompt: {
         type: 'string',

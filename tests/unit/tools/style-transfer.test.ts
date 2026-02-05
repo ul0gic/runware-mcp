@@ -115,7 +115,7 @@ describe('styleTransfer', () => {
       if (result.success) {
         expect(result.data.intensity).toBe('moderate');
         expect(result.data.colorPalette).toBe('vibrant');
-        expect(result.data.model).toBe('civitai:943001@1055701');
+        expect(result.data.model).toBe('runware:100@1');
         expect(result.data.strength).toBe(0.65);
         expect(result.data.includeCost).toBe(true);
       }
