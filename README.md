@@ -103,7 +103,7 @@ That's it. No `pip install`. No virtual environments. No Python version conflict
 ## Capabilities at a Glance
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#2563eb', 'primaryTextColor': '#fff', 'primaryBorderColor': '#3b82f6', 'lineColor': '#60a5fa', 'secondaryColor': '#1e40af', 'tertiaryColor': '#1e3a5f'}}}%%
+%%{init: {'theme': 'dark', 'themeVariables': { 'primaryColor': '#2563eb', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#60a5fa', 'lineColor': '#60a5fa', 'secondaryColor': '#1e40af', 'tertiaryColor': '#3b82f6', 'noteTextColor': '#ffffff', 'noteBkgColor': '#2563eb'}}}%%
 mindmap
   root((Runware MCP))
     Images
