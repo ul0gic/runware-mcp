@@ -45,6 +45,7 @@
     "@stylistic/eslint-plugin": "^5.7.1",
     "@types/better-sqlite3": "^7.6.13",
     "@types/node": "latest",
+    "@vitest/coverage-v8": "^4.0.18",
     "drizzle-kit": "^0.31.8",
     "eslint": "latest",
     "eslint-plugin-import-x": "^4.16.1",

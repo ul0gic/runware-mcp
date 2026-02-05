@@ -484,7 +484,10 @@ export async function processFolder(
  */
 export const processFolderToolDefinition = {
   name: 'processFolder',
-  description: 'Process all images in a folder with a specified operation (upscale, remove background, caption, vectorize, or ControlNet preprocess).',
+  description:
+    'Process all images in a folder with a specified operation (upscale, remove background, caption, vectorize, or ControlNet preprocess).\n\n' +
+    'Operations: upscale (2x/4x), removeBackground, caption, vectorize (to SVG), controlNetPreprocess. Supports concurrency 1-5, up to 100 files, recursive scanning.\n\n' +
+    'Docs: runware://docs/guides/batch-processing',
   inputSchema: {
     type: 'object',
     properties: {

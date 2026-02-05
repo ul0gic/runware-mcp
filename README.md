@@ -243,6 +243,26 @@ Pre-built workflows for common tasks:
 
 ---
 
+## Documentation
+
+This MCP server includes **comprehensive built-in documentation** accessible as MCP resources. Any LLM client connected to the server can discover and read detailed API references, feature guides, and provider docs on demand.
+
+**42 documentation resources** organized across 5 categories:
+
+| Category | Count | What's Covered |
+|----------|-------|----------------|
+| **Concepts** | 5 | AIR identifiers, task responses, output types, async delivery, connection |
+| **Tools** | 13 | Full parameter reference for every tool |
+| **Features** | 10 | ControlNet, LoRA, IP-Adapters, prompt weighting, acceleration, and more |
+| **Providers** | 9 | Provider-specific settings and capabilities |
+| **Guides** | 5 | Batch processing, cost optimization, quality tuning, combining features |
+
+Example URIs: `runware://docs/tools/image-inference`, `runware://docs/features/controlnet-guide`, `runware://docs/providers/kling-ai`, `runware://docs/guides/cost-optimization`
+
+Ask Claude to list or read any `runware://docs/*` resource for detailed reference information.
+
+---
+
 ## Architecture
 
 ```mermaid
@@ -353,6 +373,8 @@ The original Python implementation covered **~40%** of Runware's API capabilitie
 
 ## Configuration Reference
 
+> **Tip:** Copy `.env.example` to `.env` for a pre-documented template of all variables below.
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RUNWARE_API_KEY` | **required** | Your Runware API key |
@@ -440,12 +462,14 @@ npm test
 
 ## Contributing
 
-This project is being PR'd back to the official Runware repository.
+This project is being PR'd back to the official Runware repository. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full development guide including project structure, how to add new tools, testing patterns, and code style.
 
 1. Fork it
 2. Create a feature branch
 3. Make it pass: `npm run build && npm run lint && npm test`
 4. Submit PR
+
+For version history and release notes, see **[CHANGELOG.md](CHANGELOG.md)**.
 
 ---
 

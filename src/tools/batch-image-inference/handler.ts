@@ -273,7 +273,10 @@ export async function batchImageInference(
  */
 export const batchImageInferenceToolDefinition = {
   name: 'batchImageInference',
-  description: 'Generate multiple images from an array of prompts with shared settings. Ideal for creating variations or processing multiple ideas at once.',
+  description:
+    'Generate multiple images from an array of prompts with shared settings. Ideal for creating variations or processing multiple ideas at once.\n\n' +
+    'Usage: Provide 1-20 prompts with a shared model, dimensions, and quality settings. Each prompt generates one image concurrently (configurable 1-5).\n\n' +
+    'Docs: runware://docs/guides/batch-processing',
   inputSchema: {
     type: 'object',
     properties: {

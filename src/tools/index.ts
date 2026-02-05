@@ -77,6 +77,10 @@ import {
   promptEnhanceToolDefinition,
 } from './prompt-enhance/index.js';
 import {
+  styleTransfer,
+  styleTransferToolDefinition,
+} from './style-transfer/index.js';
+import {
   transcription,
   transcriptionToolDefinition,
 } from './transcription/index.js';
@@ -244,6 +248,24 @@ export {
   type ControlNetPreprocessOutput,
 } from './controlnet-preprocess/index.js';
 
+export {
+  styleTransfer,
+  styleTransferToolDefinition,
+  styleTransferInputSchema,
+  styleTransferOutputSchema,
+  artStyleSchema,
+  intensitySchema,
+  colorPaletteSchema,
+  ART_STYLES,
+  INTENSITY_LEVELS,
+  COLOR_PALETTES,
+  type StyleTransferInput,
+  type StyleTransferOutput,
+  type ArtStyle,
+  type Intensity,
+  type ColorPalette,
+} from './style-transfer/index.js';
+
 // ============================================================================
 // Re-exports - Utility Tools
 // ============================================================================
@@ -351,6 +373,7 @@ export const toolHandlers = {
   vectorize,
   promptEnhance,
   controlNetPreprocess,
+  styleTransfer,
   // Utility Tools
   modelSearch,
   costEstimate,
@@ -384,6 +407,7 @@ export const toolDefinitions = [
   vectorizeToolDefinition,
   promptEnhanceToolDefinition,
   controlNetPreprocessToolDefinition,
+  styleTransferToolDefinition,
   // Utility Tools
   modelSearchToolDefinition,
   costEstimateToolDefinition,

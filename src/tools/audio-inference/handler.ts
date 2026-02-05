@@ -278,7 +278,9 @@ export async function audioInference(
 export const audioInferenceToolDefinition = {
   name: 'audioInference',
   description:
-    'Generate music, sound effects, speech, or ambient audio from text prompts using AI models.',
+    'Generate music, sound effects, speech, or ambient audio from text prompts using AI models.\n\n' +
+    'Capabilities: music composition, sound effects, text-to-speech (with voice selection), ambient audio. Providers: ElevenLabs (composition plans), Mirelo (audio generation)\n\n' +
+    'Docs: runware://docs/tools/audio-inference',
   inputSchema: {
     type: 'object',
     properties: {

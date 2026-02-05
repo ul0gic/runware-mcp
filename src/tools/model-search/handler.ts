@@ -164,7 +164,10 @@ export async function modelSearch(
 
 export const modelSearchToolDefinition = {
   name: 'modelSearch',
-  description: 'Search for available AI models on the Runware platform by name, category, architecture, or tags.',
+  description:
+    'Search for available AI models on the Runware platform by name, category, architecture, or tags.\n\n' +
+    'Models use AIR format: provider:modelId@versionId (e.g., civitai:101195@128078). Results include defaultSteps, defaultCFG, and trigger words.\n\n' +
+    'Docs: runware://docs/concepts/air-identifiers',
   inputSchema: {
     type: 'object',
     properties: {

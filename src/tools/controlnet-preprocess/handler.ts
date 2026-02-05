@@ -222,7 +222,9 @@ export async function controlNetPreprocess(
 export const controlNetPreprocessToolDefinition = {
   name: 'controlNetPreprocess',
   description:
-    'Preprocess images for ControlNet-guided generation. Supports edge detection, depth maps, pose estimation, and more.',
+    'Preprocess images for ControlNet-guided generation. Supports edge detection, depth maps, pose estimation, and more.\n\n' +
+    'Preprocessors: canny (edges), depth (depth map), mlsd (lines), normalbae (normals), openpose (body pose), tile (detail), seg (segmentation), lineart, lineart_anime, shuffle, scribble, softedge\n\n' +
+    'Docs: runware://docs/tools/controlnet-preprocess | runware://docs/features/controlnet-guide',
   inputSchema: {
     type: 'object',
     properties: {

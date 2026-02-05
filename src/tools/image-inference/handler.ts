@@ -301,7 +301,14 @@ export async function imageInference(
  */
 export const imageInferenceToolDefinition = {
   name: 'imageInference',
-  description: 'Generate images from text prompts or transform existing images. Supports text-to-image, image-to-image, inpainting, and outpainting with ControlNet, LoRA, and identity preservation features.',
+  description:
+    'Generate images from text prompts or transform existing images. Supports text-to-image, image-to-image, inpainting, and outpainting with ControlNet, LoRA, and identity preservation features.\n\n' +
+    'Common use cases:\n' +
+    '- Text-to-image: positivePrompt + model + dimensions\n' +
+    '- Image-to-image: Add seedImage + strength\n' +
+    '- Inpainting: Add seedImage + maskImage\n' +
+    '- ControlNet: Add controlNet array for structural guidance\n\n' +
+    'Docs: runware://docs/tools/image-inference | runware://docs/features/controlnet-guide | runware://docs/features/lora-guide | runware://docs/features/identity-preservation',
   inputSchema: {
     type: 'object',
     properties: {

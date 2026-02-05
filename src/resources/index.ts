@@ -3,7 +3,7 @@
  *
  * Central registry that manages all resource providers. Each provider
  * handles a specific category of resources (images, videos, audio,
- * session history, analytics).
+ * session history, analytics, documentation).
  *
  * Re-exports the shared types and all provider modules for convenience.
  */
@@ -54,11 +54,27 @@ export type {
   TopModelEntry,
 } from './analytics/types.js';
 
+export {
+  documentationProvider,
+  getDocCount,
+  getDocResource,
+  listDocResources,
+  registerDoc,
+} from './documentation/index.js';
+export type {
+  DocCategory,
+  DocContent,
+  DocExample,
+  DocParameter,
+  DocResource,
+} from './documentation/index.js';
+
 // ============================================================================
 // Provider Registry
 // ============================================================================
 
 import { analyticsProvider } from './analytics/provider.js';
+import { documentationProvider } from './documentation/provider.js';
 import { generatedAudioProvider } from './generated-audio/provider.js';
 import { generatedImagesProvider } from './generated-images/provider.js';
 import { generatedVideosProvider } from './generated-videos/provider.js';
@@ -78,6 +94,7 @@ export const RESOURCE_PROVIDERS: readonly ResourceProvider[] = [
   generatedAudioProvider,
   sessionHistoryProvider,
   analyticsProvider,
+  documentationProvider,
 ];
 
 /**

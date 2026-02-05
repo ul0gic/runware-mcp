@@ -268,7 +268,10 @@ export async function videoInference(
 
 export const videoInferenceToolDefinition = {
   name: 'videoInference',
-  description: 'Generate videos from text prompts or transform existing images/videos. Supports multiple providers including KlingAI, Veo, PixVerse, and more.',
+  description:
+    'Generate videos from text prompts or transform existing images/videos. Supports multiple providers including KlingAI, Veo, PixVerse, and more.\n\n' +
+    'Providers: KlingAI (audio, camera control), Veo (prompt enhancement), PixVerse (viral effects, camera movements), Alibaba/Wan (shot composition), Sync.so (lip sync)\n\n' +
+    'Docs: runware://docs/tools/video-inference | runware://docs/guides/choosing-providers',
   inputSchema: {
     type: 'object',
     properties: {
