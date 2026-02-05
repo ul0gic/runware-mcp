@@ -20,34 +20,52 @@
 
 This is a **control plane layer** that connects Claude Code directly to Runware's AI media generation infrastructure.
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                              CLAUDE CODE                                 │
-│                         (Your AI Assistant)                              │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    │ MCP Protocol
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        RUNWARE MCP SERVER                                │
-│                      ┌─────────────────────┐                             │
-│   ┌──────────┐       │  Orchestration      │       ┌──────────┐         │
-│   │ 22 Tools │◄─────►│  • Rate Limiting    │◄─────►│ Database │         │
-│   └──────────┘       │  • Caching          │       │ (SQLite) │         │
-│                      │  • Batch Processing │       └──────────┘         │
-│   ┌──────────┐       │  • Progress Track   │       ┌──────────┐         │
-│   │ 6 Rsrcs  │◄─────►│  • Error Recovery   │◄─────►│ Analytics│         │
-│   └──────────┘       └─────────────────────┘       └──────────┘         │
-└─────────────────────────────────────────────────────────────────────────┘
-                                    │
-                                    │ REST API
-                                    ▼
-┌─────────────────────────────────────────────────────────────────────────┐
-│                           RUNWARE CLOUD                                  │
-│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐           │
-│  │  FLUX   │ │  SDXL   │ │  Kling  │ │   Veo   │ │ElevenLabs│  + more  │
-│  └─────────┘ └─────────┘ └─────────┘ └─────────┘ └─────────┘           │
-└─────────────────────────────────────────────────────────────────────────┘
+```mermaid
+flowchart TB
+    subgraph Claude["🤖 CLAUDE CODE"]
+        CC["Your AI Assistant"]
+    end
+
+    subgraph Server["⚡ RUNWARE MCP SERVER"]
+        direction TB
+
+        subgraph Capabilities["Tool Layer"]
+            Tools["22 Tools"]
+            Resources["6 Resources"]
+        end
+
+        subgraph Orchestration["Orchestration Engine"]
+            RL["Rate Limiting"]
+            Cache["Caching"]
+            Batch["Batch Processing"]
+            Progress["Progress Tracking"]
+        end
+
+        subgraph Storage["Data Layer"]
+            DB[("SQLite")]
+            Analytics["Analytics"]
+        end
+    end
+
+    subgraph Cloud["☁️ RUNWARE CLOUD"]
+        direction LR
+        FLUX["FLUX"]
+        SDXL["SDXL"]
+        Kling["Kling"]
+        Veo["Veo"]
+        EL["ElevenLabs"]
+        More["+ more"]
+    end
+
+    CC <-->|"MCP Protocol"| Server
+    Server -->|"REST API"| Cloud
+
+    style Claude fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Server fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Cloud fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Capabilities fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Orchestration fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Storage fill:#2563eb,stroke:#60a5fa,color:#fff
 ```
 
 **One config. Zero complexity. Infinite creativity.**
@@ -85,6 +103,7 @@ That's it. No `pip install`. No virtual environments. No Python version conflict
 ## Capabilities at a Glance
 
 ```mermaid
+%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#2563eb', 'primaryTextColor': '#fff', 'primaryBorderColor': '#3b82f6', 'lineColor': '#60a5fa', 'secondaryColor': '#1e40af', 'tertiaryColor': '#1e3a5f'}}}%%
 mindmap
   root((Runware MCP))
     Images
@@ -228,33 +247,33 @@ Pre-built workflows for common tasks:
 
 ```mermaid
 flowchart TB
-    subgraph Claude["Claude Code"]
-        CC[Claude Assistant]
+    subgraph Claude["🤖 Claude Code"]
+        CC["Claude Assistant"]
     end
 
-    subgraph MCP["Runware MCP Server"]
+    subgraph MCP["⚡ Runware MCP Server"]
         direction TB
-        Handler[MCP Protocol Handler]
+        Handler["MCP Protocol Handler"]
 
         subgraph Tools["Tool Layer"]
             direction LR
-            IMG[Image Tools]
-            VID[Video Tools]
-            AUD[Audio Tools]
-            BATCH[Batch Tools]
+            IMG["Image Tools"]
+            VID["Video Tools"]
+            AUD["Audio Tools"]
+            BATCH["Batch Tools"]
         end
 
         subgraph Core["Core Services"]
             direction LR
-            RL[Rate Limiter]
-            Cache[LRU Cache]
-            Val[Validation]
+            RL["Rate Limiter"]
+            Cache["LRU Cache"]
+            Val["Validation"]
         end
 
         subgraph Data["Data Layer"]
             direction LR
-            DB[(SQLite)]
-            Analytics[Analytics]
+            DB[("SQLite")]
+            Analytics["Analytics"]
         end
 
         Handler --> Tools
@@ -262,12 +281,19 @@ flowchart TB
         Core --> Data
     end
 
-    subgraph Runware["Runware Cloud"]
-        API[REST API]
+    subgraph Runware["☁️ Runware Cloud"]
+        API["REST API"]
     end
 
-    CC <-->|MCP Protocol| Handler
-    Tools -->|HTTPS| API
+    CC <-->|"MCP Protocol"| Handler
+    Tools -->|"HTTPS"| API
+
+    style Claude fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style MCP fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Runware fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Tools fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Core fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Data fill:#2563eb,stroke:#60a5fa,color:#fff
 ```
 
 ---
