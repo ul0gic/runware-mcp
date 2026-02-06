@@ -1,11 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mocks must come before imports of modules that use them
-vi.mock('../../../src/database/operations.js', () => ({
-  recordAnalytics: vi.fn(),
-  saveGeneration: vi.fn(),
-}));
-
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
     waitForToken: vi.fn().mockResolvedValue(undefined),
@@ -19,12 +14,10 @@ vi.mock('../../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     MAX_FILE_SIZE_MB: 50,
     ALLOWED_FILE_ROOTS: [],
-    ENABLE_DATABASE: false,
     LOG_LEVEL: 'error',
     NODE_ENV: 'test',
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    DATABASE_PATH: ':memory:',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },

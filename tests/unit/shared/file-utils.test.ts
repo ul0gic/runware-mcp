@@ -22,8 +22,6 @@ vi.mock('../../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    ENABLE_DATABASE: false,
-    DATABASE_PATH: './test.db',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },

@@ -35,18 +35,14 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",
-    "better-sqlite3": "^12.6.2",
-    "drizzle-orm": "^0.45.1",
     "zod": "latest",
     "zod-to-json-schema": "latest"
   },
   "devDependencies": {
     "@eslint/js": "latest",
     "@stylistic/eslint-plugin": "^5.7.1",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "latest",
     "@vitest/coverage-v8": "^4.0.18",
-    "drizzle-kit": "^0.31.8",
     "eslint": "latest",
     "eslint-plugin-import-x": "^4.16.1",
     "eslint-plugin-promise": "^7.2.1",

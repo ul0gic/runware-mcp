@@ -4,7 +4,6 @@
  * Implements background removal using the Runware API.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -105,28 +104,6 @@ export async function imageBackgroundRemoval(
     );
 
     const output = processResponse(response);
-
-    // model always has a default value from schema
-    saveGeneration({
-      taskType: 'removeBackground',
-      taskUUID: task.taskUUID,
-      prompt: 'Remove background',
-      model: input.model,
-      provider: 'runware',
-      status: 'completed',
-      outputUrl: output.imageURL ?? null,
-      outputUuid: output.imageUUID,
-      width: null,
-      height: null,
-      cost: output.cost ?? null,
-      metadata: JSON.stringify({
-        settings: input.settings,
-      }),
-    });
-
-    if (output.cost !== undefined) {
-      recordAnalytics('removeBackground', 'runware', output.cost);
-    }
 
     return successResult('Background removed successfully', output, output.cost);
   } catch (error) {

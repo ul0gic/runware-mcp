@@ -1,8 +1,7 @@
 /**
  * Integration tests for server capability modules.
  *
- * Tests cancellation tracking, progress reporting, and database
- * integration lifecycle functions.
+ * Tests cancellation tracking and progress reporting.
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -15,17 +14,14 @@ vi.mock('../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     MAX_FILE_SIZE_MB: 50,
     ALLOWED_FILE_ROOTS: [],
-    ENABLE_DATABASE: false,
     LOG_LEVEL: 'error',
     NODE_ENV: 'test',
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    DATABASE_PATH: ':memory:',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },
   API_BASE_URL: 'https://api.runware.ai/v1',
-  isDatabaseEnabled: (): boolean => false,
   isDevelopment: (): boolean => false,
   isProduction: (): boolean => false,
   isTest: (): boolean => true,
@@ -43,11 +39,6 @@ import {
   createProgressReporter,
   type SendProgressNotification,
 } from '../../src/server/progress.js';
-
-import {
-  setupDatabase,
-  teardownDatabase,
-} from '../../src/server/database-integration.js';
 
 // ============================================================================
 // Cancellation
@@ -238,34 +229,4 @@ describe('Progress Reporting', () => {
   });
 });
 
-// ============================================================================
-// Database Integration Lifecycle
-// ============================================================================
 
-describe('Database Integration', () => {
-  describe('setupDatabase()', () => {
-    it('does not throw when database is disabled', () => {
-      // Config mock has ENABLE_DATABASE: false
-      expect(() => {
-        setupDatabase();
-      }).not.toThrow();
-    });
-  });
-
-  describe('teardownDatabase()', () => {
-    it('does not throw when database is disabled', () => {
-      // Config mock has ENABLE_DATABASE: false, so isDatabaseReady() returns false
-      expect(() => {
-        teardownDatabase();
-      }).not.toThrow();
-    });
-
-    it('can be called multiple times safely', () => {
-      expect(() => {
-        teardownDatabase();
-        teardownDatabase();
-        teardownDatabase();
-      }).not.toThrow();
-    });
-  });
-});

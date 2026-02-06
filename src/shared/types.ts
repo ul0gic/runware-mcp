@@ -211,18 +211,9 @@ export interface ProgressReporter {
 // ============================================================================
 
 /**
- * Database interface placeholder.
- * Will be implemented in Phase 4 when database layer is built.
- */
-export interface Database {
-  readonly isConnected: boolean;
-  // Methods will be added in Phase 4
-}
-
-/**
  * Context passed to tool handlers.
- * Provides access to optional features like progress reporting,
- * cancellation, and database persistence.
+ * Provides access to optional features like progress reporting
+ * and cancellation.
  */
 export interface ToolContext {
   /**
@@ -234,12 +225,6 @@ export interface ToolContext {
    * Optional abort signal for cancellation support.
    */
   readonly signal?: AbortSignal;
-
-  /**
-   * Optional database connection for persistence.
-   * Only available when ENABLE_DATABASE is true.
-   */
-  readonly db?: Database;
 }
 
 // ============================================================================

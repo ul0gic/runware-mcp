@@ -7,7 +7,6 @@
 
 import path from 'node:path';
 
-import { recordAnalytics } from '../../database/operations.js';
 import {
   type RunwareClient,
   getDefaultClient,
@@ -446,11 +445,6 @@ export async function processFolder(
     const failed = results.filter((r) => r.status === 'failed').length;
     const skipped = results.filter((r) => r.status === 'skipped').length;
     const totalCost = results.reduce((sum, r) => sum + (r.cost ?? 0), 0);
-
-    // Record analytics
-    if (totalCost > 0) {
-      recordAnalytics(`processFolder:${input.operation}`, 'runware', totalCost);
-    }
 
     // Report final progress
     context?.progress?.report({

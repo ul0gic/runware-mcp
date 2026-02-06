@@ -1,8 +1,7 @@
 /**
  * Types for the generated audio resource.
  *
- * Defines the shape of audio entries stored in the in-memory session store
- * and persisted to the database when enabled.
+ * Defines the shape of audio entries stored in the in-memory session store.
  */
 
 /**

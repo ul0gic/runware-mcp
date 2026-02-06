@@ -35,13 +35,6 @@ function splitCommaSeparated(value: string): string[] {
 }
 
 /**
- * Parses a boolean-like string value.
- */
-function parseBoolean(value: string): boolean {
-  return value.toLowerCase() === 'true' || value === '1';
-}
-
-/**
  * Zod schema for environment variable validation.
  * All environment variables are validated at server startup.
  */
@@ -147,25 +140,6 @@ const envSchema = z.object({
     .min(0.1, 'RATE_LIMIT_REFILL_RATE must be at least 0.1')
     .max(10, 'RATE_LIMIT_REFILL_RATE cannot exceed 10')
     .default(1),
-
-  // ========================================================================
-  // Database Configuration
-  // ========================================================================
-
-  /**
-   * Enable SQLite database for persistence.
-   * When false, generated assets are not persisted.
-   */
-  ENABLE_DATABASE: z
-    .string()
-    .default('false')
-    .transform(parseBoolean),
-
-  /**
-   * Path to the SQLite database file.
-   * Only used when ENABLE_DATABASE is true.
-   */
-  DATABASE_PATH: z.string().default('./runware-mcp.db'),
 
   // ========================================================================
   // Folder Watching
@@ -293,13 +267,6 @@ export function isProduction(): boolean {
  */
 export function isTest(): boolean {
   return config.NODE_ENV === 'test';
-}
-
-/**
- * Checks if database persistence is enabled.
- */
-export function isDatabaseEnabled(): boolean {
-  return config.ENABLE_DATABASE;
 }
 
 /**

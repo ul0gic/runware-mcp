@@ -6,7 +6,6 @@
  * to improve image generation results.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import {
   type RunwareClient,
   createTaskRequest,
@@ -108,31 +107,6 @@ export async function promptEnhance(
       enhancedPrompts,
       ...(totalCost > 0 && { cost: totalCost }),
     };
-
-    // Save to database if enabled
-    saveGeneration({
-      taskType: 'promptEnhance',
-      taskUUID: crypto.randomUUID(),
-      prompt: input.prompt,
-      model: null,
-      provider: 'runware',
-      status: 'completed',
-      outputUrl: null,
-      outputUuid: null,
-      width: null,
-      height: null,
-      cost: totalCost > 0 ? totalCost : null,
-      metadata: JSON.stringify({
-        promptVersions: versionsToGenerate,
-        promptMaxLength: input.promptMaxLength,
-        enhancedPrompts,
-      }),
-    });
-
-    // Record analytics
-    if (totalCost > 0) {
-      recordAnalytics('promptEnhance', 'runware', totalCost);
-    }
 
     // Return result
     const versionsText = versionsToGenerate === 1 ? '1 variation' : `${String(versionsToGenerate)} variations`;

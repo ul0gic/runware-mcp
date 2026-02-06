@@ -5,7 +5,6 @@
  * operations using the Runware API.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { detectProvider } from '../../shared/provider-settings.js';
@@ -253,36 +252,6 @@ export async function imageInference(
     // Process response
     const output = processResponse(response.data);
     const imageCount = output.images.length;
-
-    // Save to database if enabled
-    const provider = detectProvider(input.model);
-    for (const image of output.images) {
-      saveGeneration({
-        taskType: 'imageInference',
-        taskUUID: task.taskUUID,
-        prompt: input.positivePrompt,
-        model: input.model,
-        provider: provider ?? null,
-        status: 'completed',
-        outputUrl: image.imageURL ?? null,
-        outputUuid: image.imageUUID,
-        // width and height always have default values from schema
-        width: input.width,
-        height: input.height,
-        cost: output.cost === undefined ? null : output.cost / imageCount,
-        metadata: JSON.stringify({
-          seed: image.seed,
-          steps: input.steps,
-          cfgScale: input.CFGScale,
-          scheduler: input.scheduler,
-        }),
-      });
-    }
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('imageInference', provider ?? null, output.cost);
-    }
 
     // Return result
     const message = imageCount === 1

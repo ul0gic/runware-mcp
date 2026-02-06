@@ -8,15 +8,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mocks
 // ============================================================================
 
-vi.mock('../../../src/database/operations.js', () => ({
-  recordAnalytics: vi.fn(),
-  saveGeneration: vi.fn(),
-}));
-
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
     waitForToken: vi.fn().mockResolvedValue(undefined),
   },
+}));
+
+vi.mock('../../../src/integrations/runware/polling.js', () => ({
+  pollForResult: vi.fn(),
 }));
 
 vi.mock('../../../src/shared/config.js', () => ({
@@ -26,20 +25,14 @@ vi.mock('../../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     MAX_FILE_SIZE_MB: 50,
     ALLOWED_FILE_ROOTS: [],
-    ENABLE_DATABASE: false,
     LOG_LEVEL: 'error',
     NODE_ENV: 'test',
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    DATABASE_PATH: ':memory:',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },
   API_BASE_URL: 'https://api.runware.ai/v1',
-}));
-
-vi.mock('../../../src/integrations/runware/polling.js', () => ({
-  pollForResult: vi.fn(),
 }));
 
 // ============================================================================
@@ -133,25 +126,29 @@ describe('transcription', () => {
   });
 
   describe('handler success case', () => {
-    it('should return success with transcribed text', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'transcription',
+    it('should return success with transcribed text after polling', async () => {
+      // Initial submission returns acknowledgment (no text)
+      const submissionResponse = {
+        taskType: 'caption',
         taskUUID: 'task-uuid',
-      });
+      };
 
-      const mockPollForResult = pollForResult as ReturnType<typeof vi.fn>;
-      mockPollForResult.mockResolvedValue({
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(submissionResponse);
+
+      // Polling returns the actual result with text
+      const pollResponse = {
         result: {
-          taskType: 'transcription',
+          taskType: 'caption',
           taskUUID: 'task-uuid',
           status: 'success',
           text: 'This is the transcribed text from the video.',
-          detectedLanguage: 'en',
           cost: 0.01,
         },
-        attempts: 2,
-        elapsedMs: 4000,
-      });
+        attempts: 3,
+        elapsedMs: 6500,
+      };
+
+      (pollForResult as ReturnType<typeof vi.fn>).mockResolvedValue(pollResponse);
 
       const input = transcriptionInputSchema.parse({
         inputMedia: 'https://example.com/video.mp4',
@@ -164,14 +161,105 @@ describe('transcription', () => {
       expect(result.data).toBeDefined();
       expect(result.cost).toBe(0.01);
 
-      const data = result.data as { text: string; detectedLanguage?: string };
+      const data = result.data as { text: string; pollingAttempts: number; elapsedMs: number };
       expect(data.text).toBe('This is the transcribed text from the video.');
-      expect(data.detectedLanguage).toBe('en');
+      expect(data.pollingAttempts).toBe(3);
+      expect(data.elapsedMs).toBe(6500);
+    });
+
+    it('should send correct API format with inputs.video', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'caption',
+        taskUUID: 'task-uuid',
+      });
+
+      (pollForResult as ReturnType<typeof vi.fn>).mockResolvedValue({
+        result: {
+          taskType: 'caption',
+          taskUUID: 'task-uuid',
+          status: 'success',
+          text: 'Hello world',
+          cost: 0.001,
+        },
+        attempts: 1,
+        elapsedMs: 2000,
+      });
+
+      const input = transcriptionInputSchema.parse({
+        inputMedia: 'https://example.com/video.mp4',
+      });
+
+      await transcription(input, mockClient);
+
+      // Verify the request was sent with inputs: { video: ... } format
+      const requestCall = (mockClient.requestSingle as ReturnType<typeof vi.fn>).mock.calls[0];
+      const taskPayload = requestCall[0] as Record<string, unknown>;
+      expect(taskPayload.inputs).toEqual({ video: 'https://example.com/video.mp4' });
+      expect(taskPayload).not.toHaveProperty('inputImage');
+    });
+
+    it('should handle response without text (defaults to empty string)', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'caption',
+        taskUUID: 'task-uuid',
+      });
+
+      (pollForResult as ReturnType<typeof vi.fn>).mockResolvedValue({
+        result: {
+          taskType: 'caption',
+          taskUUID: 'task-uuid',
+          status: 'success',
+          cost: 0.001,
+        },
+        attempts: 2,
+        elapsedMs: 4000,
+      });
+
+      const input = transcriptionInputSchema.parse({
+        inputMedia: 'https://example.com/video.mp4',
+      });
+
+      const result = await transcription(input, mockClient);
+
+      expect(result.status).toBe('success');
+      const data = result.data as { text: string };
+      expect(data.text).toBe('');
+    });
+
+    it('should handle structured data in response', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'caption',
+        taskUUID: 'task-uuid',
+      });
+
+      (pollForResult as ReturnType<typeof vi.fn>).mockResolvedValue({
+        result: {
+          taskType: 'caption',
+          taskUUID: 'task-uuid',
+          status: 'success',
+          text: 'Transcript with metadata',
+          structuredData: { duration: 120, wordCount: 50 },
+          cost: 0.002,
+        },
+        attempts: 1,
+        elapsedMs: 2000,
+      });
+
+      const input = transcriptionInputSchema.parse({
+        inputMedia: 'https://example.com/video.mp4',
+      });
+
+      const result = await transcription(input, mockClient);
+
+      expect(result.status).toBe('success');
+      const data = result.data as { structuredData: { duration: number; wordCount: number } };
+      expect(data.structuredData).toBeDefined();
+      expect(data.structuredData.duration).toBe(120);
     });
   });
 
   describe('handler error case', () => {
-    it('should return error when client throws', async () => {
+    it('should return error when client throws on submission', async () => {
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
         new Error('API error'),
       );
@@ -185,30 +273,49 @@ describe('transcription', () => {
       expect(result.status).toBe('error');
       expect(result.message).toContain('API error');
     });
-  });
 
-  describe('cost tracking', () => {
-    it('should propagate cost from poll result', async () => {
+    it('should return error when polling fails', async () => {
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'transcription',
+        taskType: 'caption',
         taskUUID: 'task-uuid',
       });
 
-      const mockPollForResult = pollForResult as ReturnType<typeof vi.fn>;
-      mockPollForResult.mockResolvedValue({
+      (pollForResult as ReturnType<typeof vi.fn>).mockRejectedValue(
+        new Error('Polling timed out after 150 attempts'),
+      );
+
+      const input = transcriptionInputSchema.parse({
+        inputMedia: 'https://example.com/video.mp4',
+      });
+
+      const result = await transcription(input, mockClient);
+
+      expect(result.status).toBe('error');
+      expect(result.message).toContain('Polling timed out');
+    });
+  });
+
+  describe('cost tracking', () => {
+    it('should propagate cost from polling response', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'caption',
+        taskUUID: 'task-uuid',
+      });
+
+      (pollForResult as ReturnType<typeof vi.fn>).mockResolvedValue({
         result: {
-          taskType: 'transcription',
+          taskType: 'caption',
           taskUUID: 'task-uuid',
           status: 'success',
           text: 'Hello world',
           cost: 0.05,
         },
-        attempts: 1,
-        elapsedMs: 2000,
+        attempts: 2,
+        elapsedMs: 4000,
       });
 
       const input = transcriptionInputSchema.parse({
-        inputMedia: 'https://example.com/audio.wav',
+        inputMedia: 'https://example.com/video.mp4',
       });
 
       const result = await transcription(input, mockClient);

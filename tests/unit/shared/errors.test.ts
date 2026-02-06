@@ -11,7 +11,6 @@ import {
   FileTooLargeError,
   PathTraversalError,
   FolderNotFoundError,
-  DatabaseError,
   BatchPartialFailureError,
   ProviderNotSupportedError,
   ToolNotFoundError,
@@ -242,31 +241,6 @@ describe('FolderNotFoundError', () => {
   it('stores folderPath', () => {
     const error = new FolderNotFoundError('missing', '/var/images');
     expect(error.data.folderPath).toBe('/var/images');
-  });
-});
-
-// ============================================================================
-// DatabaseError
-// ============================================================================
-
-describe('DatabaseError', () => {
-  it('has correct code', () => {
-    const error = new DatabaseError('db fail', { operation: 'INSERT' });
-    expect(error.code).toBe(MCP_ERROR_CODES.DATABASE_ERROR);
-  });
-
-  it('stores operation and cause', () => {
-    const error = new DatabaseError('db fail', {
-      operation: 'SELECT',
-      cause: 'table not found',
-    });
-    expect(error.data.operation).toBe('SELECT');
-    expect(error.data.cause).toBe('table not found');
-  });
-
-  it('omits cause when not provided', () => {
-    const error = new DatabaseError('db fail', { operation: 'DELETE' });
-    expect(error.data).not.toHaveProperty('cause');
   });
 });
 

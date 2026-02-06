@@ -78,9 +78,6 @@ export const MCP_ERROR_CODES = {
   /** Media generation failed */
   GENERATION_FAILED: -32_106,
 
-  /** Database operation failed */
-  DATABASE_ERROR: -32_107,
-
   /** Batch operation partially failed */
   BATCH_PARTIAL_FAILURE: -32_108,
 
@@ -346,35 +343,6 @@ export class FolderNotFoundError extends McpError {
   constructor(message: string, folderPath: string) {
     super(message);
     this.data = { folderPath };
-  }
-}
-
-// ============================================================================
-// Database Errors
-// ============================================================================
-
-/**
- * Error from database operations.
- */
-export class DatabaseError extends McpError {
-  readonly code = MCP_ERROR_CODES.DATABASE_ERROR;
-  readonly data: Readonly<{
-    operation: string;
-    cause?: string;
-  }>;
-
-  constructor(
-    message: string,
-    options: {
-      operation: string;
-      cause?: string;
-    },
-  ) {
-    super(message);
-    this.data = {
-      operation: options.operation,
-      ...(options.cause !== undefined && { cause: options.cause }),
-    };
   }
 }
 

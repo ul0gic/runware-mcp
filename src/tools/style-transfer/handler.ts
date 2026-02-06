@@ -5,7 +5,6 @@
  * to apply artistic styles to source images via img2img generation.
  */
 
-import { recordAnalytics } from '../../database/operations.js';
 import {
   type RunwareClient,
   getDefaultClient,
@@ -266,10 +265,6 @@ function extractOutput(
     ...(captionUsed !== undefined && { captionUsed }),
     ...(input.includeCost && totalCost > 0 && { cost: totalCost }),
   };
-
-  if (totalCost > 0) {
-    recordAnalytics('styleTransfer', 'runware', totalCost);
-  }
 
   return successResult(
     `Applied ${input.style} style successfully`,

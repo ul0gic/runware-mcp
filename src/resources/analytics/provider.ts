@@ -2,15 +2,12 @@
  * Resource provider for usage analytics.
  *
  * Provides aggregated usage statistics and cost analytics
- * across different time periods. Uses database analytics when
- * available, falls back to session-only data.
+ * across different time periods from session data.
  *
  * URI pattern: runware://analytics/{period}
  * Periods: day, week, month, all
  */
 
-import { getAnalyticsSummary, getTopModels } from '../../database/operations.js';
-import { isDatabaseEnabled } from '../../shared/config.js';
 import { getSessionAudio } from '../generated-audio/provider.js';
 import { getSessionImages } from '../generated-images/provider.js';
 import { getSessionVideos } from '../generated-videos/provider.js';
@@ -31,27 +28,6 @@ const URI_PREFIX = 'runware://analytics/';
  * Valid analytics periods.
  */
 const VALID_PERIODS: readonly AnalyticsPeriod[] = ['day', 'week', 'month', 'all'];
-
-/**
- * Returns the number of days for a given analytics period.
- * Uses a switch to avoid object injection lint issues.
- */
-function getPeriodDays(period: AnalyticsPeriod): number {
-  switch (period) {
-    case 'day': {
-      return 1;
-    }
-    case 'week': {
-      return 7;
-    }
-    case 'month': {
-      return 30;
-    }
-    case 'all': {
-      return 365_000;
-    }
-  }
-}
 
 /**
  * Returns the display name for a given analytics period.
@@ -79,8 +55,7 @@ function getPeriodDisplayName(period: AnalyticsPeriod): string {
 // ============================================================================
 
 /**
- * Computes analytics from the current session stores only.
- * Used when database is not enabled.
+ * Computes analytics from the current session stores.
  *
  * @returns Analytics data from session stores
  */
@@ -126,48 +101,6 @@ function computeSessionAnalytics(): AnalyticsData {
     byTaskType: mapToTaskTypeUsage(taskTypeMap),
     byProvider: mapToProviderUsage(providerMap),
     topModels: mapToTopModels(modelMap),
-  };
-}
-
-// ============================================================================
-// Database Analytics
-// ============================================================================
-
-/**
- * Computes analytics from the database for a given period.
- *
- * @param period - The time period to analyze
- * @returns Analytics data from the database
- */
-function computeDatabaseAnalytics(period: AnalyticsPeriod): AnalyticsData {
-  const days = getPeriodDays(period);
-  const summary = getAnalyticsSummary(days);
-  const topModelsData = getTopModels(10);
-
-  const byTaskType: TaskTypeUsage[] = summary.byTaskType.map((entry) => ({
-    taskType: entry.taskType,
-    count: entry.count,
-    cost: entry.totalCost,
-  }));
-
-  const byProvider: ProviderUsage[] = summary.byProvider.map((entry) => ({
-    provider: entry.provider,
-    count: entry.count,
-    cost: entry.totalCost,
-  }));
-
-  const topModels: TopModelEntry[] = topModelsData.map((entry) => ({
-    model: entry.model,
-    count: entry.count,
-  }));
-
-  return {
-    period,
-    totalGenerations: summary.totalGenerations,
-    totalCost: summary.totalCost,
-    byTaskType,
-    byProvider,
-    topModels,
   };
 }
 
@@ -277,8 +210,7 @@ function isValidPeriod(value: string): value is AnalyticsPeriod {
  * Resource provider for usage analytics.
  *
  * Exposes analytics data for different time periods as MCP resources.
- * When database is enabled, provides historical analytics.
- * When database is disabled, provides session-only analytics.
+ * Provides session-only analytics computed from in-memory stores.
  */
 export const analyticsProvider: ResourceProvider = {
   uri: 'runware://analytics/{period}',
@@ -290,9 +222,7 @@ export const analyticsProvider: ResourceProvider = {
     const entries = VALID_PERIODS.map((period) => ({
       uri: `${URI_PREFIX}${period}`,
       name: getPeriodDisplayName(period),
-      description: isDatabaseEnabled()
-        ? `Analytics from database for ${period}`
-        : `Session-only analytics for ${period}`,
+      description: `Session-only analytics for ${period}`,
       mimeType: 'application/json',
     }));
 
@@ -306,9 +236,7 @@ export const analyticsProvider: ResourceProvider = {
       return Promise.resolve(null);
     }
 
-    const analyticsData = isDatabaseEnabled()
-      ? computeDatabaseAnalytics(periodString)
-      : { ...computeSessionAnalytics(), period: periodString };
+    const analyticsData = { ...computeSessionAnalytics(), period: periodString };
 
     return Promise.resolve({
       uri,

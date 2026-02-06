@@ -14,12 +14,10 @@ vi.mock('../../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     MAX_FILE_SIZE_MB: 50,
     ALLOWED_FILE_ROOTS: [],
-    ENABLE_DATABASE: false,
     LOG_LEVEL: 'error',
     NODE_ENV: 'test',
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    DATABASE_PATH: ':memory:',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },
@@ -406,11 +404,12 @@ describe('submitAndPoll', () => {
   });
 
   it('submits a task then polls for result', async () => {
+    const request = mockClient.request as ReturnType<typeof vi.fn>;
     const requestSingle = mockClient.requestSingle as ReturnType<typeof vi.fn>;
 
-    // First call: task submission
-    requestSingle.mockResolvedValueOnce({ taskType: 'videoInference', taskUUID: 'submit-uuid' });
-    // Second call: poll result (success)
+    // Submission uses request()
+    request.mockResolvedValueOnce({ data: [] });
+    // Poll uses requestSingle() via pollForResult
     requestSingle.mockResolvedValueOnce({
       taskType: 'videoInference',
       taskUUID: 'submit-uuid',
@@ -435,15 +434,19 @@ describe('submitAndPoll', () => {
     const result = await resultPromise;
 
     expect(result.result.status).toBe('success');
-    // First call was for submission, second for polling
-    expect(requestSingle).toHaveBeenCalledTimes(2);
+    // Submission via request(), polling via requestSingle()
+    expect(request).toHaveBeenCalledTimes(1);
+    expect(requestSingle).toHaveBeenCalledTimes(1);
   });
 
   it('passes signal to the submission request', async () => {
     const controller = new AbortController();
+    const request = mockClient.request as ReturnType<typeof vi.fn>;
     const requestSingle = mockClient.requestSingle as ReturnType<typeof vi.fn>;
 
-    requestSingle.mockResolvedValueOnce({ taskType: 'audioInference', taskUUID: 'audio-uuid' });
+    // Submission uses request()
+    request.mockResolvedValueOnce({ data: [] });
+    // Poll uses requestSingle() via pollForResult
     requestSingle.mockResolvedValueOnce({
       taskType: 'audioInference',
       taskUUID: 'audio-uuid',
@@ -466,8 +469,8 @@ describe('submitAndPoll', () => {
 
     await resultPromise;
 
-    // The first call (submission) should include the signal
-    const firstCallOptions = requestSingle.mock.calls[0]![1] as { signal?: AbortSignal };
+    // The submission call (request) should include the signal
+    const firstCallOptions = request.mock.calls[0]![1] as { signal?: AbortSignal };
     expect(firstCallOptions.signal).toBe(controller.signal);
   });
 });

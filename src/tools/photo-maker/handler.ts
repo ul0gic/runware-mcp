@@ -5,7 +5,6 @@
  * Automatically prepends the "img" trigger word if not present in the prompt.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -187,34 +186,6 @@ export async function photoMaker(
     // Process response
     const output = processResponse(response.data);
     const imageCount = output.images.length;
-
-    // Save to database if enabled
-    // model, width, height all have defaults from schema
-    for (const image of output.images) {
-      saveGeneration({
-        taskType: 'photoMaker',
-        taskUUID: task.taskUUID,
-        prompt: input.positivePrompt,
-        model: input.model,
-        provider: 'civitai',
-        status: 'completed',
-        outputUrl: image.imageURL ?? null,
-        outputUuid: image.imageUUID,
-        width: input.width,
-        height: input.height,
-        cost: output.cost === undefined ? null : output.cost / imageCount,
-        metadata: JSON.stringify({
-          seed: image.seed,
-          styleStrength: input.styleStrength,
-          inputImageCount: input.inputImages.length,
-        }),
-      });
-    }
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('photoMaker', 'civitai', output.cost);
-    }
 
     // Return result
     const message = imageCount === 1

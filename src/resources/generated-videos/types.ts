@@ -1,8 +1,7 @@
 /**
  * Types for the generated videos resource.
  *
- * Defines the shape of video entries stored in the in-memory session store
- * and persisted to the database when enabled.
+ * Defines the shape of video entries stored in the in-memory session store.
  */
 
 /**

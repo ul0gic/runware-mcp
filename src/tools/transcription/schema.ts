@@ -1,8 +1,9 @@
 /**
  * Schema definitions for the transcription tool.
  *
- * Transcription converts video or audio content to text,
- * with optional timestamp segments.
+ * Transcription converts video content to text using the caption API
+ * with the memories:1@1 model. Only video formats are supported
+ * (MP4, M4V, QuickTime). The API is async and requires polling.
  */
 
 import { z } from 'zod';
@@ -16,8 +17,8 @@ import { z } from 'zod';
  */
 export const transcriptionInputSchema = z.object({
   /**
-   * Video or audio file to transcribe.
-   * Accepts UUID or URL of a video/audio file.
+   * Video file to transcribe.
+   * Accepts UUID or URL of a video file (MP4, M4V, QuickTime).
    */
   inputMedia: z.string().min(1),
 
@@ -50,26 +51,6 @@ export type TranscriptionInput = z.infer<typeof transcriptionInputSchema>;
 // ============================================================================
 
 /**
- * Schema for a transcription segment with timestamps.
- */
-export const transcriptionSegmentSchema = z.object({
-  /**
-   * Start time of the segment in seconds.
-   */
-  start: z.number(),
-
-  /**
-   * End time of the segment in seconds.
-   */
-  end: z.number(),
-
-  /**
-   * Transcribed text for this segment.
-   */
-  text: z.string(),
-});
-
-/**
  * Schema for transcription output.
  */
 export const transcriptionOutputSchema = z.object({
@@ -79,14 +60,9 @@ export const transcriptionOutputSchema = z.object({
   text: z.string(),
 
   /**
-   * Array of timestamped segments (if available).
+   * Structured data from the model (if available).
    */
-  segments: z.array(transcriptionSegmentSchema).optional(),
-
-  /**
-   * Detected language (ISO 639-1 code).
-   */
-  detectedLanguage: z.string().optional(),
+  structuredData: z.record(z.string(), z.unknown()).optional(),
 
   /**
    * Cost of the operation (USD).
@@ -94,12 +70,12 @@ export const transcriptionOutputSchema = z.object({
   cost: z.number().optional(),
 
   /**
-   * Number of polling attempts (if async).
+   * Number of polling attempts made before the result was ready.
    */
   pollingAttempts: z.number().optional(),
 
   /**
-   * Elapsed time in milliseconds.
+   * Total elapsed time in milliseconds for the async operation.
    */
   elapsedMs: z.number().optional(),
 });

@@ -5,7 +5,6 @@
  * Supports concurrent generation with progress reporting.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import {
   type RunwareClient,
   createTaskRequest,
@@ -126,26 +125,6 @@ async function processPrompt(
       { signal: context?.signal },
     );
 
-    // Save to database if enabled
-    saveGeneration({
-      taskType: 'imageInference',
-      taskUUID: task.taskUUID,
-      prompt,
-      model: input.model,
-      provider: 'runware',
-      status: 'completed',
-      outputUrl: response.imageURL ?? null,
-      outputUuid: response.imageUUID ?? null,
-      width: input.width,
-      height: input.height,
-      cost: response.cost ?? null,
-      metadata: JSON.stringify({
-        batchIndex: index,
-        steps: input.steps,
-        cfgScale: input.CFGScale,
-      }),
-    });
-
     return {
       prompt,
       index,
@@ -231,11 +210,6 @@ export async function batchImageInference(
     const successful = results.filter((r) => r.status === 'success').length;
     const failed = results.filter((r) => r.status === 'failed').length;
     const totalCost = results.reduce((sum, r) => sum + (r.cost ?? 0), 0);
-
-    // Record analytics
-    if (totalCost > 0) {
-      recordAnalytics('batchImageInference', 'runware', totalCost);
-    }
 
     // Report final progress
     context?.progress?.report({

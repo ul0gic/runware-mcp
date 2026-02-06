@@ -5,11 +5,9 @@
  * Video generation is asynchronous and requires polling for results.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
-import { detectProvider } from '../../shared/provider-settings.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, type TaskUUID, successResult, errorResult } from '../../shared/types.js';
 
@@ -218,34 +216,6 @@ export async function videoInference(
       pollResult.attempts,
       pollResult.elapsedMs,
     );
-
-    // Save to database if enabled
-    const provider = detectProvider(input.model);
-    saveGeneration({
-      taskType: 'videoInference',
-      taskUUID: task.taskUUID,
-      prompt: input.positivePrompt,
-      model: input.model,
-      provider: provider ?? null,
-      status: 'completed',
-      outputUrl: output.videoURL ?? null,
-      outputUuid: output.videoUUID,
-      width: input.width ?? null,
-      height: input.height ?? null,
-      cost: output.cost ?? null,
-      duration: input.duration,
-      metadata: JSON.stringify({
-        seed: output.seed,
-        fps: input.fps,
-        pollingAttempts: output.pollingAttempts,
-        elapsedMs: output.elapsedMs,
-      }),
-    });
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('videoInference', provider ?? null, output.cost);
-    }
 
     // Report progress: complete
     context?.progress?.report({

@@ -5,7 +5,6 @@
  * Supports 2x and 4x upscale factors.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -118,29 +117,6 @@ export async function imageUpscale(
 
     // Process response
     const output = processResponse(response);
-
-    // Save to database if enabled
-    saveGeneration({
-      taskType: 'upscale',
-      taskUUID: task.taskUUID,
-      prompt: `Upscale ${String(input.upscaleFactor)}x`,
-      model: input.model ?? null,
-      provider: 'runware',
-      status: 'completed',
-      outputUrl: output.imageURL ?? null,
-      outputUuid: output.imageUUID,
-      width: null,
-      height: null,
-      cost: output.cost ?? null,
-      metadata: JSON.stringify({
-        upscaleFactor: input.upscaleFactor,
-      }),
-    });
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('upscale', 'runware', output.cost);
-    }
 
     // Return result
     const message = `Image upscaled ${String(input.upscaleFactor)}x successfully`;

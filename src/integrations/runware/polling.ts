@@ -231,8 +231,9 @@ export async function submitAndPoll<TResult extends AsyncTaskResponse>(
   task: { taskType: string; taskUUID: string },
   options?: PollOptions,
 ): Promise<PollResult<TResult>> {
-  // Submit the task
-  await client.requestSingle(task, {
+  // Submit the task — use request() instead of requestSingle() because
+  // async tasks may return { data: [] } on submission, which requestSingle() rejects.
+  await client.request([task], {
     signal: options?.signal,
   });
 

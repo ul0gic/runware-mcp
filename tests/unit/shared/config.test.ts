@@ -20,8 +20,6 @@ vi.mock('../../../src/shared/config.js', () => {
     POLL_MAX_ATTEMPTS: 150,
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    ENABLE_DATABASE: false,
-    DATABASE_PATH: './runware-mcp.db',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   };
@@ -38,7 +36,6 @@ vi.mock('../../../src/shared/config.js', () => {
     isDevelopment: (): boolean => mockConfig.NODE_ENV === 'development',
     isProduction: (): boolean => mockConfig.NODE_ENV === 'production',
     isTest: (): boolean => mockConfig.NODE_ENV === 'test',
-    isDatabaseEnabled: (): boolean => mockConfig.ENABLE_DATABASE,
     shouldLog: (level: string): boolean => {
       const levels = ['debug', 'info', 'warn', 'error'];
       const configIdx = levels.indexOf(mockConfig.LOG_LEVEL);
@@ -60,7 +57,6 @@ import {
   isDevelopment,
   isProduction,
   isTest,
-  isDatabaseEnabled,
   shouldLog,
 } from '../../../src/shared/config.js';
 
@@ -96,9 +92,6 @@ describe('config object shape', () => {
     expect(config.RATE_LIMIT_REFILL_RATE).toBeGreaterThan(0);
   });
 
-  it('has ENABLE_DATABASE as boolean', () => {
-    expect(typeof config.ENABLE_DATABASE).toBe('boolean');
-  });
 });
 
 // ============================================================================
@@ -156,12 +149,6 @@ describe('isProduction', () => {
 describe('isTest', () => {
   it('returns true when NODE_ENV is test', () => {
     expect(isTest()).toBe(true);
-  });
-});
-
-describe('isDatabaseEnabled', () => {
-  it('returns false when ENABLE_DATABASE is false', () => {
-    expect(isDatabaseEnabled()).toBe(false);
   });
 });
 

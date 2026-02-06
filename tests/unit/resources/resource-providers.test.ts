@@ -11,30 +11,14 @@ vi.mock('../../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     MAX_FILE_SIZE_MB: 50,
     ALLOWED_FILE_ROOTS: [],
-    ENABLE_DATABASE: false,
     LOG_LEVEL: 'error',
     NODE_ENV: 'test',
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    DATABASE_PATH: ':memory:',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },
   API_BASE_URL: 'https://api.runware.ai/v1',
-  isDatabaseEnabled: vi.fn().mockReturnValue(false),
-}));
-
-vi.mock('../../../src/database/operations.js', () => ({
-  getGeneration: vi.fn().mockReturnValue(null),
-  getGenerationsByType: vi.fn().mockReturnValue([]),
-  getRecentGenerations: vi.fn().mockReturnValue([]),
-  getAnalyticsSummary: vi.fn().mockReturnValue({
-    totalGenerations: 0,
-    totalCost: 0,
-    byTaskType: [],
-    byProvider: [],
-  }),
-  getTopModels: vi.fn().mockReturnValue([]),
 }));
 
 // ============================================================================
@@ -75,8 +59,6 @@ import {
   RESOURCE_PROVIDERS,
   findProviderForUri,
 } from '../../../src/resources/index.js';
-
-import { getGeneration, getGenerationsByType, getRecentGenerations } from '../../../src/database/operations.js';
 
 import type { GeneratedImageEntry } from '../../../src/resources/generated-images/types.js';
 import type { GeneratedVideoEntry } from '../../../src/resources/generated-videos/types.js';
@@ -139,8 +121,6 @@ function makeAudioEntry(overrides?: Partial<GeneratedAudioEntry>): GeneratedAudi
 describe('generatedImagesProvider', () => {
   beforeEach(() => {
     clearSessionImages();
-    vi.mocked(getGenerationsByType).mockReturnValue([]);
-    vi.mocked(getGeneration).mockReturnValue(null);
   });
 
   describe('metadata', () => {
@@ -219,78 +199,6 @@ describe('generatedImagesProvider', () => {
       expect(entries[0]?.description).toContain('civitai:943001@1055701');
     });
 
-    it('includes database images avoiding duplicates', async () => {
-      registerImage(makeImageEntry({ id: 'img-001' }));
-      vi.mocked(getGenerationsByType).mockReturnValue([
-        {
-          id: 'img-001',
-          taskType: 'imageInference',
-          prompt: 'db prompt',
-          model: 'model',
-          width: 512,
-          height: 512,
-          outputUrl: 'https://example.com/img.png',
-          cost: 0.01,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          duration: null,
-          metadata: null,
-          errorMessage: null,
-        },
-        {
-          id: 'img-002',
-          taskType: 'imageInference',
-          prompt: 'another image',
-          model: 'other-model',
-          width: 768,
-          height: 768,
-          outputUrl: 'https://example.com/img2.png',
-          cost: 0.02,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          duration: null,
-          metadata: null,
-          errorMessage: null,
-        },
-      ]);
-      const entries = await generatedImagesProvider.list();
-      // img-001 from session + img-002 from db (img-001 db skipped as duplicate)
-      expect(entries).toHaveLength(2);
-      expect(entries.map((e) => e.uri)).toContain('runware://images/img-002');
-    });
-
-    it('handles db images with null prompt', async () => {
-      vi.mocked(getGenerationsByType).mockReturnValue([
-        {
-          id: 'img-db-null',
-          taskType: 'imageInference',
-          prompt: null,
-          model: null,
-          width: null,
-          height: null,
-          outputUrl: null,
-          cost: null,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          duration: null,
-          metadata: null,
-          errorMessage: null,
-        },
-      ]);
-      const entries = await generatedImagesProvider.list();
-      expect(entries).toHaveLength(1);
-      expect(entries[0]?.name).toBe('Image img-db-null');
-      expect(entries[0]?.description).toContain('unknown');
-    });
   });
 
   describe('get()', () => {
@@ -303,30 +211,6 @@ describe('generatedImagesProvider', () => {
       expect(result?.mimeType).toBe('application/json');
       const parsed = JSON.parse(result?.text ?? '{}');
       expect(parsed.id).toBe('img-001');
-    });
-
-    it('falls back to database when not in session', async () => {
-      vi.mocked(getGeneration).mockReturnValue({
-        id: 'img-db-001',
-        taskType: 'imageInference',
-        prompt: 'db image',
-        model: 'model',
-        width: 512,
-        height: 512,
-        outputUrl: 'https://example.com/img.png',
-        cost: 0.01,
-        status: 'completed' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        height2: null,
-        width2: null,
-        duration: null,
-        metadata: null,
-        errorMessage: null,
-      });
-      const result = await generatedImagesProvider.get('runware://images/img-db-001');
-      expect(result).not.toBeNull();
-      expect(result?.mimeType).toBe('application/json');
     });
 
     it('returns null for non-existent image', async () => {
@@ -343,8 +227,6 @@ describe('generatedImagesProvider', () => {
 describe('generatedVideosProvider', () => {
   beforeEach(() => {
     clearSessionVideos();
-    vi.mocked(getGenerationsByType).mockReturnValue([]);
-    vi.mocked(getGeneration).mockReturnValue(null);
   });
 
   describe('metadata', () => {
@@ -405,76 +287,6 @@ describe('generatedVideosProvider', () => {
       expect(entries[0]?.name).toBe('Video vid-001');
     });
 
-    it('includes db videos avoiding duplicates', async () => {
-      registerVideo(makeVideoEntry({ id: 'vid-001' }));
-      vi.mocked(getGenerationsByType).mockReturnValue([
-        {
-          id: 'vid-001',
-          taskType: 'videoInference',
-          prompt: 'db video',
-          model: 'model',
-          width: null,
-          height: null,
-          duration: 5,
-          outputUrl: 'https://example.com/vid.mp4',
-          cost: 0.50,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          metadata: null,
-          errorMessage: null,
-        },
-        {
-          id: 'vid-002',
-          taskType: 'videoInference',
-          prompt: 'another video',
-          model: 'other-model',
-          width: null,
-          height: null,
-          duration: null,
-          outputUrl: 'https://example.com/vid2.mp4',
-          cost: 0.60,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          metadata: null,
-          errorMessage: null,
-        },
-      ]);
-      const entries = await generatedVideosProvider.list();
-      expect(entries).toHaveLength(2);
-    });
-
-    it('handles db videos with null duration', async () => {
-      vi.mocked(getGenerationsByType).mockReturnValue([
-        {
-          id: 'vid-db-null',
-          taskType: 'videoInference',
-          prompt: null,
-          model: null,
-          width: null,
-          height: null,
-          duration: null,
-          outputUrl: null,
-          cost: null,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          metadata: null,
-          errorMessage: null,
-        },
-      ]);
-      const entries = await generatedVideosProvider.list();
-      expect(entries).toHaveLength(1);
-      expect(entries[0]?.name).toBe('Video vid-db-null');
-      expect(entries[0]?.description).toContain('unknown');
-    });
   });
 
   describe('get()', () => {
@@ -485,29 +297,6 @@ describe('generatedVideosProvider', () => {
       expect(result?.uri).toBe('runware://videos/vid-001');
       const parsed = JSON.parse(result?.text ?? '{}');
       expect(parsed.id).toBe('vid-001');
-    });
-
-    it('falls back to database', async () => {
-      vi.mocked(getGeneration).mockReturnValue({
-        id: 'vid-db-001',
-        taskType: 'videoInference',
-        prompt: 'db video',
-        model: 'model',
-        width: null,
-        height: null,
-        duration: 5,
-        outputUrl: 'https://example.com/vid.mp4',
-        cost: 0.50,
-        status: 'completed' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        height2: null,
-        width2: null,
-        metadata: null,
-        errorMessage: null,
-      });
-      const result = await generatedVideosProvider.get('runware://videos/vid-db-001');
-      expect(result).not.toBeNull();
     });
 
     it('returns null for non-existent video', async () => {
@@ -524,8 +313,6 @@ describe('generatedVideosProvider', () => {
 describe('generatedAudioProvider', () => {
   beforeEach(() => {
     clearSessionAudio();
-    vi.mocked(getGenerationsByType).mockReturnValue([]);
-    vi.mocked(getGeneration).mockReturnValue(null);
   });
 
   describe('metadata', () => {
@@ -586,76 +373,6 @@ describe('generatedAudioProvider', () => {
       expect(entries[0]?.name).toBe('Audio aud-001');
     });
 
-    it('includes db audio avoiding duplicates', async () => {
-      registerAudio(makeAudioEntry({ id: 'aud-001' }));
-      vi.mocked(getGenerationsByType).mockReturnValue([
-        {
-          id: 'aud-001',
-          taskType: 'audioInference',
-          prompt: 'db audio',
-          model: 'model',
-          width: null,
-          height: null,
-          duration: 30,
-          outputUrl: 'https://example.com/aud.mp3',
-          cost: 0.10,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          metadata: null,
-          errorMessage: null,
-        },
-        {
-          id: 'aud-002',
-          taskType: 'audioInference',
-          prompt: 'another audio',
-          model: 'mirelo:1@1',
-          width: null,
-          height: null,
-          duration: null,
-          outputUrl: 'https://example.com/aud2.mp3',
-          cost: 0.20,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          metadata: null,
-          errorMessage: null,
-        },
-      ]);
-      const entries = await generatedAudioProvider.list();
-      expect(entries).toHaveLength(2);
-    });
-
-    it('handles db audio with null duration and prompt', async () => {
-      vi.mocked(getGenerationsByType).mockReturnValue([
-        {
-          id: 'aud-db-null',
-          taskType: 'audioInference',
-          prompt: null,
-          model: null,
-          width: null,
-          height: null,
-          duration: null,
-          outputUrl: null,
-          cost: null,
-          status: 'completed' as const,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          height2: null,
-          width2: null,
-          metadata: null,
-          errorMessage: null,
-        },
-      ]);
-      const entries = await generatedAudioProvider.list();
-      expect(entries).toHaveLength(1);
-      expect(entries[0]?.name).toBe('Audio aud-db-null');
-      expect(entries[0]?.description).toContain('unknown');
-    });
   });
 
   describe('get()', () => {
@@ -666,29 +383,6 @@ describe('generatedAudioProvider', () => {
       expect(result?.uri).toBe('runware://audio/aud-001');
       const parsed = JSON.parse(result?.text ?? '{}');
       expect(parsed.id).toBe('aud-001');
-    });
-
-    it('falls back to database', async () => {
-      vi.mocked(getGeneration).mockReturnValue({
-        id: 'aud-db-001',
-        taskType: 'audioInference',
-        prompt: 'db audio',
-        model: 'model',
-        width: null,
-        height: null,
-        duration: 30,
-        outputUrl: 'https://example.com/aud.mp3',
-        cost: 0.10,
-        status: 'completed' as const,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        height2: null,
-        width2: null,
-        metadata: null,
-        errorMessage: null,
-      });
-      const result = await generatedAudioProvider.get('runware://audio/aud-db-001');
-      expect(result).not.toBeNull();
     });
 
     it('returns null for non-existent audio', async () => {
@@ -708,9 +402,6 @@ describe('sessionHistoryProvider', () => {
     clearSessionVideos();
     clearSessionAudio();
     clearSessionEvents();
-    vi.mocked(getGenerationsByType).mockReturnValue([]);
-    vi.mocked(getGeneration).mockReturnValue(null);
-    vi.mocked(getRecentGenerations).mockReturnValue([]);
   });
 
   describe('metadata', () => {

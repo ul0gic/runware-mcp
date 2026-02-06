@@ -1,11 +1,11 @@
 /**
  * Handler for the transcription tool.
  *
- * Implements video/audio transcription using the Runware API.
- * May use async processing for longer content.
+ * Implements video transcription using the Runware caption API
+ * with the memories:1@1 model. The API is async — submit with
+ * `inputs: { video: "..." }` then poll with `getResponse`.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import {
   type RunwareClient,
   createTaskRequest,
@@ -13,7 +13,6 @@ import {
 } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
-import { detectProvider } from '../../shared/provider-settings.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type TaskUUID,
@@ -29,19 +28,12 @@ import type { TranscriptionInput, TranscriptionOutput } from './schema.js';
 // Types
 // ============================================================================
 
-interface TranscriptionSegment {
-  readonly start: number;
-  readonly end: number;
-  readonly text: string;
-}
-
 interface TranscriptionApiResponse {
-  readonly taskType: 'audioTranscription';
+  readonly taskType: 'caption';
   readonly taskUUID: string;
   readonly status?: 'processing' | 'success' | 'error';
   readonly text?: string;
-  readonly segments?: readonly TranscriptionSegment[];
-  readonly detectedLanguage?: string;
+  readonly structuredData?: Record<string, unknown>;
   readonly cost?: number;
 }
 
@@ -51,17 +43,19 @@ interface TranscriptionApiResponse {
 
 /**
  * Builds the API request from validated input.
+ *
+ * The memories:1@1 model uses `inputs: { video: "..." }` format
+ * for the video source. The API is async and requires polling.
  */
 function buildApiRequest(input: TranscriptionInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
-    inputMedia: input.inputMedia,
+    inputs: { video: input.inputMedia },
     model: input.model,
-    deliveryMethod: 'async', // Transcription may take time
     includeCost: input.includeCost,
   };
 
   if (input.language !== undefined) {
-    request.language = input.language;
+    request.prompt = `Transcribe the video content. Language: ${input.language}`;
   }
 
   return request;
@@ -81,14 +75,7 @@ function processResponse(
 ): TranscriptionOutput {
   return {
     text: response.text ?? '',
-    ...(response.segments !== undefined && {
-      segments: response.segments.map((seg) => ({
-        start: seg.start,
-        end: seg.end,
-        text: seg.text,
-      })),
-    }),
-    ...(response.detectedLanguage !== undefined && { detectedLanguage: response.detectedLanguage }),
+    ...(response.structuredData !== undefined && { structuredData: response.structuredData }),
     ...(response.cost !== undefined && { cost: response.cost }),
     pollingAttempts,
     elapsedMs,
@@ -100,14 +87,17 @@ function processResponse(
 // ============================================================================
 
 /**
- * Transcribes video or audio using the Runware API.
+ * Transcribes video using the Runware caption API.
  *
- * Converts speech in video/audio content to text with optional
- * timestamped segments. Uses async processing for reliability.
+ * Uses the caption taskType with the memories:1@1 model
+ * to convert speech in video content to text. The API is async:
+ * 1. Submit the task with `inputs: { video: "..." }`
+ * 2. Poll with `getResponse` until `status: "success"`
+ * 3. The poll result contains the transcribed `text`
  *
  * @param input - Validated input parameters
  * @param client - Optional Runware client
- * @param context - Optional tool context for progress and cancellation
+ * @param context - Optional tool context for cancellation and progress
  * @returns Tool result with transcribed text
  */
 export async function transcription(
@@ -121,14 +111,16 @@ export async function transcription(
     // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
+    // Build request — uses inputs: { video: "..." } for the caption API
     const requestParams = buildApiRequest(input);
-    const task = createTaskRequest('audioTranscription', requestParams);
+    const task = createTaskRequest('caption', requestParams);
 
-    // Submit the task
-    await runwareClient.requestSingle<TranscriptionApiResponse>(task, {
-      signal: context?.signal,
-    });
+    // Submit the task — the API is async for memories:1@1, the initial
+    // response is just an acknowledgment with taskType and taskUUID.
+    await runwareClient.requestSingle<TranscriptionApiResponse>(
+      task,
+      { signal: context?.signal },
+    );
 
     // Report progress: task submitted
     context?.progress?.report({
@@ -137,7 +129,7 @@ export async function transcription(
       message: 'Transcription task submitted, polling for result...',
     });
 
-    // Poll for result
+    // Poll for result — the actual text comes from the poll response
     const pollResult = await pollForResult<TranscriptionApiResponse>(task.taskUUID as TaskUUID, {
       client: runwareClient,
       signal: context?.signal,
@@ -147,35 +139,6 @@ export async function transcription(
     // Process response
     const output = processResponse(pollResult.result, pollResult.attempts, pollResult.elapsedMs);
 
-    // Save to database if enabled
-    const provider = detectProvider(input.model);
-    saveGeneration({
-      taskType: 'audioTranscription',
-      taskUUID: task.taskUUID,
-      prompt: `Transcribe media (${input.language ?? 'auto-detect'})`,
-      model: input.model,
-      provider: provider ?? 'memories',
-      status: 'completed',
-      outputUrl: null,
-      outputUuid: task.taskUUID,
-      width: null,
-      height: null,
-      cost: output.cost ?? null,
-      metadata: JSON.stringify({
-        language: input.language,
-        detectedLanguage: output.detectedLanguage,
-        segmentCount: output.segments?.length,
-        textLength: output.text.length,
-        pollingAttempts: output.pollingAttempts,
-        elapsedMs: output.elapsedMs,
-      }),
-    });
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('audioTranscription', provider ?? 'memories', output.cost);
-    }
-
     // Report progress: complete
     context?.progress?.report({
       progress: 100,
@@ -183,10 +146,9 @@ export async function transcription(
       message: 'Transcription complete',
     });
 
-    const wordCount = output.text.split(/\s+/).filter((w) => w.length > 0).length;
     const elapsedSeconds = Math.round((output.elapsedMs ?? 0) / 1000);
     return successResult(
-      `Transcribed ${String(wordCount)} words in ${String(elapsedSeconds)}s`,
+      `Video transcribed successfully in ${String(elapsedSeconds)}s (${String(output.pollingAttempts)} poll attempts)`,
       output,
       output.cost,
     );
@@ -202,13 +164,13 @@ export async function transcription(
 export const transcriptionToolDefinition = {
   name: 'transcription',
   description:
-    'Transcribe video or audio content to text. Supports multiple languages with auto-detection.',
+    'Transcribe video content to text. Supports multiple languages with auto-detection.',
   inputSchema: {
     type: 'object',
     properties: {
       inputMedia: {
         type: 'string',
-        description: 'Video or audio file to transcribe (UUID or URL)',
+        description: 'Video file to transcribe (UUID or URL). Supported formats: MP4, M4V, QuickTime.',
       },
       model: {
         type: 'string',

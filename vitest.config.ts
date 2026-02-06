@@ -17,8 +17,6 @@ export default defineConfig({
         'src/resources/*/index.ts',
         'src/resources/*/types.ts',
         'src/prompts/*/index.ts',
-        'src/database/index.ts',
-        'src/database/types.ts',
         'src/constants/index.ts',
         'src/index.ts',
       ],

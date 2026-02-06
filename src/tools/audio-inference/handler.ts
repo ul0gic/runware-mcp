@@ -6,7 +6,6 @@
  */
 
 import { isValidAudioModel, isValidTTSVoice } from '../../constants/audio-models.js';
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import {
   type RunwareClient,
   createTaskRequest,
@@ -14,7 +13,6 @@ import {
 } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { RunwareApiError, wrapError } from '../../shared/errors.js';
-import { detectProvider } from '../../shared/provider-settings.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type TaskUUID,
@@ -98,9 +96,8 @@ function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
   };
 
   // Optional parameters
-  if (input.audioType !== undefined) {
-    request.audioType = input.audioType;
-  }
+  // NOTE: audioType is intentionally NOT sent to the API — Runware rejects it
+  // as an unsupported parameter. It remains in the schema for informational use only.
   if (input.voice !== undefined) {
     request.voice = input.voice;
   }
@@ -203,8 +200,9 @@ export async function audioInference(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('audioInference', requestParams);
 
-    // Submit the task
-    await runwareClient.requestSingle<AudioInferenceApiResponse>(task, {
+    // Submit the task — use request() instead of requestSingle() because
+    // async tasks may return { data: [] } on submission, which requestSingle() rejects.
+    await runwareClient.request<AudioInferenceApiResponse>([task], {
       signal: context?.signal,
     });
 
@@ -224,34 +222,6 @@ export async function audioInference(
 
     // Process response
     const output = processResponse(pollResult.result, pollResult.attempts, pollResult.elapsedMs);
-
-    // Save to database if enabled
-    const provider = detectProvider(input.model);
-    saveGeneration({
-      taskType: 'audioInference',
-      taskUUID: task.taskUUID,
-      prompt: input.positivePrompt,
-      model: input.model,
-      provider: provider ?? null,
-      status: 'completed',
-      outputUrl: output.results[0]?.audioURL ?? null,
-      outputUuid: output.results[0]?.audioUUID ?? task.taskUUID,
-      width: null,
-      height: null,
-      cost: output.cost ?? null,
-      duration: input.duration,
-      metadata: JSON.stringify({
-        audioType: input.audioType,
-        voice: input.voice,
-        pollingAttempts: output.pollingAttempts,
-        elapsedMs: output.elapsedMs,
-      }),
-    });
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('audioInference', provider ?? null, output.cost);
-    }
 
     // Report progress: complete
     context?.progress?.report({

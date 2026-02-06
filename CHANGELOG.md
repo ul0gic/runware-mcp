@@ -20,7 +20,6 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 - Zod schema validation on all tool inputs and configuration
 - Token bucket rate limiter with configurable burst and refill rate
 - LRU cache for repeated lookups
-- Optional SQLite persistence via `better-sqlite3` and Drizzle ORM
 - Branded types for API keys, task UUIDs, image/video/audio UUIDs
 - Progress reporting for long-running operations
 - AbortController-based cancellation support
@@ -96,15 +95,6 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 - **PixVerse** -- 20 viral effects, 21 camera movements, multi-clip mode
 - **Sync.so** -- lip sync, speaker detection, occlusion handling, audio segments
 
-#### Database
-
-- Optional SQLite database with Drizzle ORM
-- `generations` table for tracking all media generations with metadata
-- `watchedFolders` table for folder watch configurations
-- `analytics` table for daily aggregated usage statistics
-- Full CRUD operations, date range queries, and full-text search on prompts
-- Analytics aggregation by provider, model, and task type
-
 #### Security
 
 - Path traversal prevention via canonicalization and symlink resolution
@@ -120,7 +110,7 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 - 82%+ line, statement, and function coverage
 - 67%+ branch coverage
 - Unit tests for all 22 tools, shared modules, and resource providers
-- Integration tests for MCP protocol handlers and database operations
+- Integration tests for MCP protocol handlers
 
 ### Fixed
 

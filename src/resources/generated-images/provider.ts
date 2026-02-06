@@ -2,13 +2,11 @@
  * Resource provider for generated images.
  *
  * Maintains an in-memory session store of all images generated
- * during the current session. Also queries the database for
- * persisted images when database is enabled.
+ * during the current session.
  *
  * URI pattern: runware://images/{imageId}
  */
 
-import { getGeneration, getGenerationsByType } from '../../database/operations.js';
 import { truncate } from '../../shared/utils.js';
 
 import type { GeneratedImageEntry } from './types.js';
@@ -70,7 +68,6 @@ const URI_PREFIX = 'runware://images/';
  * Resource provider for generated images.
  *
  * Exposes all images generated in the current session as MCP resources.
- * When database is enabled, also includes persisted images from previous sessions.
  */
 export const generatedImagesProvider: ResourceProvider = {
   uri: 'runware://images/{id}',
@@ -81,7 +78,6 @@ export const generatedImagesProvider: ResourceProvider = {
   list(): Promise<readonly ResourceEntry[]> {
     const entries: ResourceEntry[] = [];
 
-    // Add session images
     for (const image of SESSION_IMAGES.values()) {
       entries.push({
         uri: `${URI_PREFIX}${image.id}`,
@@ -93,46 +89,18 @@ export const generatedImagesProvider: ResourceProvider = {
       });
     }
 
-    // Add database images (if enabled, avoiding duplicates)
-    const dbGenerations = getGenerationsByType('imageInference', { limit: 100 });
-    for (const gen of dbGenerations) {
-      if (!SESSION_IMAGES.has(gen.id)) {
-        entries.push({
-          uri: `${URI_PREFIX}${gen.id}`,
-          name: gen.prompt !== null && gen.prompt.length > 0
-            ? truncate(gen.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-            : `Image ${gen.id}`,
-          description: gen.width !== null && gen.height !== null
-            ? `${String(gen.width)}x${String(gen.height)} via ${gen.model ?? 'unknown'}`
-            : `via ${gen.model ?? 'unknown'}`,
-          mimeType: 'application/json',
-        });
-      }
-    }
-
     return Promise.resolve(entries);
   },
 
   get(uri: string): Promise<ResourceContent | null> {
     const id = uri.replace(URI_PREFIX, '');
 
-    // Check session store first
     const sessionImage = SESSION_IMAGES.get(id);
     if (sessionImage !== undefined) {
       return Promise.resolve({
         uri,
         mimeType: 'application/json',
         text: JSON.stringify(sessionImage, null, 2),
-      });
-    }
-
-    // Fall back to database
-    const dbGeneration = getGeneration(id);
-    if (dbGeneration !== null) {
-      return Promise.resolve({
-        uri,
-        mimeType: 'application/json',
-        text: JSON.stringify(dbGeneration, null, 2),
       });
     }
 

@@ -5,19 +5,11 @@
  * Watchers use fs.watch with debouncing to handle rapid file changes.
  *
  * NOTE: Watchers are in-memory and do not persist across server restarts.
- * The database stores watcher configuration for potential future persistence.
  */
 
 import { watch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
 
-import {
-  addWatchedFolder,
-  getWatchedFolder,
-  getWatchedFolders,
-  removeWatchedFolder,
-  updateWatchedFolder,
-} from '../../database/operations.js';
 import {
   type RunwareClient,
   getDefaultClient,
@@ -397,16 +389,6 @@ async function handleStart(
   // Generate watcher ID
   const watcherId = generateTaskUUID();
 
-  // Save to database
-  addWatchedFolder({
-    path: folderPath,
-    operation: inputOperation,
-    operationParams: JSON.stringify(input.operationParams ?? {}),
-    outputFolder: input.outputFolder ?? null,
-    isActive: true,
-    lastScan: null,
-  });
-
   // Create watcher state
   const state: WatcherState = {
     id: watcherId,
@@ -472,9 +454,6 @@ function handleStop(input: WatchFolderInputType): WatchFolderOutput {
   // Remove from registry
   activeWatchers.delete(watcherId);
 
-  // Update database
-  removeWatchedFolder(watcherId);
-
   return {
     action: 'stop',
     watcherId,
@@ -499,25 +478,6 @@ function handleList(): WatchFolderOutput {
       lastActivity: state.lastActivity?.toISOString(),
       outputFolder: state.outputFolder,
       createdAt: state.createdAt.toISOString(),
-    });
-  }
-
-  // Also include inactive watchers from database
-  const dbWatchers = getWatchedFolders();
-  for (const dbWatcher of dbWatchers) {
-    // Skip if already in active list
-    if (activeWatchers.has(dbWatcher.id)) {
-      continue;
-    }
-
-    watchers.push({
-      id: dbWatcher.id,
-      folderPath: dbWatcher.path,
-      operation: dbWatcher.operation,
-      isActive: false,
-      processedCount: 0,
-      outputFolder: dbWatcher.outputFolder ?? undefined,
-      createdAt: dbWatcher.createdAt.toISOString(),
     });
   }
 
@@ -553,25 +513,6 @@ function handleStatus(input: WatchFolderInputType): WatchFolderOutput {
           createdAt: state.createdAt.toISOString(),
         },
         message: `Watcher ${watcherId} is active`,
-      };
-    }
-
-    // Check database
-    const dbWatcher = getWatchedFolder(watcherId);
-    if (dbWatcher !== null) {
-      return {
-        action: 'status',
-        watcherId,
-        watcher: {
-          id: dbWatcher.id,
-          folderPath: dbWatcher.path,
-          operation: dbWatcher.operation,
-          isActive: false,
-          processedCount: 0,
-          outputFolder: dbWatcher.outputFolder ?? undefined,
-          createdAt: dbWatcher.createdAt.toISOString(),
-        },
-        message: `Watcher ${watcherId} exists but is not active`,
       };
     }
 
@@ -646,9 +587,8 @@ export async function watchFolder(
  * Should be called during server shutdown.
  */
 export function stopAllWatchers(): void {
-  for (const [id, state] of activeWatchers.entries()) {
+  for (const [, state] of activeWatchers.entries()) {
     state.watcher.close();
-    updateWatchedFolder(id, { isActive: false });
   }
   activeWatchers.clear();
 }

@@ -5,14 +5,12 @@
  * This is a synchronous operation.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import {
   type RunwareClient,
   createTaskRequest,
   getDefaultClient,
 } from '../../integrations/runware/client.js';
 import { RunwareApiError, wrapError } from '../../shared/errors.js';
-import { detectProvider } from '../../shared/provider-settings.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 
@@ -129,30 +127,6 @@ export async function vectorize(
 
     // Process response
     const output = processResponse(response);
-
-    // Save to database if enabled
-    const provider = detectProvider(input.model);
-    saveGeneration({
-      taskType: 'vectorize',
-      taskUUID: task.taskUUID,
-      prompt: 'Vectorize image to SVG',
-      model: input.model,
-      provider: provider ?? 'recraft',
-      status: 'completed',
-      outputUrl: output.imageURL ?? null,
-      outputUuid: output.imageUUID,
-      width: null,
-      height: null,
-      cost: output.cost ?? null,
-      metadata: JSON.stringify({
-        outputFormat: input.outputFormat,
-      }),
-    });
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('vectorize', provider ?? 'recraft', output.cost);
-    }
 
     // Return result
     return successResult('Image vectorized to SVG successfully', output, output.cost);

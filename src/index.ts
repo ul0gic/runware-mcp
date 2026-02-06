@@ -8,12 +8,11 @@
  *
  * Startup sequence:
  * 1. Config validation (fail fast if RUNWARE_API_KEY is missing)
- * 2. Database initialization (optional, non-fatal)
- * 3. Runware client creation
- * 4. MCP server creation with capability registration
- * 5. Handler registration (tools, resources, prompts)
- * 6. Graceful shutdown signal handlers
- * 7. Transport binding and server start
+ * 2. Runware client creation
+ * 3. MCP server creation with capability registration
+ * 4. Handler registration (tools, resources, prompts)
+ * 5. Graceful shutdown signal handlers
+ * 6. Transport binding and server start
  */
 
 import { randomUUID } from 'node:crypto';
@@ -40,9 +39,7 @@ import {
   completeOperation,
   createCancellableOperation,
 } from './server/cancellation.js';
-import { setupDatabase, teardownDatabase } from './server/database-integration.js';
 import { createProgressReporter } from './server/progress.js';
-import { config } from './shared/config.js';
 import { toolDefinitions, toolHandlers, toolInputSchemas } from './tools/index.js';
 import { stopAllWatchers } from './tools/watch-folder/index.js';
 
@@ -177,13 +174,10 @@ async function main(): Promise<void> {
   //    If RUNWARE_API_KEY is missing or invalid, the process has already exited.
   log(`Starting server v${SERVER_VERSION}`);
 
-  // 2. Initialize database (optional, non-fatal)
-  setupDatabase();
-
-  // 3. Create Runware API client
+  // 2. Create Runware API client
   const client = createRunwareClient();
 
-  // 4. Create MCP server
+  // 3. Create MCP server
   // eslint-disable-next-line sonarjs/deprecation, @typescript-eslint/no-deprecated -- Low-level API required for custom tool registry dispatch
   const server = new Server(
     { name: SERVER_NAME, version: SERVER_VERSION },
@@ -196,7 +190,7 @@ async function main(): Promise<void> {
     },
   );
 
-  // 5. Register tool handlers
+  // 4. Register tool handlers
   server.setRequestHandler(ListToolsRequestSchema, () =>
     Promise.resolve({ tools: toolDefinitions }),
   );
@@ -258,7 +252,7 @@ async function main(): Promise<void> {
     }
   });
 
-  // 6. Register resource handlers
+  // 5. Register resource handlers
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
     const resources = [];
     for (const provider of RESOURCE_PROVIDERS) {
@@ -283,7 +277,7 @@ async function main(): Promise<void> {
     };
   });
 
-  // 7. Register prompt handlers
+  // 6. Register prompt handlers
   server.setRequestHandler(ListPromptsRequestSchema, () =>
     Promise.resolve({
       prompts: Object.entries(PROMPT_TEMPLATES).map(([name, template]) => ({
@@ -309,11 +303,10 @@ async function main(): Promise<void> {
     });
   });
 
-  // 8. Graceful shutdown handlers
+  // 7. Graceful shutdown handlers
   const shutdown = async (): Promise<void> => {
     log('Shutting down...');
     stopAllWatchers();
-    teardownDatabase();
     await server.close();
     process.exit(0);
   };
@@ -326,7 +319,7 @@ async function main(): Promise<void> {
     void shutdown();
   });
 
-  // 9. Start server
+  // 8. Start server
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
@@ -334,7 +327,6 @@ async function main(): Promise<void> {
   log(`Tools: ${String(toolDefinitions.length)}`);
   log(`Resources: ${String(RESOURCE_PROVIDERS.length)} providers`);
   log(`Prompts: ${String(Object.keys(PROMPT_TEMPLATES).length)} templates`);
-  log(`Database: ${config.ENABLE_DATABASE ? 'enabled' : 'disabled'}`);
 }
 
 // ============================================================================

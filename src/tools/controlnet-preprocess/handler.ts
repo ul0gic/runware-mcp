@@ -6,7 +6,6 @@
  */
 
 import { getPreprocessor, isValidApiPreprocessor } from '../../constants/controlnet.js';
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import {
   type RunwareClient,
   createTaskRequest,
@@ -172,38 +171,8 @@ export async function controlNetPreprocess(
     // Process response
     const output = processResponse(response);
 
-    // Get preprocessor info for metadata
-    const preprocessorInfo = getPreprocessor(input.preprocessor);
-
-    // Save to database if enabled
-    saveGeneration({
-      taskType: 'imageControlNetPreProcess',
-      taskUUID: task.taskUUID,
-      prompt: `ControlNet ${input.preprocessor} preprocessing`,
-      model: null,
-      provider: 'runware',
-      status: 'completed',
-      outputUrl: output.guideImageURL ?? null,
-      outputUuid: output.guideImageUUID,
-      width: input.width ?? null,
-      height: input.height ?? null,
-      cost: output.cost ?? null,
-      metadata: JSON.stringify({
-        preprocessor: input.preprocessor,
-        preprocessorName: preprocessorInfo?.name,
-        outputType: preprocessorInfo?.outputType,
-        lowThresholdCanny: input.lowThresholdCanny,
-        highThresholdCanny: input.highThresholdCanny,
-        includeHandsAndFaceOpenPose: input.includeHandsAndFaceOpenPose,
-      }),
-    });
-
-    // Record analytics
-    if (output.cost !== undefined) {
-      recordAnalytics('imageControlNetPreProcess', 'runware', output.cost);
-    }
-
     // Return result
+    const preprocessorInfo = getPreprocessor(input.preprocessor);
     const preprocessorName = preprocessorInfo?.name ?? input.preprocessor;
     return successResult(
       `Image preprocessed with ${preprocessorName} successfully`,

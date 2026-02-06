@@ -48,8 +48,7 @@ src/
 ├── server/                           # MCP server infrastructure
 │   ├── capabilities.ts               # Server capability declarations
 │   ├── cancellation.ts               # AbortController management
-│   ├── progress.ts                   # Progress reporting for long ops
-│   └── database-integration.ts       # Optional SQLite setup
+│   └── progress.ts                   # Progress reporting for long ops
 ├── shared/                           # Cross-cutting concerns
 │   ├── types.ts                      # Branded types (ApiKey, TaskUUID, etc.)
 │   ├── config.ts                     # Env validation (Zod), singleton config
@@ -70,10 +69,6 @@ src/
 │   ├── audio-models.ts               # 4 audio models, 14 TTS voices
 │   ├── controlnet.ts                 # 12 ControlNet preprocessors
 │   └── masking-models.ts             # 15 face/body masking models
-├── database/                         # Optional SQLite persistence
-│   ├── schema.ts                     # Drizzle ORM table definitions
-│   ├── client.ts                     # Database connection management
-│   └── operations.ts                 # CRUD operations (generations, analytics)
 ├── tools/                            # MCP tool implementations (22 tools)
 │   ├── index.ts                      # Tool registry and barrel exports
 │   └── {tool-name}/                  # One directory per tool
@@ -235,8 +230,6 @@ vi.mock('../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    ENABLE_DATABASE: false,
-    DATABASE_PATH: './test.db',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },
@@ -245,7 +238,6 @@ vi.mock('../../src/shared/config.js', () => ({
   isDevelopment: () => false,
   isProduction: () => false,
   isTest: () => true,
-  isDatabaseEnabled: () => false,
   shouldLog: () => false,
 }));
 ```
@@ -268,15 +260,6 @@ const mockClient = {
   requestSingle: vi.fn(),
   generateTaskUUID: vi.fn().mockReturnValue('test-uuid'),
 };
-```
-
-**Database operations mock**:
-
-```typescript
-vi.mock('../../src/database/operations.js', () => ({
-  saveGeneration: vi.fn(),
-  recordAnalytics: vi.fn(),
-}));
 ```
 
 ### Important: `vi.mock()` placement

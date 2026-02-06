@@ -4,7 +4,6 @@
  * Implements element detection and mask generation using Runware API.
  */
 
-import { recordAnalytics, saveGeneration } from '../../database/operations.js';
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -119,29 +118,6 @@ export async function imageMasking(
 
     const output = processResponse(response);
     const detectionCount = output.detections.length;
-
-    // model always has a default value from schema
-    saveGeneration({
-      taskType: 'imageMasking',
-      taskUUID: task.taskUUID,
-      prompt: `Masking with ${input.model}`,
-      model: input.model,
-      provider: 'runware',
-      status: 'completed',
-      outputUrl: output.maskImageURL ?? null,
-      outputUuid: output.maskImageUUID,
-      width: null,
-      height: null,
-      cost: output.cost ?? null,
-      metadata: JSON.stringify({
-        detectionCount,
-        confidence: input.confidence,
-      }),
-    });
-
-    if (output.cost !== undefined) {
-      recordAnalytics('imageMasking', 'runware', output.cost);
-    }
 
     const message = detectionCount === 1
       ? 'Detected 1 element and generated mask'

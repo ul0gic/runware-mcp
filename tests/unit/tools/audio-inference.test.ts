@@ -8,11 +8,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 // Mocks (must be before imports of mocked modules)
 // ============================================================================
 
-vi.mock('../../../src/database/operations.js', () => ({
-  recordAnalytics: vi.fn(),
-  saveGeneration: vi.fn(),
-}));
-
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
     waitForToken: vi.fn().mockResolvedValue(undefined),
@@ -26,12 +21,10 @@ vi.mock('../../../src/shared/config.js', () => ({
     POLL_MAX_ATTEMPTS: 150,
     MAX_FILE_SIZE_MB: 50,
     ALLOWED_FILE_ROOTS: [],
-    ENABLE_DATABASE: false,
     LOG_LEVEL: 'error',
     NODE_ENV: 'test',
     RATE_LIMIT_MAX_TOKENS: 10,
     RATE_LIMIT_REFILL_RATE: 1,
-    DATABASE_PATH: ':memory:',
     WATCH_FOLDERS: [],
     WATCH_DEBOUNCE_MS: 500,
   },
@@ -149,7 +142,7 @@ describe('audioInference', () => {
         status: 'processing',
       };
 
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
+      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
 
       const mockPollForResult = pollForResult as ReturnType<typeof vi.fn>;
       mockPollForResult.mockResolvedValue({
@@ -203,7 +196,7 @@ describe('audioInference', () => {
     });
 
     it('should return error when client throws', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
+      (mockClient.request as ReturnType<typeof vi.fn>).mockRejectedValue(
         new Error('Network error'),
       );
 
@@ -222,7 +215,7 @@ describe('audioInference', () => {
 
   describe('cost tracking', () => {
     it('should propagate cost from polling result', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue({
         taskType: 'audioInference',
         taskUUID: 'task-uuid',
       });

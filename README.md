@@ -42,7 +42,7 @@ flowchart TB
         end
 
         subgraph Storage["Data Layer"]
-            DB[("SQLite")]
+            Session["Session Store"]
             Analytics["Analytics"]
         end
     end
@@ -292,7 +292,7 @@ flowchart TB
 
         subgraph Data["Data Layer"]
             direction LR
-            DB[("SQLite")]
+            Session["Session Store"]
             Analytics["Analytics"]
         end
 
@@ -328,7 +328,7 @@ The original Python implementation covered **~40%** of Runware's API capabilitie
 | **Tools** | 8 | **22** |
 | **Providers** | 4 | **9** |
 | **Provider Settings** | 0 | **Full Support** |
-| **Database** | None | **SQLite + Drizzle** |
+| **Session Storage** | None | **In-memory session stores** |
 | **Batch Ops** | None | **Folder processing, watching** |
 | **Type Safety** | `Dict[str, Any]` | **Strict TypeScript + Zod** |
 | **Security** | Path traversal bugs | **SSRF protection, rate limiting** |
@@ -385,8 +385,6 @@ The original Python implementation covered **~40%** of Runware's API capabilitie
 | `POLL_MAX_ATTEMPTS` | `150` | Video poll attempts |
 | `RATE_LIMIT_MAX_TOKENS` | `10` | Rate limit burst |
 | `RATE_LIMIT_REFILL_RATE` | `1` | Tokens per second |
-| `ENABLE_DATABASE` | `false` | Enable SQLite persistence |
-| `DATABASE_PATH` | `./runware-mcp.db` | Database location |
 | `WATCH_FOLDERS` | — | Auto-watch folders |
 | `WATCH_DEBOUNCE_MS` | `500` | Watch debounce |
 

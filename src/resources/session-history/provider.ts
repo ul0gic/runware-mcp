@@ -8,7 +8,6 @@
  * URI: runware://session/history
  */
 
-import { getRecentGenerations } from '../../database/operations.js';
 import { getSessionAudio } from '../generated-audio/provider.js';
 import { getSessionImages } from '../generated-images/provider.js';
 import { getSessionVideos } from '../generated-videos/provider.js';
@@ -150,31 +149,7 @@ export const sessionHistoryProvider: ResourceProvider = {
       return Promise.resolve(null);
     }
 
-    const sessionEvents = getAllSessionEvents();
-
-    // Also include database generations if available
-    const dbGenerations = getRecentGenerations({ limit: 200 });
-    const sessionIds = new Set(sessionEvents.map((event) => event.id));
-
-    const dbEvents: SessionHistoryEntry[] = [];
-    for (const gen of dbGenerations) {
-      if (sessionIds.has(gen.id)) {
-        continue;
-      }
-      dbEvents.push({
-        id: gen.id,
-        taskType: gen.taskType,
-        prompt: gen.prompt ?? undefined,
-        model: gen.model ?? undefined,
-        outputURL: gen.outputUrl ?? undefined,
-        cost: gen.cost ?? undefined,
-        createdAt: gen.createdAt,
-      });
-    }
-
-    const allEvents = [...sessionEvents, ...dbEvents].toSorted(
-      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-    );
+    const allEvents = getAllSessionEvents();
 
     const totalCost = allEvents.reduce(
       (sum, event) => sum + (event.cost ?? 0),
