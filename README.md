@@ -373,8 +373,6 @@ The original Python implementation covered **~40%** of Runware's API capabilitie
 
 ## Configuration Reference
 
-> **Tip:** Copy `.env.example` to `.env` for a pre-documented template of all variables below.
-
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `RUNWARE_API_KEY` | **required** | Your Runware API key |

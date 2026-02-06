@@ -16,10 +16,6 @@ cd mcp-server
 # Install dependencies
 npm install
 
-# Configure environment
-cp .env.example .env
-# Edit .env and add your RUNWARE_API_KEY
-
 # Build the project
 npm run build
 

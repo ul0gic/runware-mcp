@@ -20,7 +20,7 @@ export const connectionDoc: DocResource = {
         name: 'RUNWARE_API_KEY',
         type: 'string',
         required: true,
-        description: 'Environment variable containing your Runware API key. Set this in your .env file or system environment.',
+        description: 'Environment variable containing your Runware API key. Set this in your MCP client config.',
       },
     ],
     examples: [
@@ -46,7 +46,7 @@ export const connectionDoc: DocResource = {
     ],
     tips: [
       'Get your API key from the Runware dashboard at https://runware.ai after creating an account.',
-      'Never commit API keys to version control. Use environment variables or .env files.',
+      'Never commit API keys to version control. Use environment variables via your MCP client config.',
       'The MCP server validates the API key at startup — if it is missing or invalid, the server will not start.',
       'Create separate API keys for development and production environments to track usage independently.',
     ],
