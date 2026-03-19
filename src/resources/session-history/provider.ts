@@ -25,6 +25,12 @@ import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.
 const SESSION_START = new Date();
 
 /**
+ * Maximum number of entries in the session events store.
+ * When exceeded, the oldest entries are evicted.
+ */
+const MAX_SESSION_SIZE = 10_000;
+
+/**
  * Additional session events that do not fit into images/videos/audio
  * (e.g., upscale, background removal, captioning, etc.).
  */
@@ -35,11 +41,18 @@ const SESSION_EVENTS = new Map<string, SessionHistoryEntry>();
  *
  * Used by tool handlers for operations like upscale, background removal,
  * caption, vectorize, controlnet preprocessing, etc.
+ * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
  *
  * @param event - The session history entry to record
  */
 export function recordSessionEvent(event: SessionHistoryEntry): void {
   SESSION_EVENTS.set(event.id, event);
+  if (SESSION_EVENTS.size > MAX_SESSION_SIZE) {
+    const oldestKey = SESSION_EVENTS.keys().next().value;
+    if (oldestKey !== undefined) {
+      SESSION_EVENTS.delete(oldestKey);
+    }
+  }
 }
 
 /**

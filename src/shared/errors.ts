@@ -308,13 +308,22 @@ export class FileTooLargeError extends McpError {
  *
  * This is a security error - the requested path attempted to
  * escape the allowed file roots.
+ *
+ * The resolvedPath is kept as a server-side property for logging
+ * but is NOT included in client-facing error data to avoid
+ * exposing internal filesystem structure.
  */
 export class PathTraversalError extends McpError {
   readonly code = MCP_ERROR_CODES.PATH_TRAVERSAL_DETECTED;
   readonly data: Readonly<{
     requestedPath: string;
-    resolvedPath: string;
   }>;
+
+  /**
+   * The resolved absolute path (server-side only, not sent to clients).
+   * Useful for server-side logging and debugging.
+   */
+  readonly resolvedPath: string;
 
   constructor(
     message: string,
@@ -324,9 +333,9 @@ export class PathTraversalError extends McpError {
     },
   ) {
     super(message);
+    this.resolvedPath = options.resolvedPath;
     this.data = {
       requestedPath: options.requestedPath,
-      resolvedPath: options.resolvedPath,
     };
   }
 }

@@ -159,10 +159,11 @@ export function isPathSafe(filePath: string, allowedRoots?: readonly string[]): 
       return false;
     }
 
-    // Check if under an allowed root
+    // Check if under an allowed root (use trailing separator to prevent prefix bypass)
     const isUnderAllowedRoot = roots.some((root) => {
       const normalizedRoot = path.normalize(root);
-      return normalizedPath.startsWith(normalizedRoot);
+      const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : normalizedRoot + path.sep;
+      return normalizedPath === normalizedRoot || normalizedPath.startsWith(rootWithSep);
     });
 
     return isUnderAllowedRoot;
@@ -202,10 +203,11 @@ export async function resolveAndValidatePath(
     });
   }
 
-  // Check if under an allowed root before resolving symlinks
+  // Check if under an allowed root before resolving symlinks (use trailing separator to prevent prefix bypass)
   const isUnderAllowedRoot = roots.some((root) => {
     const normalizedRoot = path.normalize(root);
-    return normalizedPath.startsWith(normalizedRoot);
+    const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : normalizedRoot + path.sep;
+    return normalizedPath === normalizedRoot || normalizedPath.startsWith(rootWithSep);
   });
 
   if (!isUnderAllowedRoot) {
@@ -239,10 +241,11 @@ export async function resolveAndValidatePath(
     const realPath = await realpath(absolutePath);
     const normalizedRealPath = path.normalize(realPath);
 
-    // Check if the real path is also under an allowed root
+    // Check if the real path is also under an allowed root (use trailing separator to prevent prefix bypass)
     const realPathSafe = roots.some((root) => {
       const normalizedRoot = path.normalize(root);
-      return normalizedRealPath.startsWith(normalizedRoot);
+      const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : normalizedRoot + path.sep;
+      return normalizedRealPath === normalizedRoot || normalizedRealPath.startsWith(rootWithSep);
     });
 
     if (!realPathSafe) {

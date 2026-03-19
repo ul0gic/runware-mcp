@@ -113,6 +113,13 @@ function findToolSchema(name: string): (typeof toolInputSchemas)[string] | undef
 }
 
 /**
+ * Result of tool input validation.
+ */
+type ValidationResult =
+  | { success: true; data: unknown }
+  | { success: false; errors: string[] };
+
+/**
  * Validates and transforms raw MCP arguments through the tool's Zod schema.
  *
  * This ensures that Zod defaults are applied and input is validated before
@@ -121,22 +128,24 @@ function findToolSchema(name: string): (typeof toolInputSchemas)[string] | undef
  *
  * @param name - The tool name
  * @param args - Raw arguments from the MCP client
- * @returns Validated arguments with defaults applied, or the original args if no schema found
+ * @returns Validation result with parsed data or error details
  */
-function validateToolInput(name: string, args: Record<string, unknown>): unknown {
+function validateToolInput(name: string, args: Record<string, unknown>): ValidationResult {
   const schema = findToolSchema(name);
   if (schema === undefined) {
-    return args;
+    return { success: true, data: args };
   }
 
   const result = schema.safeParse(args);
   if (result.success) {
-    return result.data;
+    return { success: true, data: result.data };
   }
 
-  // If validation fails, return the raw args and let the handler deal with it.
-  // This preserves existing error handling behavior.
-  return args;
+  // Return structured validation errors instead of falling through with raw args
+  const errors = result.error.issues.map(
+    (issue) => `${issue.path.join('.')}: ${issue.message}`,
+  );
+  return { success: false, errors };
 }
 
 // ============================================================================
@@ -229,7 +238,21 @@ async function main(): Promise<void> {
     try {
       // Validate input through Zod schema to apply defaults and constraints.
       // Raw MCP arguments bypass Zod defaults, so we parse here at the boundary.
-      const validatedArgs = validateToolInput(name, args ?? {});
+      const validation = validateToolInput(name, args ?? {});
+
+      if (!validation.success) {
+        completeOperation(requestId);
+        return {
+          content: [{ type: 'text' as const, text: JSON.stringify({
+            status: 'error',
+            message: `Invalid input for tool "${name}"`,
+            validationErrors: validation.errors,
+          }) }],
+          isError: true,
+        };
+      }
+
+      const validatedArgs = validation.data;
 
       const result: ToolResult = await handler(
         validatedArgs as never,

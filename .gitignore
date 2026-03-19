@@ -38,3 +38,4 @@ temp/
 .claude/
 .project/
 .mcp.json
+generated/

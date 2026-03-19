@@ -17,6 +17,12 @@ import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.
 // ============================================================================
 
 /**
+ * Maximum number of entries in the session store.
+ * When exceeded, the oldest entries are evicted.
+ */
+const MAX_SESSION_SIZE = 10_000;
+
+/**
  * In-memory store for audio clips generated in the current session.
  * Cleared when the server restarts.
  */
@@ -26,11 +32,18 @@ const SESSION_AUDIO = new Map<string, GeneratedAudioEntry>();
  * Registers a generated audio clip in the session store.
  *
  * Called by tool handlers after a successful audio generation.
+ * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
  *
  * @param audio - The generated audio entry to register
  */
 export function registerAudio(audio: GeneratedAudioEntry): void {
   SESSION_AUDIO.set(audio.id, audio);
+  if (SESSION_AUDIO.size > MAX_SESSION_SIZE) {
+    const oldestKey = SESSION_AUDIO.keys().next().value;
+    if (oldestKey !== undefined) {
+      SESSION_AUDIO.delete(oldestKey);
+    }
+  }
 }
 
 /**

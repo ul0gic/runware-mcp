@@ -167,10 +167,11 @@ export class RunwareClient {
       timeoutController.abort();
     }, timeout);
 
-    // Combine user signal with timeout signal
+    // Combine user signal with timeout signal using AbortSignal.any() (Node.js >= 20)
+    // This handles cleanup correctly, unlike manual event listener approaches.
     const combinedSignal = userSignal === undefined
       ? timeoutController.signal
-      : this.combineAbortSignals(userSignal, timeoutController.signal);
+      : AbortSignal.any([userSignal, timeoutController.signal]);
 
     try {
       const response = await this.executeRequest<T>(tasks, combinedSignal);
@@ -242,31 +243,6 @@ export class RunwareClient {
     }
 
     return firstResult;
-  }
-
-  /**
-   * Combines multiple abort signals into one.
-   * The combined signal aborts when any of the input signals abort.
-   */
-  private combineAbortSignals(...signals: readonly AbortSignal[]): AbortSignal {
-    const controller = new AbortController();
-
-    for (const signal of signals) {
-      if (signal.aborted) {
-        controller.abort(signal.reason);
-        return controller.signal;
-      }
-
-      signal.addEventListener(
-        'abort',
-        () => {
-          controller.abort(signal.reason);
-        },
-        { once: true },
-      );
-    }
-
-    return controller.signal;
   }
 }
 

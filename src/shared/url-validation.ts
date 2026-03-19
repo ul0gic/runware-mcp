@@ -233,6 +233,14 @@ function isBlockedHostname(hostname: string): boolean {
 /**
  * Checks if a URL should be blocked for SSRF protection.
  *
+ * NOTE: SSRF checks validate hostnames at parse time only. A DNS rebinding
+ * attack could resolve to a public IP during validation then rebind to an
+ * internal IP at request time. This is an accepted risk because all URLs are
+ * proxied to the Runware API and never fetched directly by this server.
+ *
+ * FUTURE: If this server ever fetches URLs directly (not via Runware), add
+ * DNS resolution validation before the actual request to mitigate rebinding.
+ *
  * @param urlString - URL string to check
  * @returns true if the URL should be blocked
  */

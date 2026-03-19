@@ -224,7 +224,7 @@ export async function videoInference(
       message: 'Video generation complete',
     });
 
-    const elapsedSeconds = Math.round(output.elapsedMs ?? 0 / 1000);
+    const elapsedSeconds = Math.round((output.elapsedMs ?? 0) / 1000);
     return successResult(
       `Video generated successfully in ${String(elapsedSeconds)}s (${String(output.pollingAttempts)} poll attempts)`,
       output,

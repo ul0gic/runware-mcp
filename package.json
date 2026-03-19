@@ -34,9 +34,9 @@
     "mcp-server"
   ],
   "dependencies": {
-    "@modelcontextprotocol/sdk": "latest",
-    "zod": "latest",
-    "zod-to-json-schema": "latest"
+    "@modelcontextprotocol/sdk": "^1.26.0",
+    "zod": "^4.3.6",
+    "zod-to-json-schema": "^3.25.1"
   },
   "devDependencies": {
     "@eslint/js": "latest",

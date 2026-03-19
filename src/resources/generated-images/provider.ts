@@ -17,6 +17,12 @@ import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.
 // ============================================================================
 
 /**
+ * Maximum number of entries in the session store.
+ * When exceeded, the oldest entries are evicted.
+ */
+const MAX_SESSION_SIZE = 10_000;
+
+/**
  * In-memory store for images generated in the current session.
  * Cleared when the server restarts.
  */
@@ -26,11 +32,18 @@ const SESSION_IMAGES = new Map<string, GeneratedImageEntry>();
  * Registers a generated image in the session store.
  *
  * Called by tool handlers after a successful image generation.
+ * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
  *
  * @param image - The generated image entry to register
  */
 export function registerImage(image: GeneratedImageEntry): void {
   SESSION_IMAGES.set(image.id, image);
+  if (SESSION_IMAGES.size > MAX_SESSION_SIZE) {
+    const oldestKey = SESSION_IMAGES.keys().next().value;
+    if (oldestKey !== undefined) {
+      SESSION_IMAGES.delete(oldestKey);
+    }
+  }
 }
 
 /**

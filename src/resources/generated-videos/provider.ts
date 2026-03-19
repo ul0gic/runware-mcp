@@ -17,6 +17,12 @@ import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.
 // ============================================================================
 
 /**
+ * Maximum number of entries in the session store.
+ * When exceeded, the oldest entries are evicted.
+ */
+const MAX_SESSION_SIZE = 10_000;
+
+/**
  * In-memory store for videos generated in the current session.
  * Cleared when the server restarts.
  */
@@ -26,11 +32,18 @@ const SESSION_VIDEOS = new Map<string, GeneratedVideoEntry>();
  * Registers a generated video in the session store.
  *
  * Called by tool handlers after a successful video generation.
+ * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
  *
  * @param video - The generated video entry to register
  */
 export function registerVideo(video: GeneratedVideoEntry): void {
   SESSION_VIDEOS.set(video.id, video);
+  if (SESSION_VIDEOS.size > MAX_SESSION_SIZE) {
+    const oldestKey = SESSION_VIDEOS.keys().next().value;
+    if (oldestKey !== undefined) {
+      SESSION_VIDEOS.delete(oldestKey);
+    }
+  }
 }
 
 /**

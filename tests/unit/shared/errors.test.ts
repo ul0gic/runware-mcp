@@ -218,13 +218,15 @@ describe('PathTraversalError', () => {
     expect(error.code).toBe(MCP_ERROR_CODES.PATH_TRAVERSAL_DETECTED);
   });
 
-  it('stores both paths', () => {
+  it('stores requestedPath in data and resolvedPath on the error object (not in client-facing data)', () => {
     const error = new PathTraversalError('bad path', {
       requestedPath: '../secret',
       resolvedPath: '/root/secret',
     });
     expect(error.data.requestedPath).toBe('../secret');
-    expect(error.data.resolvedPath).toBe('/root/secret');
+    // resolvedPath is kept as a server-side property, not in client-facing data
+    expect(error.resolvedPath).toBe('/root/secret');
+    expect('resolvedPath' in error.data).toBe(false);
   });
 });
 
