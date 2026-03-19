@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.0] - 2026-03-19
+
+### Changed
+
+- Made project fully client-agnostic — removed all Claude-specific branding from README, source comments, and package.json
+- Added MCP client setup instructions for Claude Code, Cursor, Windsurf, VS Code Copilot, and Claude Desktop
+- Redesigned all README diagrams with horizontal layouts and color-coded sections
+- Replaced negative comparison table with positive "What's Included" feature summary
+- Pinned production dependencies to semver ranges instead of `latest`
+
+### Fixed
+
+#### Security Audit Fixes
+
+- **SEC-01 (Medium):** Fixed path prefix bypass in `startsWith` root checks — added trailing path separator to prevent sibling directory access (3 locations in `file-utils.ts`)
+- **SEC-02 (Medium):** Documented DNS rebinding limitation as accepted risk in `url-validation.ts`
+- **SEC-03 (Low):** Validation failures now return MCP error responses instead of silently passing raw unvalidated args to handlers
+- **SEC-04 (Low):** Removed `resolvedPath` from client-facing `PathTraversalError` data to prevent internal filesystem structure leakage
+- **SEC-06 (Low):** Replaced manual `combineAbortSignals` with `AbortSignal.any()` to fix event listener leak
+- **SEC-11 (Informational):** Fixed operator precedence bug in video elapsed time calculation
+
+#### Dependency Vulnerabilities
+
+- Bumped `hono` 4.11.7 → 4.12.8 (prototype pollution, serveStatic file access, cookie/SSE injection)
+- Bumped `@hono/node-server` 1.19.9 → 1.19.11 (auth bypass via encoded slashes)
+- Bumped `express-rate-limit` 8.2.1 → 8.3.1 (IPv4-mapped IPv6 rate limit bypass)
+- Bumped `rollup` 4.57.1 → 4.59.0 (arbitrary file write via path traversal)
+
+### Added
+
+- `MAX_SESSION_SIZE` (10,000) with oldest-entry eviction on all session stores to prevent unbounded memory growth
+- Security policy (`SECURITY.md`)
+- `generated/` to `.gitignore`
+
+### Removed
+
+- SQLite database layer (`better-sqlite3`, `drizzle-orm`) — replaced with in-memory session stores
+- `.env.example` and all `.env` file references
+
+---
+
 ## [1.0.0] - 2026-02-05
 
 Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
@@ -140,4 +181,5 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 
 - Python implementation replaced entirely by this TypeScript rewrite
 
-[1.0.0]: https://github.com/runware/mcp-server/releases/tag/v1.0.0
+[1.1.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.1.0
+[1.0.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.0.0
