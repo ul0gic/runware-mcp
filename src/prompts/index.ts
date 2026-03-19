@@ -2,7 +2,7 @@
  * Prompt template registry for the Runware MCP server.
  *
  * Central registry that manages all prompt templates. Each template
- * generates a sequence of messages that guide Claude to use the
+ * generates a sequence of messages that guide the LLM to use the
  * appropriate Runware tools with optimal settings for common
  * creative workflows.
  *

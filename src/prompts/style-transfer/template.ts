@@ -2,7 +2,7 @@
  * Style Transfer prompt template.
  *
  * Applies artistic styles to image generation with configurable
- * style type, intensity, and color palette. Instructs Claude to use
+ * style type, intensity, and color palette. Instructs the LLM to use
  * the imageInference tool with prompts crafted for artistic stylization.
  */
 

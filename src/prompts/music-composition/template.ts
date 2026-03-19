@@ -2,7 +2,7 @@
  * Music Composition prompt template.
  *
  * Generates music and audio compositions with configurable genre,
- * mood, tempo, and instrumentation. Instructs Claude to use the
+ * mood, tempo, and instrumentation. Instructs the LLM to use the
  * audioInference tool with appropriate model selection and settings
  * for the desired musical output.
  */

@@ -31,7 +31,7 @@
     "ai",
     "image-generation",
     "video-generation",
-    "claude"
+    "mcp-server"
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "latest",

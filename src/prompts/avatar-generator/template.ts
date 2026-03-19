@@ -2,7 +2,7 @@
  * Avatar Generator prompt template.
  *
  * Generates profile pictures and character avatars with configurable
- * art style, mood/expression, and framing. Instructs Claude to use
+ * art style, mood/expression, and framing. Instructs the LLM to use
  * the imageInference tool with settings optimized for portrait and
  * character generation.
  */

@@ -2,7 +2,7 @@
  * Video Scene prompt template.
  *
  * Composes detailed video scene descriptions for video generation.
- * Instructs Claude to use the videoInference tool with appropriate
+ * Instructs the LLM to use the videoInference tool with appropriate
  * model selection, camera work, and atmospheric settings for
  * cinematic video production.
  */

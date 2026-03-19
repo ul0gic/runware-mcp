@@ -3,7 +3,7 @@
  *
  * Creates engaging thumbnails for videos, articles, and social media
  * with configurable platform targeting, visual style, and emotional hooks.
- * Instructs Claude to use the imageInference tool with dimensions and
+ * Instructs the LLM to use the imageInference tool with dimensions and
  * composition optimized for each target platform.
  */
 

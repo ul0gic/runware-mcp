@@ -3,7 +3,7 @@
  *
  * Generates professional e-commerce product photography prompts
  * with configurable style, background, lighting, and camera angle.
- * Instructs Claude to use the imageInference tool with photorealistic
+ * Instructs the LLM to use the imageInference tool with photorealistic
  * model settings optimized for commercial product photography.
  */
 

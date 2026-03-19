@@ -2,7 +2,7 @@
  * Shared types for the MCP prompt template system.
  *
  * Defines the interfaces that all prompt templates must implement.
- * Each prompt generates a sequence of messages that guide Claude
+ * Each prompt generates a sequence of messages that guide the LLM
  * to use the appropriate Runware tools with optimal settings.
  */
 
@@ -50,7 +50,7 @@ export interface PromptMessage {
  * A reusable prompt template for a common creative workflow.
  *
  * Templates define their arguments, validate them, and generate
- * a sequence of messages that instruct Claude to use the right
+ * a sequence of messages that instruct the LLM to use the right
  * Runware tools with appropriate settings.
  */
 export interface PromptTemplate {

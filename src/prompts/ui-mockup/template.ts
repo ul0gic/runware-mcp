@@ -3,7 +3,7 @@
  *
  * Generates UI/UX design mockups for various application types with
  * configurable design system, color scheme, and fidelity level.
- * Instructs Claude to use the imageInference tool with settings
+ * Instructs the LLM to use the imageInference tool with settings
  * optimized for clean, readable interface designs.
  */
 

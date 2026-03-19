@@ -1,6 +1,6 @@
 # Runware MCP Server
 
-### The AI Media Orchestration Layer for Claude Code
+### AI Media Generation for Any MCP Client
 
 <p align="center">
   <img src="https://img.shields.io/badge/Tools-22-blue?style=for-the-badge" alt="22 Tools">
@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <strong>Turn Claude Code into a creative powerhouse.</strong><br>
+  <strong>Turn any MCP-compatible AI assistant into a creative powerhouse.</strong><br>
   Images. Videos. Audio. Vectors. All from natural language.
 </p>
 
@@ -18,54 +18,31 @@
 
 ## What Is This?
 
-This is a **control plane layer** that connects Claude Code directly to Runware's AI media generation infrastructure.
+An MCP server that connects your AI coding assistant directly to Runware's AI media generation infrastructure. Works with any client that supports the [Model Context Protocol](https://modelcontextprotocol.io).
 
 ```mermaid
-flowchart TB
-    subgraph Claude["🤖 CLAUDE CODE"]
-        CC["Your AI Assistant"]
-    end
+flowchart LR
+    Client["MCP Client"] <-->|"MCP Protocol"| Server
 
-    subgraph Server["⚡ RUNWARE MCP SERVER"]
+    subgraph Server["Runware MCP Server"]
         direction TB
-
-        subgraph Capabilities["Tool Layer"]
-            Tools["22 Tools"]
-            Resources["6 Resources"]
-        end
-
-        subgraph Orchestration["Orchestration Engine"]
-            RL["Rate Limiting"]
-            Cache["Caching"]
-            Batch["Batch Processing"]
-            Progress["Progress Tracking"]
-        end
-
-        subgraph Storage["Data Layer"]
-            Session["Session Store"]
-            Analytics["Analytics"]
-        end
+        Tools["22 Tools  &middot;  6 Resources"]
+        Engine["Rate Limiting  &middot;  Caching  &middot;  Batch Processing"]
     end
 
-    subgraph Cloud["☁️ RUNWARE CLOUD"]
-        direction LR
-        FLUX["FLUX"]
-        SDXL["SDXL"]
-        Kling["Kling"]
-        Veo["Veo"]
-        EL["ElevenLabs"]
-        More["+ more"]
-    end
-
-    CC <-->|"MCP Protocol"| Server
     Server -->|"REST API"| Cloud
 
-    style Claude fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    subgraph Cloud["Runware Cloud"]
+        direction TB
+        Models["FLUX  &middot;  SDXL  &middot;  Kling  &middot;  Veo  &middot;  ElevenLabs  &middot;  +more"]
+    end
+
+    style Client fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
     style Server fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style Cloud fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style Capabilities fill:#2563eb,stroke:#60a5fa,color:#fff
-    style Orchestration fill:#2563eb,stroke:#60a5fa,color:#fff
-    style Storage fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Tools fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Engine fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Cloud fill:#854d0e,stroke:#facc15,stroke-width:2px,color:#fff
+    style Models fill:#a16207,stroke:#fde047,color:#fff
 ```
 
 **One config. Zero complexity. Infinite creativity.**
@@ -74,7 +51,7 @@ flowchart TB
 
 ## Installation
 
-Add this to your Claude Code config and you're done:
+Add the server to your MCP client config:
 
 ```json
 {
@@ -90,11 +67,19 @@ Add this to your Claude Code config and you're done:
 }
 ```
 
-| Platform | Config Location |
-|----------|-----------------|
-| **macOS** | `~/.claude/claude_desktop_config.json` |
-| **Linux** | `~/.config/claude/claude_desktop_config.json` |
-| **Windows** | `%APPDATA%\Claude\claude_desktop_config.json` |
+### Config locations by client
+
+| Client | Config Location |
+|--------|-----------------|
+| **Claude Code** | `~/.claude.json` or project `.mcp.json` |
+| **Claude Desktop (macOS)** | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| **Claude Desktop (Linux)** | `~/.config/claude/claude_desktop_config.json` |
+| **Claude Desktop (Windows)** | `%APPDATA%\Claude\claude_desktop_config.json` |
+| **Cursor** | `.cursor/mcp.json` in your project root |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` |
+| **VS Code (Copilot)** | `.vscode/mcp.json` in your project root |
+
+> **Note:** Config format may vary slightly by client. Check your client's MCP documentation for exact syntax.
 
 That's it. No `pip install`. No virtual environments. No Python version conflicts. Just paste, restart, create.
 
@@ -103,38 +88,49 @@ That's it. No `pip install`. No virtual environments. No Python version conflict
 ## Capabilities at a Glance
 
 ```mermaid
-%%{init: {'theme': 'base', 'themeVariables': { 'primaryColor': '#3b82f6', 'primaryTextColor': '#ffffff', 'primaryBorderColor': '#60a5fa', 'lineColor': '#60a5fa', 'secondaryColor': '#3b82f6', 'tertiaryColor': '#3b82f6', 'background': '#1e293b', 'mainBkg': '#3b82f6', 'nodeBkg': '#3b82f6', 'clusterBkg': '#3b82f6', 'titleColor': '#ffffff', 'edgeLabelBackground': '#3b82f6'}}}%%
-mindmap
-  root((Runware MCP))
-    🖼️ Images
-      Text to Image
-      Image to Image
-      Inpainting
-      Outpainting
-      Upscaling
-      Background Removal
-      Captioning
-      Masking
-      Vectorization
-    🎬 Video
-      Text to Video
-      Image to Video
-      Lip Sync
-      9 Providers
-    🎵 Audio
-      Music Generation
-      Sound Effects
-      Text to Speech
-      Transcription
-    📁 Batch Ops
-      Folder Processing
-      Batch Generation
-      Folder Watching
-    🧠 Intelligence
-      Prompt Enhancement
-      ControlNet Preprocessing
-      Model Search
-      Cost Estimation
+flowchart LR
+    R((Runware MCP)) --> IMG[Images]
+    R --> VID[Video]
+    R --> AUD[Audio]
+    R --> BATCH[Batch Ops]
+    R --> INT[Intelligence]
+
+    IMG --> I1[Text to Image]
+    IMG --> I2[Img to Img &middot; Inpaint &middot; Outpaint]
+    IMG --> I3[Upscale &middot; BG Removal &middot; Caption]
+    IMG --> I4[Masking &middot; Vectorize]
+
+    VID --> V1[Text/Image to Video]
+    VID --> V2[Lip Sync &middot; 9 Providers]
+
+    AUD --> A1[Music &middot; SFX &middot; TTS]
+    AUD --> A2[Transcription]
+
+    BATCH --> B1[Folder Processing]
+    BATCH --> B2[Batch Generate &middot; Watch]
+
+    INT --> N1[Prompt Enhance &middot; ControlNet]
+    INT --> N2[Model Search &middot; Cost Est.]
+
+    style R fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
+    style IMG fill:#2563eb,stroke:#60a5fa,color:#fff
+    style VID fill:#7c3aed,stroke:#a78bfa,color:#fff
+    style AUD fill:#059669,stroke:#34d399,color:#fff
+    style BATCH fill:#d97706,stroke:#fbbf24,color:#fff
+    style INT fill:#dc2626,stroke:#f87171,color:#fff
+
+    style I1 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style I2 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style I3 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style I4 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style V1 fill:#5b21b6,stroke:#8b5cf6,color:#fff
+    style V2 fill:#5b21b6,stroke:#8b5cf6,color:#fff
+    style A1 fill:#065f46,stroke:#10b981,color:#fff
+    style A2 fill:#065f46,stroke:#10b981,color:#fff
+    style B1 fill:#92400e,stroke:#f59e0b,color:#fff
+    style B2 fill:#92400e,stroke:#f59e0b,color:#fff
+    style N1 fill:#991b1b,stroke:#ef4444,color:#fff
+    style N2 fill:#991b1b,stroke:#ef4444,color:#fff
 ```
 
 ---
@@ -145,14 +141,14 @@ mindmap
 
 | Tool | What It Does | Key Features |
 |------|--------------|--------------|
-| `imageInference` | Text/image → stunning images | 60+ parameters, LoRA, ControlNet, IP-Adapters |
+| `imageInference` | Text/image to images | 60+ parameters, LoRA, ControlNet, IP-Adapters |
 | `photoMaker` | Preserve identity across generations | Face consistency, style transfer |
 | `imageUpscale` | Enhance resolution up to 4x | Multiple algorithms, preserve details |
 | `imageBackgroundRemoval` | Remove backgrounds instantly | Alpha matting, custom colors |
 | `imageCaption` | Describe images in detail | Multiple models, structured output |
 | `imageMasking` | Generate segmentation masks | Face, body, hands detection |
 | `imageUpload` | Upload local images | Base64, URL, data URI support |
-| `vectorize` | Convert raster → SVG | Perfect for logos, icons |
+| `vectorize` | Convert raster to SVG | Perfect for logos, icons |
 
 ### Video Generation
 
@@ -167,7 +163,7 @@ mindmap
 | Tool | What It Does | Features |
 |------|--------------|----------|
 | `audioInference` | Generate music, SFX, speech | ElevenLabs, Mirelo, 14 voices |
-| `transcription` | Video → text transcription | Multiple languages |
+| `transcription` | Video to text transcription | Multiple languages |
 
 ### Creative Tools
 
@@ -245,7 +241,7 @@ Pre-built workflows for common tasks:
 
 ## Documentation
 
-This MCP server includes **comprehensive built-in documentation** accessible as MCP resources. Any LLM client connected to the server can discover and read detailed API references, feature guides, and provider docs on demand.
+This MCP server includes **comprehensive built-in documentation** accessible as MCP resources. Any connected client can discover and read detailed API references, feature guides, and provider docs on demand.
 
 **42 documentation resources** organized across 5 categories:
 
@@ -259,61 +255,58 @@ This MCP server includes **comprehensive built-in documentation** accessible as 
 
 Example URIs: `runware://docs/tools/image-inference`, `runware://docs/features/controlnet-guide`, `runware://docs/providers/kling-ai`, `runware://docs/guides/cost-optimization`
 
-Ask Claude to list or read any `runware://docs/*` resource for detailed reference information.
+Ask your AI assistant to list or read any `runware://docs/*` resource for detailed reference information.
 
 ---
 
 ## Architecture
 
 ```mermaid
-flowchart TB
-    subgraph Claude["🤖 Claude Code"]
-        CC["Claude Assistant"]
-    end
+flowchart LR
+    Client["MCP Client"] <-->|"MCP"| Handler
 
-    subgraph MCP["⚡ Runware MCP Server"]
-        direction TB
-        Handler["MCP Protocol Handler"]
+    subgraph Server["Runware MCP Server"]
+        Handler["Protocol Handler"]
+        Handler --> Tools & Core
+        Core --> Data
 
-        subgraph Tools["Tool Layer"]
-            direction LR
-            IMG["Image Tools"]
-            VID["Video Tools"]
-            AUD["Audio Tools"]
-            BATCH["Batch Tools"]
+        subgraph Tools["Tools"]
+            direction TB
+            IMG["Image"] ~~~ VID["Video"]
+            AUD["Audio"] ~~~ BATCH["Batch"]
         end
 
-        subgraph Core["Core Services"]
-            direction LR
-            RL["Rate Limiter"]
-            Cache["LRU Cache"]
+        subgraph Core["Services"]
+            direction TB
+            RL["Rate Limiter"] ~~~ Cache["Cache"]
             Val["Validation"]
         end
 
-        subgraph Data["Data Layer"]
-            direction LR
-            Session["Session Store"]
+        subgraph Data["Data"]
+            direction TB
+            Session["Sessions"]
             Analytics["Analytics"]
         end
-
-        Handler --> Tools
-        Tools --> Core
-        Core --> Data
     end
 
-    subgraph Runware["☁️ Runware Cloud"]
-        API["REST API"]
-    end
+    Tools -->|"HTTPS"| API["Runware Cloud API"]
 
-    CC <-->|"MCP Protocol"| Handler
-    Tools -->|"HTTPS"| API
-
-    style Claude fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style MCP fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style Runware fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style Tools fill:#2563eb,stroke:#60a5fa,color:#fff
-    style Core fill:#2563eb,stroke:#60a5fa,color:#fff
-    style Data fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Client fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
+    style Server fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Handler fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Tools fill:#1e40af,stroke:#3b82f6,color:#fff
+    style Core fill:#065f46,stroke:#10b981,color:#fff
+    style Data fill:#854d0e,stroke:#facc15,color:#fff
+    style IMG fill:#2563eb,stroke:#60a5fa,color:#fff
+    style VID fill:#7c3aed,stroke:#a78bfa,color:#fff
+    style AUD fill:#059669,stroke:#34d399,color:#fff
+    style BATCH fill:#d97706,stroke:#fbbf24,color:#fff
+    style RL fill:#065f46,stroke:#10b981,color:#fff
+    style Cache fill:#065f46,stroke:#10b981,color:#fff
+    style Val fill:#065f46,stroke:#10b981,color:#fff
+    style Session fill:#92400e,stroke:#f59e0b,color:#fff
+    style Analytics fill:#92400e,stroke:#f59e0b,color:#fff
+    style API fill:#854d0e,stroke:#facc15,stroke-width:2px,color:#fff
 ```
 
 ---
@@ -341,14 +334,14 @@ The original Python implementation covered **~40%** of Runware's API capabilitie
 
 | Provider | Models | Max Resolution | Max Duration | Special Features |
 |----------|--------|----------------|--------------|------------------|
-| **KlingAI** | 10 | 1920×1080 | 10s | Sound, camera lock |
-| **Google Veo** | 3 | 1920×1080 | 8s | Audio gen (Veo 3) |
-| **MiniMax** | 4 | 1920×1080 | 5s | Fast generation |
-| **PixVerse** | 3 | 1280×720 | 4s | Viral effects |
-| **Vidu** | 4 | 1280×720 | 4s | Reference videos |
-| **Wan/Alibaba** | 2 | 1280×720 | 5s | Multi-shot |
-| **Runway** | 2 | 1920×1080 | 10s | Professional |
-| **Sync.so** | 1 | 1920×1080 | 60s | Lip sync |
+| **KlingAI** | 10 | 1920x1080 | 10s | Sound, camera lock |
+| **Google Veo** | 3 | 1920x1080 | 8s | Audio gen (Veo 3) |
+| **MiniMax** | 4 | 1920x1080 | 5s | Fast generation |
+| **PixVerse** | 3 | 1280x720 | 4s | Viral effects |
+| **Vidu** | 4 | 1280x720 | 4s | Reference videos |
+| **Wan/Alibaba** | 2 | 1280x720 | 5s | Multi-shot |
+| **Runway** | 2 | 1920x1080 | 10s | Professional |
+| **Sync.so** | 1 | 1920x1080 | 60s | Lip sync |
 
 ---
 
@@ -406,8 +399,7 @@ The original Python implementation covered **~40%** of Runware's API capabilitie
 ```
 You: "Process all images in /photos/products - remove backgrounds,
       upscale 2x, and save as PNGs to /photos/processed"
-
-Claude: Uses processFolder → removeBackground → upscale pipeline
+Assistant uses processFolder with removeBackground and upscale pipeline
 ```
 
 ### Video Storyboard
@@ -415,7 +407,7 @@ Claude: Uses processFolder → removeBackground → upscale pipeline
 You: "Create a 3-part video story: sunrise over mountains,
       eagle soaring, landing on a branch. Use Kling, 5s each."
 
-Claude: Generates 3 coordinated videos with consistent style
+Assistant generates 3 coordinated videos with consistent style
 ```
 
 ### Brand Asset Generation
@@ -423,14 +415,14 @@ Claude: Generates 3 coordinated videos with consistent style
 You: "Generate 5 logo variations for 'TechFlow' - modern, minimal,
       tech-focused. Then vectorize the best one."
 
-Claude: Uses imageInference → selects best → vectorize to SVG
+Assistant uses imageInference, selects best, then vectorize to SVG
 ```
 
 ### Music + Video
 ```
 You: "Create a 30-second promo video with matching background music"
 
-Claude: Uses videoInference + audioInference in parallel
+Assistant uses videoInference + audioInference in parallel
 ```
 
 ---
@@ -458,7 +450,7 @@ npm test
 
 ## Contributing
 
-This project is being PR'd back to the official Runware repository. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full development guide including project structure, how to add new tools, testing patterns, and code style.
+See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full development guide including project structure, how to add new tools, testing patterns, and code style.
 
 1. Fork it
 2. Create a feature branch
@@ -476,7 +468,7 @@ MIT
 ---
 
 <p align="center">
-  <strong>Built for creators who demand more from their AI assistant.</strong>
+  <strong>Built for creators who demand more from their AI tools.</strong>
 </p>
 
 <p align="center">
