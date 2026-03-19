@@ -21,28 +21,45 @@
 An MCP server that connects your AI coding assistant directly to Runware's AI media generation infrastructure. Works with any client that supports the [Model Context Protocol](https://modelcontextprotocol.io).
 
 ```mermaid
-flowchart LR
-    Client["MCP Client"] <-->|"MCP Protocol"| Server
+flowchart TB
+    subgraph Client["MCP Client"]
+        direction LR
+        C1["Claude Code"] ~~~ C2["Cursor"] ~~~ C3["Windsurf"] ~~~ C4["VS Code"] ~~~ C5["Any MCP Client"]
+    end
+
+    Client <-->|"MCP Protocol"| Server
 
     subgraph Server["Runware MCP Server"]
-        direction TB
-        Tools["22 Tools  &middot;  6 Resources"]
-        Engine["Rate Limiting  &middot;  Caching  &middot;  Batch Processing"]
+        direction LR
+        Tools["22 Tools"] ~~~ Resources["6 Resources"] ~~~ RL["Rate Limiting"] ~~~ Cache["Caching"] ~~~ Batch["Batch Processing"]
     end
 
     Server -->|"REST API"| Cloud
 
     subgraph Cloud["Runware Cloud"]
-        direction TB
-        Models["FLUX  &middot;  SDXL  &middot;  Kling  &middot;  Veo  &middot;  ElevenLabs  &middot;  +more"]
+        direction LR
+        FLUX["FLUX"] ~~~ SDXL["SDXL"] ~~~ Kling["Kling"] ~~~ Veo["Veo"] ~~~ EL["ElevenLabs"] ~~~ More["+more"]
     end
 
     style Client fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
+    style C1 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C2 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C3 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C4 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C5 fill:#0f766e,stroke:#2dd4bf,color:#fff
     style Server fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
     style Tools fill:#2563eb,stroke:#60a5fa,color:#fff
-    style Engine fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Resources fill:#2563eb,stroke:#60a5fa,color:#fff
+    style RL fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Cache fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Batch fill:#2563eb,stroke:#60a5fa,color:#fff
     style Cloud fill:#854d0e,stroke:#facc15,stroke-width:2px,color:#fff
-    style Models fill:#a16207,stroke:#fde047,color:#fff
+    style FLUX fill:#a16207,stroke:#fde047,color:#fff
+    style SDXL fill:#a16207,stroke:#fde047,color:#fff
+    style Kling fill:#a16207,stroke:#fde047,color:#fff
+    style Veo fill:#a16207,stroke:#fde047,color:#fff
+    style EL fill:#a16207,stroke:#fde047,color:#fff
+    style More fill:#a16207,stroke:#fde047,color:#fff
 ```
 
 **One config. Zero complexity. Infinite creativity.**
