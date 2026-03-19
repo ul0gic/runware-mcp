@@ -86,15 +86,44 @@ Add the server to your MCP client config:
 
 ### Config locations by client
 
-| Client | Config Location |
-|--------|-----------------|
-| **Claude Code** | `~/.claude.json` or project `.mcp.json` |
-| **Claude Desktop (macOS)** | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| **Claude Desktop (Linux)** | `~/.config/claude/claude_desktop_config.json` |
-| **Claude Desktop (Windows)** | `%APPDATA%\Claude\claude_desktop_config.json` |
-| **Cursor** | `.cursor/mcp.json` in your project root |
-| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` |
-| **VS Code (Copilot)** | `.vscode/mcp.json` in your project root |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Client</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Config Location</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>**Claude Code**</td>
+    <td>`~/.claude.json` or project `.mcp.json`</td>
+  </tr>
+  <tr>
+    <td>**Claude Desktop (macOS)**</td>
+    <td>`~/Library/Application Support/Claude/claude_desktop_config.json`</td>
+  </tr>
+  <tr>
+    <td>**Claude Desktop (Linux)**</td>
+    <td>`~/.config/claude/claude_desktop_config.json`</td>
+  </tr>
+  <tr>
+    <td>**Claude Desktop (Windows)**</td>
+    <td>`%APPDATA%\Claude\claude_desktop_config.json`</td>
+  </tr>
+  <tr>
+    <td>**Cursor**</td>
+    <td>`.cursor/mcp.json` in your project root</td>
+  </tr>
+  <tr>
+    <td>**Windsurf**</td>
+    <td>`~/.codeium/windsurf/mcp_config.json`</td>
+  </tr>
+  <tr>
+    <td>**VS Code (Copilot)**</td>
+    <td>`.vscode/mcp.json` in your project root</td>
+  </tr>
+</tbody>
+</table>
 
 > **Note:** Config format may vary slightly by client. Check your client's MCP documentation for exact syntax.
 
@@ -156,55 +185,197 @@ flowchart LR
 
 ### Image Generation & Manipulation
 
-| Tool | What It Does | Key Features |
-|------|--------------|--------------|
-| `imageInference` | Text/image to images | 60+ parameters, LoRA, ControlNet, IP-Adapters |
-| `photoMaker` | Preserve identity across generations | Face consistency, style transfer |
-| `imageUpscale` | Enhance resolution up to 4x | Multiple algorithms, preserve details |
-| `imageBackgroundRemoval` | Remove backgrounds instantly | Alpha matting, custom colors |
-| `imageCaption` | Describe images in detail | Multiple models, structured output |
-| `imageMasking` | Generate segmentation masks | Face, body, hands detection |
-| `imageUpload` | Upload local images | Base64, URL, data URI support |
-| `vectorize` | Convert raster to SVG | Perfect for logos, icons |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Key Features</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`imageInference`</td>
+    <td>Text/image to images</td>
+    <td>60+ parameters, LoRA, ControlNet, IP-Adapters</td>
+  </tr>
+  <tr>
+    <td>`photoMaker`</td>
+    <td>Preserve identity across generations</td>
+    <td>Face consistency, style transfer</td>
+  </tr>
+  <tr>
+    <td>`imageUpscale`</td>
+    <td>Enhance resolution up to 4x</td>
+    <td>Multiple algorithms, preserve details</td>
+  </tr>
+  <tr>
+    <td>`imageBackgroundRemoval`</td>
+    <td>Remove backgrounds instantly</td>
+    <td>Alpha matting, custom colors</td>
+  </tr>
+  <tr>
+    <td>`imageCaption`</td>
+    <td>Describe images in detail</td>
+    <td>Multiple models, structured output</td>
+  </tr>
+  <tr>
+    <td>`imageMasking`</td>
+    <td>Generate segmentation masks</td>
+    <td>Face, body, hands detection</td>
+  </tr>
+  <tr>
+    <td>`imageUpload`</td>
+    <td>Upload local images</td>
+    <td>Base64, URL, data URI support</td>
+  </tr>
+  <tr>
+    <td>`vectorize`</td>
+    <td>Convert raster to SVG</td>
+    <td>Perfect for logos, icons</td>
+  </tr>
+</tbody>
+</table>
 
 ### Video Generation
 
-| Tool | What It Does | Providers |
-|------|--------------|-----------|
-| `videoInference` | Create videos from text/images | Kling, Veo, MiniMax, PixVerse, Runway, Vidu, Wan, Sync |
-| `listVideoModels` | Browse available models | All providers with specs |
-| `getVideoModelInfo` | Get model details | Dimensions, duration, features |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Providers</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`videoInference`</td>
+    <td>Create videos from text/images</td>
+    <td>Kling, Veo, MiniMax, PixVerse, Runway, Vidu, Wan, Sync</td>
+  </tr>
+  <tr>
+    <td>`listVideoModels`</td>
+    <td>Browse available models</td>
+    <td>All providers with specs</td>
+  </tr>
+  <tr>
+    <td>`getVideoModelInfo`</td>
+    <td>Get model details</td>
+    <td>Dimensions, duration, features</td>
+  </tr>
+</tbody>
+</table>
 
 ### Audio Generation
 
-| Tool | What It Does | Features |
-|------|--------------|----------|
-| `audioInference` | Generate music, SFX, speech | ElevenLabs, Mirelo, 14 voices |
-| `transcription` | Video to text transcription | Multiple languages |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Features</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`audioInference`</td>
+    <td>Generate music, SFX, speech</td>
+    <td>ElevenLabs, Mirelo, 14 voices</td>
+  </tr>
+  <tr>
+    <td>`transcription`</td>
+    <td>Video to text transcription</td>
+    <td>Multiple languages</td>
+  </tr>
+</tbody>
+</table>
 
 ### Creative Tools
 
-| Tool | What It Does | Use Cases |
-|------|--------------|-----------|
-| `promptEnhance` | Supercharge your prompts | 1-5 variations, AI enrichment |
-| `controlNetPreprocess` | Prepare images for ControlNet | 12 preprocessors |
-| `styleTransfer` | Apply artistic styles | Combine with any model |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Use Cases</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`promptEnhance`</td>
+    <td>Supercharge your prompts</td>
+    <td>1-5 variations, AI enrichment</td>
+  </tr>
+  <tr>
+    <td>`controlNetPreprocess`</td>
+    <td>Prepare images for ControlNet</td>
+    <td>12 preprocessors</td>
+  </tr>
+  <tr>
+    <td>`styleTransfer`</td>
+    <td>Apply artistic styles</td>
+    <td>Combine with any model</td>
+  </tr>
+</tbody>
+</table>
 
 ### Utilities
 
-| Tool | What It Does | Why It Matters |
-|------|--------------|----------------|
-| `modelSearch` | Search 100,000+ models | Find the perfect model |
-| `costEstimate` | Estimate before generating | Budget control |
-| `getAccountBalance` | Check your credits | Never run dry |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Why It Matters</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`modelSearch`</td>
+    <td>Search 100,000+ models</td>
+    <td>Find the perfect model</td>
+  </tr>
+  <tr>
+    <td>`costEstimate`</td>
+    <td>Estimate before generating</td>
+    <td>Budget control</td>
+  </tr>
+  <tr>
+    <td>`getAccountBalance`</td>
+    <td>Check your credits</td>
+    <td>Never run dry</td>
+  </tr>
+</tbody>
+</table>
 
 ### Batch Operations
 
-| Tool | What It Does | Power Features |
-|------|--------------|----------------|
-| `processFolder` | Process entire folders | Upscale, remove BG, caption, vectorize |
-| `batchImageInference` | Generate from multiple prompts | Concurrent processing |
-| `watchFolder` | Auto-process new files | Pipelines, debouncing |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Power Features</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`processFolder`</td>
+    <td>Process entire folders</td>
+    <td>Upscale, remove BG, caption, vectorize</td>
+  </tr>
+  <tr>
+    <td>`batchImageInference`</td>
+    <td>Generate from multiple prompts</td>
+    <td>Concurrent processing</td>
+  </tr>
+  <tr>
+    <td>`watchFolder`</td>
+    <td>Auto-process new files</td>
+    <td>Pipelines, debouncing</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
@@ -212,17 +383,52 @@ flowchart LR
 
 This server exposes the **full capabilities** of each provider:
 
-| Provider | Exclusive Features |
-|----------|-------------------|
-| **Alibaba (Wan)** | Prompt extension, multi-shot videos, audio generation |
-| **Black Forest Labs** | Safety tolerance, raw mode, prompt upsampling |
-| **Bria** | Content moderation, medium selection, fast mode |
-| **Ideogram** | 65+ style types, color palettes, magic prompt |
-| **ByteDance** | Sequential image narratives (1-15 images) |
-| **KlingAI** | Sound generation, camera fixed mode |
-| **PixVerse** | 20 viral effects, 21 camera movements, multi-clip |
-| **Google Veo** | Prompt enhancement, audio generation (Veo 3) |
-| **Sync.so** | Lip sync, speaker detection, audio segments |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Provider</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Exclusive Features</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>**Alibaba (Wan)**</td>
+    <td>Prompt extension, multi-shot videos, audio generation</td>
+  </tr>
+  <tr>
+    <td>**Black Forest Labs**</td>
+    <td>Safety tolerance, raw mode, prompt upsampling</td>
+  </tr>
+  <tr>
+    <td>**Bria**</td>
+    <td>Content moderation, medium selection, fast mode</td>
+  </tr>
+  <tr>
+    <td>**Ideogram**</td>
+    <td>65+ style types, color palettes, magic prompt</td>
+  </tr>
+  <tr>
+    <td>**ByteDance**</td>
+    <td>Sequential image narratives (1-15 images)</td>
+  </tr>
+  <tr>
+    <td>**KlingAI**</td>
+    <td>Sound generation, camera fixed mode</td>
+  </tr>
+  <tr>
+    <td>**PixVerse**</td>
+    <td>20 viral effects, 21 camera movements, multi-clip</td>
+  </tr>
+  <tr>
+    <td>**Google Veo**</td>
+    <td>Prompt enhancement, audio generation (Veo 3)</td>
+  </tr>
+  <tr>
+    <td>**Sync.so**</td>
+    <td>Lip sync, speaker detection, audio segments</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
@@ -230,13 +436,36 @@ This server exposes the **full capabilities** of each provider:
 
 Access your generated content programmatically:
 
-| Resource URI | Description |
-|--------------|-------------|
-| `runware://images/{id}` | Generated images with metadata |
-| `runware://videos/{id}` | Generated videos with metadata |
-| `runware://audio/{id}` | Generated audio with metadata |
-| `runware://session/history` | Full session generation history |
-| `runware://analytics/{period}` | Usage analytics (day/week/month/all) |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Resource URI</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Description</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`runware://images/{id}`</td>
+    <td>Generated images with metadata</td>
+  </tr>
+  <tr>
+    <td>`runware://videos/{id}`</td>
+    <td>Generated videos with metadata</td>
+  </tr>
+  <tr>
+    <td>`runware://audio/{id}`</td>
+    <td>Generated audio with metadata</td>
+  </tr>
+  <tr>
+    <td>`runware://session/history`</td>
+    <td>Full session generation history</td>
+  </tr>
+  <tr>
+    <td>`runware://analytics/{period}`</td>
+    <td>Usage analytics (day/week/month/all)</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
@@ -244,15 +473,44 @@ Access your generated content programmatically:
 
 Pre-built workflows for common tasks:
 
-| Template | Perfect For |
-|----------|-------------|
-| `product-photo` | E-commerce, catalogs, marketing |
-| `avatar-generator` | Profile pictures, characters |
-| `video-scene` | Storyboarding, content creation |
-| `style-transfer` | Artistic transformations |
-| `ui-mockup` | Web/mobile design prototypes |
-| `thumbnail` | YouTube, articles, social media |
-| `music-composition` | Background music, jingles |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Template</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Perfect For</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`product-photo`</td>
+    <td>E-commerce, catalogs, marketing</td>
+  </tr>
+  <tr>
+    <td>`avatar-generator`</td>
+    <td>Profile pictures, characters</td>
+  </tr>
+  <tr>
+    <td>`video-scene`</td>
+    <td>Storyboarding, content creation</td>
+  </tr>
+  <tr>
+    <td>`style-transfer`</td>
+    <td>Artistic transformations</td>
+  </tr>
+  <tr>
+    <td>`ui-mockup`</td>
+    <td>Web/mobile design prototypes</td>
+  </tr>
+  <tr>
+    <td>`thumbnail`</td>
+    <td>YouTube, articles, social media</td>
+  </tr>
+  <tr>
+    <td>`music-composition`</td>
+    <td>Background music, jingles</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
@@ -262,13 +520,42 @@ This MCP server includes **comprehensive built-in documentation** accessible as 
 
 **42 documentation resources** organized across 5 categories:
 
-| Category | Count | What's Covered |
-|----------|-------|----------------|
-| **Concepts** | 5 | AIR identifiers, task responses, output types, async delivery, connection |
-| **Tools** | 13 | Full parameter reference for every tool |
-| **Features** | 10 | ControlNet, LoRA, IP-Adapters, prompt weighting, acceleration, and more |
-| **Providers** | 9 | Provider-specific settings and capabilities |
-| **Guides** | 5 | Batch processing, cost optimization, quality tuning, combining features |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Category</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Count</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">What's Covered</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>**Concepts**</td>
+    <td>5</td>
+    <td>AIR identifiers, task responses, output types, async delivery, connection</td>
+  </tr>
+  <tr>
+    <td>**Tools**</td>
+    <td>13</td>
+    <td>Full parameter reference for every tool</td>
+  </tr>
+  <tr>
+    <td>**Features**</td>
+    <td>10</td>
+    <td>ControlNet, LoRA, IP-Adapters, prompt weighting, acceleration, and more</td>
+  </tr>
+  <tr>
+    <td>**Providers**</td>
+    <td>9</td>
+    <td>Provider-specific settings and capabilities</td>
+  </tr>
+  <tr>
+    <td>**Guides**</td>
+    <td>5</td>
+    <td>Batch processing, cost optimization, quality tuning, combining features</td>
+  </tr>
+</tbody>
+</table>
 
 Example URIs: `runware://docs/tools/image-inference`, `runware://docs/features/controlnet-guide`, `runware://docs/providers/kling-ai`, `runware://docs/guides/cost-optimization`
 
@@ -328,85 +615,299 @@ flowchart LR
 
 ---
 
-## Why This Exists
+## What's Included
 
-The original Python implementation covered **~40%** of Runware's API capabilities.
+A ground-up TypeScript rewrite covering **100% of the Runware API**.
 
-| Metric | Original Python | This TypeScript |
-|--------|-----------------|-----------------|
-| **API Coverage** | ~40% | **100%** |
-| **Tools** | 8 | **22** |
-| **Providers** | 4 | **9** |
-| **Provider Settings** | 0 | **Full Support** |
-| **Session Storage** | None | **In-memory session stores** |
-| **Batch Ops** | None | **Folder processing, watching** |
-| **Type Safety** | `Dict[str, Any]` | **Strict TypeScript + Zod** |
-| **Security** | Path traversal bugs | **SSRF protection, rate limiting** |
-| **Tests** | 0% | **80%+ coverage** |
-| **Install Complexity** | UV, venv, Python hell | **`npx` — just works** |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Feature</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Details</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>**API Coverage**</td>
+    <td>100% — every endpoint, every parameter</td>
+  </tr>
+  <tr>
+    <td>**Tools**</td>
+    <td>22 tools across image, video, audio, and batch ops</td>
+  </tr>
+  <tr>
+    <td>**Providers**</td>
+    <td>9 providers with full provider-specific settings</td>
+  </tr>
+  <tr>
+    <td>**Type Safety**</td>
+    <td>Strict TypeScript + Zod validation on every input</td>
+  </tr>
+  <tr>
+    <td>**Security**</td>
+    <td>SSRF protection, rate limiting, path traversal prevention</td>
+  </tr>
+  <tr>
+    <td>**Testing**</td>
+    <td>80%+ coverage across 1300+ tests</td>
+  </tr>
+  <tr>
+    <td>**Install**</td>
+    <td>`npx @runware/mcp-server` — zero setup</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
 ## Video Model Comparison
 
-| Provider | Models | Max Resolution | Max Duration | Special Features |
-|----------|--------|----------------|--------------|------------------|
-| **KlingAI** | 10 | 1920x1080 | 10s | Sound, camera lock |
-| **Google Veo** | 3 | 1920x1080 | 8s | Audio gen (Veo 3) |
-| **MiniMax** | 4 | 1920x1080 | 5s | Fast generation |
-| **PixVerse** | 3 | 1280x720 | 4s | Viral effects |
-| **Vidu** | 4 | 1280x720 | 4s | Reference videos |
-| **Wan/Alibaba** | 2 | 1280x720 | 5s | Multi-shot |
-| **Runway** | 2 | 1920x1080 | 10s | Professional |
-| **Sync.so** | 1 | 1920x1080 | 60s | Lip sync |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Provider</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Models</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Max Resolution</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Max Duration</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Special Features</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>**KlingAI**</td>
+    <td>10</td>
+    <td>1920x1080</td>
+    <td>10s</td>
+    <td>Sound, camera lock</td>
+  </tr>
+  <tr>
+    <td>**Google Veo**</td>
+    <td>3</td>
+    <td>1920x1080</td>
+    <td>8s</td>
+    <td>Audio gen (Veo 3)</td>
+  </tr>
+  <tr>
+    <td>**MiniMax**</td>
+    <td>4</td>
+    <td>1920x1080</td>
+    <td>5s</td>
+    <td>Fast generation</td>
+  </tr>
+  <tr>
+    <td>**PixVerse**</td>
+    <td>3</td>
+    <td>1280x720</td>
+    <td>4s</td>
+    <td>Viral effects</td>
+  </tr>
+  <tr>
+    <td>**Vidu**</td>
+    <td>4</td>
+    <td>1280x720</td>
+    <td>4s</td>
+    <td>Reference videos</td>
+  </tr>
+  <tr>
+    <td>**Wan/Alibaba**</td>
+    <td>2</td>
+    <td>1280x720</td>
+    <td>5s</td>
+    <td>Multi-shot</td>
+  </tr>
+  <tr>
+    <td>**Runway**</td>
+    <td>2</td>
+    <td>1920x1080</td>
+    <td>10s</td>
+    <td>Professional</td>
+  </tr>
+  <tr>
+    <td>**Sync.so**</td>
+    <td>1</td>
+    <td>1920x1080</td>
+    <td>60s</td>
+    <td>Lip sync</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
 ## ControlNet Preprocessors
 
-| Preprocessor | Use Case | Best For |
-|--------------|----------|----------|
-| `canny` | Edge detection | Architectural, product |
-| `depth` | Depth mapping | Scenes, landscapes |
-| `mlsd` | Line segments | Interior design |
-| `normalbae` | Normal maps | 3D-like rendering |
-| `openpose` | Human pose | Character art |
-| `tile` | Tile processing | Textures, patterns |
-| `seg` | Segmentation | Complex scenes |
-| `lineart` | Line extraction | Illustrations |
-| `lineart_anime` | Anime lines | Anime, manga |
-| `shuffle` | Content shuffle | Abstract, creative |
-| `scribble` | Scribble style | Concept art |
-| `softedge` | Soft edges | Soft, dreamy |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Preprocessor</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Use Case</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Best For</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`canny`</td>
+    <td>Edge detection</td>
+    <td>Architectural, product</td>
+  </tr>
+  <tr>
+    <td>`depth`</td>
+    <td>Depth mapping</td>
+    <td>Scenes, landscapes</td>
+  </tr>
+  <tr>
+    <td>`mlsd`</td>
+    <td>Line segments</td>
+    <td>Interior design</td>
+  </tr>
+  <tr>
+    <td>`normalbae`</td>
+    <td>Normal maps</td>
+    <td>3D-like rendering</td>
+  </tr>
+  <tr>
+    <td>`openpose`</td>
+    <td>Human pose</td>
+    <td>Character art</td>
+  </tr>
+  <tr>
+    <td>`tile`</td>
+    <td>Tile processing</td>
+    <td>Textures, patterns</td>
+  </tr>
+  <tr>
+    <td>`seg`</td>
+    <td>Segmentation</td>
+    <td>Complex scenes</td>
+  </tr>
+  <tr>
+    <td>`lineart`</td>
+    <td>Line extraction</td>
+    <td>Illustrations</td>
+  </tr>
+  <tr>
+    <td>`lineart_anime`</td>
+    <td>Anime lines</td>
+    <td>Anime, manga</td>
+  </tr>
+  <tr>
+    <td>`shuffle`</td>
+    <td>Content shuffle</td>
+    <td>Abstract, creative</td>
+  </tr>
+  <tr>
+    <td>`scribble`</td>
+    <td>Scribble style</td>
+    <td>Concept art</td>
+  </tr>
+  <tr>
+    <td>`softedge`</td>
+    <td>Soft edges</td>
+    <td>Soft, dreamy</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
 ## Configuration Reference
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `RUNWARE_API_KEY` | **required** | Your Runware API key |
-| `NODE_ENV` | `production` | Environment mode |
-| `LOG_LEVEL` | `info` | Logging verbosity |
-| `MAX_FILE_SIZE_MB` | `50` | Max upload size |
-| `REQUEST_TIMEOUT_MS` | `60000` | API timeout |
-| `POLL_MAX_ATTEMPTS` | `150` | Video poll attempts |
-| `RATE_LIMIT_MAX_TOKENS` | `10` | Rate limit burst |
-| `RATE_LIMIT_REFILL_RATE` | `1` | Tokens per second |
-| `WATCH_FOLDERS` | — | Auto-watch folders |
-| `WATCH_DEBOUNCE_MS` | `500` | Watch debounce |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Variable</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Default</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Description</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`RUNWARE_API_KEY`</td>
+    <td>**required**</td>
+    <td>Your Runware API key</td>
+  </tr>
+  <tr>
+    <td>`NODE_ENV`</td>
+    <td>`production`</td>
+    <td>Environment mode</td>
+  </tr>
+  <tr>
+    <td>`LOG_LEVEL`</td>
+    <td>`info`</td>
+    <td>Logging verbosity</td>
+  </tr>
+  <tr>
+    <td>`MAX_FILE_SIZE_MB`</td>
+    <td>`50`</td>
+    <td>Max upload size</td>
+  </tr>
+  <tr>
+    <td>`REQUEST_TIMEOUT_MS`</td>
+    <td>`60000`</td>
+    <td>API timeout</td>
+  </tr>
+  <tr>
+    <td>`POLL_MAX_ATTEMPTS`</td>
+    <td>`150`</td>
+    <td>Video poll attempts</td>
+  </tr>
+  <tr>
+    <td>`RATE_LIMIT_MAX_TOKENS`</td>
+    <td>`10`</td>
+    <td>Rate limit burst</td>
+  </tr>
+  <tr>
+    <td>`RATE_LIMIT_REFILL_RATE`</td>
+    <td>`1`</td>
+    <td>Tokens per second</td>
+  </tr>
+  <tr>
+    <td>`WATCH_FOLDERS`</td>
+    <td>—</td>
+    <td>Auto-watch folders</td>
+  </tr>
+  <tr>
+    <td>`WATCH_DEBOUNCE_MS`</td>
+    <td>`500`</td>
+    <td>Watch debounce</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
 ## Security
 
-| Protection | Implementation |
-|------------|----------------|
-| **Input Validation** | Zod schemas on every tool |
-| **Path Traversal** | Canonicalization + symlink resolution |
-| **SSRF Protection** | Private IP + metadata endpoint blocking |
-| **Rate Limiting** | Token bucket algorithm |
-| **Error Sanitization** | No stack traces or paths leaked |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Protection</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Implementation</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>**Input Validation**</td>
+    <td>Zod schemas on every tool</td>
+  </tr>
+  <tr>
+    <td>**Path Traversal**</td>
+    <td>Canonicalization + symlink resolution</td>
+  </tr>
+  <tr>
+    <td>**SSRF Protection**</td>
+    <td>Private IP + metadata endpoint blocking</td>
+  </tr>
+  <tr>
+    <td>**Rate Limiting**</td>
+    <td>Token bucket algorithm</td>
+  </tr>
+  <tr>
+    <td>**Error Sanitization**</td>
+    <td>No stack traces or paths leaked</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
@@ -454,14 +955,40 @@ npm run build
 npm test
 ```
 
-| Command | Purpose |
-|---------|---------|
-| `npm run build` | Compile TypeScript |
-| `npm run dev` | Watch mode |
-| `npm run typecheck` | Type checking |
-| `npm run lint` | Lint with strict rules |
-| `npm run test` | Run tests |
-| `npm run test:coverage` | Coverage report |
+<table>
+<thead>
+  <tr>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Command</font></th>
+    <th bgcolor="#0d1117"><font color="#58a6ff">Purpose</font></th>
+  </tr>
+</thead>
+<tbody>
+  <tr>
+    <td>`npm run build`</td>
+    <td>Compile TypeScript</td>
+  </tr>
+  <tr>
+    <td>`npm run dev`</td>
+    <td>Watch mode</td>
+  </tr>
+  <tr>
+    <td>`npm run typecheck`</td>
+    <td>Type checking</td>
+  </tr>
+  <tr>
+    <td>`npm run lint`</td>
+    <td>Lint with strict rules</td>
+  </tr>
+  <tr>
+    <td>`npm run test`</td>
+    <td>Run tests</td>
+  </tr>
+  <tr>
+    <td>`npm run test:coverage`</td>
+    <td>Coverage report</td>
+  </tr>
+</tbody>
+</table>
 
 ---
 
