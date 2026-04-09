@@ -20,7 +20,47 @@
 
 An MCP server that connects your AI coding assistant directly to Runware's AI media generation infrastructure. Works with any client that supports the [Model Context Protocol](https://modelcontextprotocol.io).
 
-> **[View diagrams on GitHub](https://github.com/ul0gic/runware-mcp)**
+```mermaid
+flowchart TB
+    subgraph Client["MCP Client"]
+        direction LR
+        C1["Claude Code"] ~~~ C2["Cursor"] ~~~ C3["Windsurf"] ~~~ C4["VS Code"] ~~~ C5["Any MCP Client"]
+    end
+
+    Client <-->|"MCP Protocol"| Server
+
+    subgraph Server["Runware MCP Server"]
+        direction LR
+        Tools["22 Tools"] ~~~ Resources["6 Resources"] ~~~ RL["Rate Limiting"] ~~~ Cache["Caching"] ~~~ Batch["Batch Processing"]
+    end
+
+    Server -->|"REST API"| Cloud
+
+    subgraph Cloud["Runware Cloud"]
+        direction LR
+        FLUX["FLUX"] ~~~ SDXL["SDXL"] ~~~ Kling["Kling"] ~~~ Veo["Veo"] ~~~ EL["ElevenLabs"] ~~~ More["+more"]
+    end
+
+    style Client fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
+    style C1 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C2 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C3 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C4 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style C5 fill:#0f766e,stroke:#2dd4bf,color:#fff
+    style Server fill:#1e3a5f,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Tools fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Resources fill:#2563eb,stroke:#60a5fa,color:#fff
+    style RL fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Cache fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Batch fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Cloud fill:#854d0e,stroke:#facc15,stroke-width:2px,color:#fff
+    style FLUX fill:#a16207,stroke:#fde047,color:#fff
+    style SDXL fill:#a16207,stroke:#fde047,color:#fff
+    style Kling fill:#a16207,stroke:#fde047,color:#fff
+    style Veo fill:#a16207,stroke:#fde047,color:#fff
+    style EL fill:#a16207,stroke:#fde047,color:#fff
+    style More fill:#a16207,stroke:#fde047,color:#fff
+```
 
 **One config. Zero complexity. Infinite creativity.**
 
@@ -93,7 +133,51 @@ That's it. No `pip install`. No virtual environments. No Python version conflict
 
 ## Capabilities at a Glance
 
-> **[View diagrams on GitHub](https://github.com/ul0gic/runware-mcp)**
+```mermaid
+flowchart LR
+    R((Runware MCP)) --> IMG[Images]
+    R --> VID[Video]
+    R --> AUD[Audio]
+    R --> BATCH[Batch Ops]
+    R --> INT[Intelligence]
+
+    IMG --> I1[Text to Image]
+    IMG --> I2[Img to Img &middot; Inpaint &middot; Outpaint]
+    IMG --> I3[Upscale &middot; BG Removal &middot; Caption]
+    IMG --> I4[Masking &middot; Vectorize]
+
+    VID --> V1[Text/Image to Video]
+    VID --> V2[Lip Sync &middot; 9 Providers]
+
+    AUD --> A1[Music &middot; SFX &middot; TTS]
+    AUD --> A2[Transcription]
+
+    BATCH --> B1[Folder Processing]
+    BATCH --> B2[Batch Generate &middot; Watch]
+
+    INT --> N1[Prompt Enhance &middot; ControlNet]
+    INT --> N2[Model Search &middot; Cost Est.]
+
+    style R fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
+    style IMG fill:#2563eb,stroke:#60a5fa,color:#fff
+    style VID fill:#7c3aed,stroke:#a78bfa,color:#fff
+    style AUD fill:#059669,stroke:#34d399,color:#fff
+    style BATCH fill:#d97706,stroke:#fbbf24,color:#fff
+    style INT fill:#dc2626,stroke:#f87171,color:#fff
+
+    style I1 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style I2 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style I3 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style I4 fill:#1e40af,stroke:#3b82f6,color:#fff
+    style V1 fill:#5b21b6,stroke:#8b5cf6,color:#fff
+    style V2 fill:#5b21b6,stroke:#8b5cf6,color:#fff
+    style A1 fill:#065f46,stroke:#10b981,color:#fff
+    style A2 fill:#065f46,stroke:#10b981,color:#fff
+    style B1 fill:#92400e,stroke:#f59e0b,color:#fff
+    style B2 fill:#92400e,stroke:#f59e0b,color:#fff
+    style N1 fill:#991b1b,stroke:#ef4444,color:#fff
+    style N2 fill:#991b1b,stroke:#ef4444,color:#fff
+```
 
 ---
 
@@ -481,7 +565,53 @@ Ask your AI assistant to list or read any `runware://docs/*` resource for detail
 
 ## Architecture
 
-> **[View diagrams on GitHub](https://github.com/ul0gic/runware-mcp)**
+```mermaid
+flowchart LR
+    Client["MCP Client"] <-->|"MCP"| Handler
+
+    subgraph Server["Runware MCP Server"]
+        Handler["Protocol Handler"]
+        Handler --> Tools & Core
+        Core --> Data
+
+        subgraph Tools["Tools"]
+            direction TB
+            IMG["Image"] ~~~ VID["Video"]
+            AUD["Audio"] ~~~ BATCH["Batch"]
+        end
+
+        subgraph Core["Services"]
+            direction TB
+            RL["Rate Limiter"] ~~~ Cache["Cache"]
+            Val["Validation"]
+        end
+
+        subgraph Data["Data"]
+            direction TB
+            Session["Sessions"]
+            Analytics["Analytics"]
+        end
+    end
+
+    Tools -->|"HTTPS"| API["Runware Cloud API"]
+
+    style Client fill:#0d9488,stroke:#2dd4bf,stroke-width:2px,color:#fff
+    style Server fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
+    style Handler fill:#2563eb,stroke:#60a5fa,color:#fff
+    style Tools fill:#1e40af,stroke:#3b82f6,color:#fff
+    style Core fill:#065f46,stroke:#10b981,color:#fff
+    style Data fill:#854d0e,stroke:#facc15,color:#fff
+    style IMG fill:#2563eb,stroke:#60a5fa,color:#fff
+    style VID fill:#7c3aed,stroke:#a78bfa,color:#fff
+    style AUD fill:#059669,stroke:#34d399,color:#fff
+    style BATCH fill:#d97706,stroke:#fbbf24,color:#fff
+    style RL fill:#065f46,stroke:#10b981,color:#fff
+    style Cache fill:#065f46,stroke:#10b981,color:#fff
+    style Val fill:#065f46,stroke:#10b981,color:#fff
+    style Session fill:#92400e,stroke:#f59e0b,color:#fff
+    style Analytics fill:#92400e,stroke:#f59e0b,color:#fff
+    style API fill:#854d0e,stroke:#facc15,stroke-width:2px,color:#fff
+```
 
 ---
 
