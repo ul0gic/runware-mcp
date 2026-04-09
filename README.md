@@ -20,6 +20,8 @@
 
 An MCP server that connects your AI coding assistant directly to Runware's AI media generation infrastructure. Works with any client that supports the [Model Context Protocol](https://modelcontextprotocol.io).
 
+<!-- Diagrams render on GitHub — view at https://github.com/ul0gic/runware-mcp -->
+
 ```mermaid
 flowchart TB
     subgraph Client["MCP Client"]
@@ -132,6 +134,8 @@ That's it. No `pip install`. No virtual environments. No Python version conflict
 ---
 
 ## Capabilities at a Glance
+
+<!-- Diagram renders on GitHub — view at https://github.com/ul0gic/runware-mcp -->
 
 ```mermaid
 flowchart LR
@@ -564,6 +568,8 @@ Ask your AI assistant to list or read any `runware://docs/*` resource for detail
 ---
 
 ## Architecture
+
+<!-- Diagram renders on GitHub — view at https://github.com/ul0gic/runware-mcp -->
 
 ```mermaid
 flowchart LR
