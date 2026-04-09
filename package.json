@@ -1,6 +1,6 @@
 {
   "name": "runware-mcp",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "MCP server for Runware AI image and video generation",
   "repository": {
     "type": "git",
@@ -26,7 +26,7 @@
     "lint": "eslint src --max-warnings 0"
   },
   "engines": {
-    "node": ">=25"
+    "node": ">=22"
   },
   "license": "MIT",
   "keywords": [
