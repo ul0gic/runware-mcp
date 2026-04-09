@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-04-09
+
+### Changed
+
+- **Upgraded to ESLint 10** — upgraded from ESLint 9.x to 10.2.0, along with all ESLint plugins (`typescript-eslint`, `@eslint/js`, `eslint-plugin-sonarjs`, `eslint-plugin-import-x`, `eslint-plugin-security`, `eslint-plugin-unicorn`, `@stylistic/eslint-plugin`)
+- **Upgraded Vite 7 to 8** — bumped vitest 4.0.18 → 4.1.4, pulling vite 7.3.1 → 8.0.8
+- **Bumped transitive dependencies** — hono 4.12.8 → 4.12.12, @hono/node-server 1.19.11 → 1.19.13, path-to-regexp 8.3.0 → 8.4.0, picomatch 4.0.3 → 4.0.4, flatted 3.3.3 → 3.4.2, qs 6.14.1 → 6.15.0, ajv 6.12.6 → 6.14.0
+
+### Added
+
+- **`.npmrc` supply chain hardening** — `ignore-scripts=true`, `save-exact=true`, `engine-strict=true`, `audit=true`, `package-lock=true`
+
+### Removed
+
+- **Dropped `eslint-plugin-promise`** — plugin is unmaintained (no commits in 6 months, MIA maintainers, 55 open issues). Its 2 rules (`always-return`, `no-return-wrap`) are already covered by TypeScript's `no-floating-promises` and `no-misused-promises`. Removing it unblocked the ESLint 10 upgrade and eliminated all minimatch vulnerabilities.
+
+### Fixed
+
+- Resolved 12+ dependabot security alerts (cookie bypass, middleware bypass, path traversal, WebSocket file read, ReDoS, glob injection)
+- **0 vulnerabilities** — down from 15 open alerts
+
+---
+
 ## [1.1.0] - 2026-03-19
 
 ### Changed
@@ -181,5 +204,6 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 
 - Python implementation replaced entirely by this TypeScript rewrite
 
+[1.2.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.0.0

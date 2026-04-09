@@ -1,7 +1,6 @@
 import eslint from '@eslint/js';
 import stylistic from '@stylistic/eslint-plugin';
 import importX from 'eslint-plugin-import-x';
-import promise from 'eslint-plugin-promise';
 import security from 'eslint-plugin-security';
 import sonarjs from 'eslint-plugin-sonarjs';
 import unicorn from 'eslint-plugin-unicorn';
@@ -24,8 +23,6 @@ export default tseslint.config(
   security.configs.recommended,
   sonarjs.configs.recommended,
   unicorn.configs['flat/recommended'],
-  promise.configs['flat/recommended'],
-
   // Main configuration for TypeScript files
   {
     files: ['src/**/*.ts'],
@@ -247,16 +244,6 @@ export default tseslint.config(
 
       // No duplicate imports
       'import-x/no-duplicates': 'error',
-
-      // ============================================
-      // Promise Rules (eslint-plugin-promise)
-      // ============================================
-
-      // Always return in promise handlers
-      'promise/always-return': 'error',
-
-      // No wrapping values in Promise.resolve/reject unnecessarily
-      'promise/no-return-wrap': 'error',
 
       // ============================================
       // Stylistic Rules (@stylistic/eslint-plugin)
