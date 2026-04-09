@@ -75,7 +75,7 @@ Add the server to your MCP client config:
   "mcpServers": {
     "runware": {
       "command": "npx",
-      "args": ["-y", "@runware/mcp-server"],
+      "args": ["-y", "runware-mcp"],
       "env": {
         "RUNWARE_API_KEY": "your-api-key"
       }
@@ -653,7 +653,7 @@ A ground-up TypeScript rewrite covering **100% of the Runware API**.
   </tr>
   <tr>
     <td>**Install**</td>
-    <td>`npx @runware/mcp-server` — zero setup</td>
+    <td>`npx runware-mcp` — zero setup</td>
   </tr>
 </tbody>
 </table>

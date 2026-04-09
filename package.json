@@ -1,10 +1,14 @@
 {
-  "name": "@runware/mcp-server",
-  "version": "1.0.0",
+  "name": "runware-mcp",
+  "version": "1.2.0",
   "description": "MCP server for Runware AI image and video generation",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ul0gic/runware-mcp.git"
+  },
   "type": "module",
   "bin": {
-    "runware-mcp": "./dist/index.js"
+    "runware-mcp": "dist/index.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
