@@ -117,8 +117,8 @@ Add the server to your MCP client config:
     <td>`.cursor/mcp.json` in your project root</td>
   </tr>
   <tr>
-    <td>**Windsurf**</td>
-    <td>`~/.codeium/windsurf/mcp_config.json`</td>
+    <td>**Codex CLI**</td>
+    <td>`~/.codex/config.toml` or project `.codex/config.toml`</td>
   </tr>
   <tr>
     <td>**VS Code (Copilot)**</td>
@@ -127,7 +127,7 @@ Add the server to your MCP client config:
 </tbody>
 </table>
 
-> **Note:** Config format may vary slightly by client. Check your client's MCP documentation for exact syntax.
+> **Note:** Config format may vary slightly by client. Check your client's MCP documentation for exact syntax. Codex CLI uses TOML — see the [Codex MCP docs](https://developers.openai.com/codex/mcp) for setup.
 
 That's it. No `pip install`. No virtual environments. No Python version conflicts. Just paste, restart, create.
 
