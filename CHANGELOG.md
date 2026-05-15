@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.4] - 2026-05-14
+
+### Changed
+
+- **Upgraded `@modelcontextprotocol/sdk` 1.26.0 → 1.29.0** — pulls in upstream bug fixes for OAuth/auth, transport error reporting, and stricter `inputSchema` validation. No breaking changes affect this server's stdio-only surface.
+
+### Fixed
+
+- Resolved 8 dependabot security alerts via transitive bumps in `package-lock.json`:
+  - `fast-uri` 3.1.0 → 3.1.2 (2× HIGH: path traversal, host confusion)
+  - `hono` 4.12.14 → 4.12.18 (4 medium + 1 low: bodyLimit bypass, JSX tag injection, cache Vary leakage, CSS injection, JWT NumericDate validation)
+  - `ip-address` 10.1.0 → 10.2.0 + `express-rate-limit` 8.3.1 → 8.5.2 (medium: Address6 XSS)
+- **0 vulnerabilities** — `npm audit` clean
+
+---
+
 ## [1.2.0] - 2026-04-09
 
 ### Changed
