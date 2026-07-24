@@ -78,7 +78,7 @@ async function resolveImageSource(input: ImageUploadInput): Promise<string> {
 
     // Validate file type
     const extension = validatedPath.toLowerCase().slice(validatedPath.lastIndexOf('.'));
-    validateFileType(extension, ALLOWED_EXTENSIONS as unknown as readonly string[]);
+    validateFileType(extension, ALLOWED_EXTENSIONS);
 
     // Read file and convert to base64
     // eslint-disable-next-line security/detect-non-literal-fs-filename -- path validated above

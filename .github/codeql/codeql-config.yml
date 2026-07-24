@@ -1,0 +1,9 @@
+name: runware-mcp-security
+
+queries:
+  - uses: security-extended
+
+paths-ignore:
+  - coverage
+  - dist
+  - node_modules
