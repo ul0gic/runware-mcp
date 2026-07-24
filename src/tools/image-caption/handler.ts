@@ -32,7 +32,7 @@ interface ImageCaptionApiResponse {
 
 function buildApiRequest(input: ImageCaptionInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
-    inputImage: input.inputImage,
+    inputs: { image: input.inputImage },
     model: input.model,
     includeCost: input.includeCost,
   };

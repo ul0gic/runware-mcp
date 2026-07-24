@@ -125,7 +125,7 @@ describe('dimensionSchema', () => {
     expect(result).toBe(MAX_DIMENSION);
   });
 
-  it('accepts valid multiple of 64', () => {
+  it('accepts valid dimension step', () => {
     const result = dimensionSchema.parse(1024);
     expect(result).toBe(1024);
   });
@@ -138,8 +138,8 @@ describe('dimensionSchema', () => {
     expectZodError(() => dimensionSchema.parse(MAX_DIMENSION + DIMENSION_STEP));
   });
 
-  it('rejects non-multiple of 64', () => {
-    expectZodError(() => dimensionSchema.parse(1000));
+  it('rejects values outside the dimension step', () => {
+    expectZodError(() => dimensionSchema.parse(1001));
   });
 
   it('rejects float value', () => {

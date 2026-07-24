@@ -166,7 +166,9 @@ function buildFilterDescription(input: ListVideoModelsInput): string {
 
 export const listVideoModelsToolDefinition = {
   name: 'listVideoModels',
-  description: 'List available video generation models with optional filtering by provider, duration, audio support, and features.',
+  description:
+    'List the bundled offline video-model compatibility catalog. Prefer listModels with category="video" ' +
+    'for the current live catalog; use this tool when offline specifications are needed.',
   inputSchema: {
     type: 'object',
     properties: {

@@ -1,7 +1,7 @@
 {
   "name": "runware-mcp",
-  "version": "1.2.4",
-  "description": "MCP server for Runware AI image and video generation",
+  "version": "2.0.0",
+  "description": "MCP server for Runware AI media generation and model discovery",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/ul0gic/runware-mcp.git"
@@ -30,7 +30,7 @@
     "check": "npm run typecheck && npm run lint && npm test && npm run build"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=26"
   },
   "license": "MIT",
   "keywords": [
@@ -43,6 +43,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
+    "ajv": "8.20.0",
     "zod": "^4.4.3",
     "zod-to-json-schema": "^3.25.2"
   },

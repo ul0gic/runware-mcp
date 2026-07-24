@@ -14,6 +14,11 @@ import {
   accountBalanceInputSchema,
 } from './account-balance/index.js';
 import {
+  accountManagement,
+  accountManagementToolDefinition,
+  accountManagementInputSchema,
+} from './account-management/index.js';
+import {
   audioInference,
   audioInferenceToolDefinition,
   audioInferenceInputSchema,
@@ -74,10 +79,39 @@ import {
   listVideoModelsInputSchema,
 } from './list-video-models/index.js';
 import {
+  mediaStorage,
+  mediaStorageInputSchema,
+  mediaStorageToolDefinition,
+} from './media-storage/index.js';
+import {
+  listCapabilities,
+  listCapabilitiesInputSchema,
+  listCapabilitiesToolDefinition,
+  listModels,
+  listModelsInputSchema,
+  listModelsToolDefinition,
+  modelDetails,
+  modelDetailsToolDefinition,
+  modelExamples,
+  modelExamplesInputSchema,
+  modelExamplesToolDefinition,
+  modelIdentifierInputSchema,
+  modelPricing,
+  modelPricingToolDefinition,
+  modelSchema,
+  modelSchemaInputSchema,
+  modelSchemaToolDefinition,
+} from './model-catalog/index.js';
+import {
   modelSearch,
   modelSearchToolDefinition,
   modelSearchInputSchema,
 } from './model-search/index.js';
+import {
+  modelUpload,
+  modelUploadInputSchema,
+  modelUploadToolDefinition,
+} from './model-upload/index.js';
 import {
   photoMaker,
   photoMakerToolDefinition,
@@ -94,10 +128,35 @@ import {
   promptEnhanceInputSchema,
 } from './prompt-enhance/index.js';
 import {
+  runInference,
+  runInferenceInputSchema,
+  runInferenceToolDefinition,
+} from './run-inference/index.js';
+import {
   styleTransfer,
   styleTransferToolDefinition,
   styleTransferInputSchema,
 } from './style-transfer/index.js';
+import {
+  getTaskDetails,
+  getTaskDetailsInputSchema,
+  getTaskDetailsToolDefinition,
+} from './task-details/index.js';
+import {
+  textInference,
+  textInferenceInputSchema,
+  textInferenceToolDefinition,
+} from './text-inference/index.js';
+import {
+  threeDInference,
+  threeDInferenceInputSchema,
+  threeDInferenceToolDefinition,
+} from './three-d-inference/index.js';
+import {
+  training,
+  trainingInputSchema,
+  trainingToolDefinition,
+} from './training/index.js';
 import {
   transcription,
   transcriptionToolDefinition,
@@ -321,6 +380,16 @@ export {
   type AccountBalanceOutput,
 } from './account-balance/index.js';
 
+export * from './account-management/index.js';
+export * from './media-storage/index.js';
+export * from './model-catalog/index.js';
+export * from './model-upload/index.js';
+export * from './run-inference/index.js';
+export * from './task-details/index.js';
+export * from './text-inference/index.js';
+export * from './three-d-inference/index.js';
+export * from './training/index.js';
+
 // ============================================================================
 // Re-exports - Batch & Folder Tools
 // ============================================================================
@@ -402,6 +471,20 @@ export const toolHandlers = {
   modelSearch,
   costEstimate,
   accountBalance,
+  accountManagement,
+  listModels,
+  modelDetails,
+  modelExamples,
+  modelPricing,
+  listCapabilities,
+  modelSchema,
+  runInference,
+  getTaskDetails,
+  mediaStorage,
+  modelUpload,
+  training,
+  textInference,
+  threeDInference,
   // Batch & Folder Tools
   processFolder,
   batchImageInference,
@@ -439,6 +522,20 @@ export const toolInputSchemas: Record<string, z.ZodType> = {
   modelSearch: modelSearchInputSchema,
   costEstimate: costEstimateInputSchema,
   accountBalance: accountBalanceInputSchema,
+  accountManagement: accountManagementInputSchema,
+  listModels: listModelsInputSchema,
+  modelDetails: modelIdentifierInputSchema,
+  modelExamples: modelExamplesInputSchema,
+  modelPricing: modelIdentifierInputSchema,
+  listCapabilities: listCapabilitiesInputSchema,
+  modelSchema: modelSchemaInputSchema,
+  runInference: runInferenceInputSchema,
+  getTaskDetails: getTaskDetailsInputSchema,
+  mediaStorage: mediaStorageInputSchema,
+  modelUpload: modelUploadInputSchema,
+  training: trainingInputSchema,
+  textInference: textInferenceInputSchema,
+  threeDInference: threeDInferenceInputSchema,
   // Batch & Folder Tools
   processFolder: processFolderInputSchema,
   batchImageInference: batchImageInferenceInputSchema,
@@ -473,6 +570,20 @@ export const toolDefinitions = [
   modelSearchToolDefinition,
   costEstimateToolDefinition,
   accountBalanceToolDefinition,
+  accountManagementToolDefinition,
+  listModelsToolDefinition,
+  modelDetailsToolDefinition,
+  modelExamplesToolDefinition,
+  modelPricingToolDefinition,
+  listCapabilitiesToolDefinition,
+  modelSchemaToolDefinition,
+  runInferenceToolDefinition,
+  getTaskDetailsToolDefinition,
+  mediaStorageToolDefinition,
+  modelUploadToolDefinition,
+  trainingToolDefinition,
+  textInferenceToolDefinition,
+  threeDInferenceToolDefinition,
   // Batch & Folder Tools
   processFolderToolDefinition,
   batchImageInferenceToolDefinition,

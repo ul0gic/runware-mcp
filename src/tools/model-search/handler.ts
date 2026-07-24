@@ -17,6 +17,14 @@ import type { z } from 'zod';
 // ============================================================================
 
 type ModelSearchInput = z.infer<typeof modelSearchInputSchema>;
+type ModelSearchResult = ModelSearchOutput['models'][number];
+
+const CATEGORY_ALIASES = new Map<string, string>([
+  ['LoRA', 'lora'],
+  ['Lycoris', 'lycoris'],
+  ['ControlNet', 'checkpoint'],
+  ['VAE', 'vae'],
+]);
 
 /**
  * Individual model result from the API.
@@ -38,6 +46,11 @@ interface ModelSearchApiModel {
   readonly defaultCFG?: number;
   readonly defaultStrength?: number;
   readonly positiveTriggerWords?: string | readonly string[];
+  readonly capabilities?: readonly string[];
+  readonly source?: 'featured' | 'community';
+  readonly isFavorite?: boolean;
+  readonly provider?: string;
+  readonly shortDescription?: string;
 }
 
 /**
@@ -69,6 +82,11 @@ interface ModelSearchApiResult {
   readonly defaultCFG?: number;
   readonly defaultStrength?: number;
   readonly positiveTriggerWords?: string | readonly string[];
+  readonly capabilities?: readonly string[];
+  readonly source?: 'featured' | 'community';
+  readonly isFavorite?: boolean;
+  readonly provider?: string;
+  readonly shortDescription?: string;
 }
 
 // ============================================================================
@@ -85,11 +103,14 @@ function buildApiRequest(input: ModelSearchInput): Record<string, unknown> {
   if (input.search !== undefined) {
     request.search = input.search;
   }
+  if (input.source !== undefined) {
+    request.source = input.source;
+  }
   if (input.tags !== undefined) {
     request.tags = input.tags;
   }
   if (input.category !== undefined) {
-    request.category = input.category;
+    request.category = CATEGORY_ALIASES.get(input.category) ?? input.category;
   }
   if (input.type !== undefined) {
     request.type = input.type;
@@ -100,8 +121,14 @@ function buildApiRequest(input: ModelSearchInput): Record<string, unknown> {
   if (input.conditioning !== undefined) {
     request.conditioning = input.conditioning;
   }
+  if (input.capabilities !== undefined) {
+    request.capabilities = input.capabilities;
+  }
   if (input.visibility !== undefined) {
     request.visibility = input.visibility;
+  }
+  if (input.sort !== undefined) {
+    request.sort = input.sort;
   }
 
   return request;
@@ -114,17 +141,8 @@ function buildApiRequest(input: ModelSearchInput): Record<string, unknown> {
 /**
  * Maps a single model API result to the output format.
  */
-function mapModelResult(result: ModelSearchApiModel): ModelSearchOutput['models'][number] {
+function mapModelDefaults(result: ModelSearchApiModel): Partial<ModelSearchResult> {
   return {
-    air: result.air,
-    name: result.name ?? result.air,
-    ...(result.version !== undefined && { version: result.version }),
-    ...(result.category !== undefined && { category: result.category }),
-    ...(result.architecture !== undefined && { architecture: result.architecture }),
-    ...(result.type !== undefined && { type: result.type }),
-    ...(result.tags !== undefined && { tags: [...result.tags] }),
-    ...(result.heroImage !== undefined && { heroImage: result.heroImage }),
-    ...(result.private !== undefined && { private: result.private }),
     ...(result.defaultWidth !== undefined && { defaultWidth: result.defaultWidth }),
     ...(result.defaultHeight !== undefined && { defaultHeight: result.defaultHeight }),
     ...(result.defaultSteps !== undefined && { defaultSteps: result.defaultSteps }),
@@ -136,6 +154,34 @@ function mapModelResult(result: ModelSearchApiModel): ModelSearchOutput['models'
         ? [result.positiveTriggerWords]
         : [...result.positiveTriggerWords],
     }),
+  };
+}
+
+function mapModelMetadata(result: ModelSearchApiModel): Partial<ModelSearchResult> {
+  return {
+    ...(result.version !== undefined && { version: result.version }),
+    ...(result.category !== undefined && { category: result.category }),
+    ...(result.architecture !== undefined && { architecture: result.architecture }),
+    ...(result.type !== undefined && { type: result.type }),
+    ...(result.tags !== undefined && { tags: [...result.tags] }),
+    ...(result.heroImage !== undefined && { heroImage: result.heroImage }),
+    ...(result.private !== undefined && { private: result.private }),
+    ...(result.capabilities !== undefined && { capabilities: [...result.capabilities] }),
+    ...(result.source !== undefined && { source: result.source }),
+    ...(result.isFavorite !== undefined && { isFavorite: result.isFavorite }),
+    ...(result.provider !== undefined && { provider: result.provider }),
+    ...(result.shortDescription !== undefined && {
+      shortDescription: result.shortDescription,
+    }),
+  };
+}
+
+function mapModelResult(result: ModelSearchApiModel): ModelSearchResult {
+  return {
+    air: result.air,
+    name: result.name ?? result.air,
+    ...mapModelDefaults(result),
+    ...mapModelMetadata(result),
   };
 }
 
@@ -245,6 +291,11 @@ export const modelSearchToolDefinition = {
         type: 'string',
         description: 'Search term for model names, versions, and tags',
       },
+      source: {
+        type: 'string',
+        enum: ['featured', 'community'],
+        description: 'Filter by curated or community model source',
+      },
       tags: {
         type: 'array',
         items: { type: 'string' },
@@ -252,7 +303,7 @@ export const modelSearchToolDefinition = {
       },
       category: {
         type: 'string',
-        enum: ['checkpoint', 'LoRA', 'Lycoris', 'ControlNet', 'VAE', 'embeddings'],
+        enum: ['checkpoint', 'lora', 'lycoris', 'vae', 'embeddings', 'LoRA', 'Lycoris', 'ControlNet', 'VAE'],
         description: 'Filter by category',
       },
       type: {
@@ -263,6 +314,32 @@ export const modelSearchToolDefinition = {
       architecture: {
         type: 'string',
         description: 'Filter by architecture (e.g., FLUX.1-dev, SDXL)',
+      },
+      conditioning: {
+        type: 'string',
+        description: 'Legacy ControlNet conditioning filter',
+      },
+      capabilities: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Filter by capability identifiers',
+      },
+      visibility: {
+        type: 'string',
+        enum: ['public', 'private', 'favorite', 'owned', 'all'],
+      },
+      sort: {
+        type: 'string',
+        enum: [
+          'popularity',
+          '-popularity',
+          'name',
+          '-name',
+          'addedUnixTimestamp',
+          '-addedUnixTimestamp',
+          'updatedDateUnixTimestamp',
+          '-updatedDateUnixTimestamp',
+        ],
       },
       limit: {
         type: 'number',

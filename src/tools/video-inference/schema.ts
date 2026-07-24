@@ -111,7 +111,7 @@ export const videoInferenceInputSchema = z.object({
   model: z.string(),
 
   /**
-   * Video duration in seconds (1-10).
+   * Video duration in seconds. Model-specific limits vary.
    */
   duration: videoDurationSchema,
 
@@ -120,14 +120,14 @@ export const videoInferenceInputSchema = z.object({
   // ========================================================================
 
   /**
-   * Video width in pixels (256-1920, multiple of 8).
+   * Video width in pixels. Model-specific limits vary.
    */
-  width: z.number().int().min(256).max(1920).optional(),
+  width: z.number().int().min(256).max(7680).multipleOf(8).optional(),
 
   /**
-   * Video height in pixels (256-1080, multiple of 8).
+   * Video height in pixels. Model-specific limits vary.
    */
-  height: z.number().int().min(256).max(1080).optional(),
+  height: z.number().int().min(256).max(4320).multipleOf(8).optional(),
 
   // ========================================================================
   // Quality Controls

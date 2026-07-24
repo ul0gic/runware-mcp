@@ -120,21 +120,22 @@ export type ImageInput = z.infer<typeof imageInputSchema>;
 /**
  * Minimum image dimension in pixels.
  */
-export const MIN_DIMENSION = 512;
+export const MIN_DIMENSION = 256;
 
 /**
  * Maximum image dimension in pixels.
  */
-export const MAX_DIMENSION = 2048;
+export const MAX_DIMENSION = 16_384;
 
 /**
  * Dimension step size (must be multiple of this).
  */
-export const DIMENSION_STEP = 64;
+export const DIMENSION_STEP = 8;
 
 /**
  * Schema for image dimensions.
- * Must be a multiple of 64, between 512 and 2048.
+ * Must be a multiple of 8, between 256 and 16384. Individual model schemas
+ * may impose narrower constraints.
  */
 export const dimensionSchema = z
   .number()
@@ -360,7 +361,7 @@ export const negativePromptSchema = z
 export const videoDurationSchema = z
   .number()
   .min(1, 'Video duration must be at least 1 second')
-  .max(10, 'Video duration cannot exceed 10 seconds');
+  .max(600, 'Video duration cannot exceed 600 seconds');
 
 /**
  * Schema for audio duration in seconds.

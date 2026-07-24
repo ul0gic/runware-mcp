@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-07-24
+
+### Added
+
+- Live Runware model catalog, capability, pricing, example, and JSON Schema tools.
+- Schema-validated unified inference with an explicit non-administrative task allowlist.
+- Native text and 3D inference tools.
+- Training, model upload, media storage, task details, and account analytics tools.
+- CodeQL, dependency review, npm audit, signature verification, and dependency health workflows.
+
+### Changed
+
+- Raised the minimum supported runtime to Node.js 26.
+- Expanded the server to 36 MCP tools across inference, discovery, administration, and batch workflows.
+- Updated image, video, caption, account balance, and model search contracts for the current Runware API.
+- Replaced the public README with a concise setup and capability reference.
+- Hardened GitHub Actions with immutable SHA pins, minimal permissions, and trusted npm publishing.
+
+### Fixed
+
+- Prevented callers from overriding generated task types and UUIDs.
+- Corrected current nested account balance and image caption request handling.
+- Added bounded caching, request timeouts, safe administrative boundaries, and secret redaction.
+- Added current API contract fixtures and regression coverage.
+- **0 vulnerabilities** — `npm audit` clean.
+
+---
+
 ## [1.2.4] - 2026-05-14
 
 ### Changed
