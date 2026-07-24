@@ -75,7 +75,7 @@ jobs:
         run: npm pack --dry-run
 
   required:
-    name: Required
+    name: CI / Required
     if: always()
     needs:
       - test

@@ -51,7 +51,7 @@ jobs:
           category: /language:${{ matrix.language }}
 
   required:
-    name: Required
+    name: CodeQL / Required
     if: always()
     needs:
       - analyze
