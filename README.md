@@ -1,34 +1,31 @@
 # Runware MCP Server
 
-### AI Media Generation for Any MCP Client
+Use [Runware](https://runware.ai) image, video, audio, text, and 3D generation
+from any client that supports the
+[Model Context Protocol](https://modelcontextprotocol.io).
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Tools-22-blue?style=for-the-badge" alt="22 Tools">
-  <img src="https://img.shields.io/badge/Resources-6-green?style=for-the-badge" alt="6 Resources">
-  <img src="https://img.shields.io/badge/Providers-9-purple?style=for-the-badge" alt="9 Providers">
-  <img src="https://img.shields.io/badge/API%20Coverage-100%25-gold?style=for-the-badge" alt="100% API Coverage">
-</p>
+The server provides 36 MCP tools, live model discovery, model-specific schema
+validation, reusable prompt templates, and session resources.
 
-<p align="center">
-  <strong>Turn any MCP-compatible AI assistant into a creative powerhouse.</strong><br>
-  Images. Videos. Audio. Vectors. All from natural language.
-</p>
+## Highlights
 
----
+- Generate and transform images, video, audio, text, and 3D assets.
+- Discover current Runware models, capabilities, examples, pricing, and schemas.
+- Run model-specific requests through a schema-validated unified tool.
+- Estimate costs, inspect task results, and view account usage.
+- Process batches and watch folders for automated media workflows.
+- Validate inputs with Zod and live Runware JSON Schemas.
 
-## What Is This?
+## Requirements
 
-An MCP server that connects your AI coding assistant directly to Runware's AI media generation infrastructure. Works with any client that supports the [Model Context Protocol](https://modelcontextprotocol.io).
+- Node.js 26 or newer
+- A [Runware API key](https://runware.ai)
 
-> **[View diagrams on GitHub](https://github.com/ul0gic/runware-mcp)**
+Runware inference and storage operations may incur usage charges.
 
-**One config. Zero complexity. Infinite creativity.**
+## Quick start
 
----
-
-## Installation
-
-Add the server to your MCP client config:
+Add the server to your MCP client configuration:
 
 ```json
 {
@@ -44,847 +41,116 @@ Add the server to your MCP client config:
 }
 ```
 
-### Config locations by client
+Restart the client after saving the configuration.
 
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Client</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Config Location</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>**Claude Code**</td>
-    <td>`~/.claude.json` or project `.mcp.json`</td>
-  </tr>
-  <tr>
-    <td>**Claude Desktop (macOS)**</td>
-    <td>`~/Library/Application Support/Claude/claude_desktop_config.json`</td>
-  </tr>
-  <tr>
-    <td>**Claude Desktop (Linux)**</td>
-    <td>`~/.config/claude/claude_desktop_config.json`</td>
-  </tr>
-  <tr>
-    <td>**Claude Desktop (Windows)**</td>
-    <td>`%APPDATA%\Claude\claude_desktop_config.json`</td>
-  </tr>
-  <tr>
-    <td>**Cursor**</td>
-    <td>`.cursor/mcp.json` in your project root</td>
-  </tr>
-  <tr>
-    <td>**Codex CLI**</td>
-    <td>`~/.codex/config.toml` or project `.codex/config.toml`</td>
-  </tr>
-  <tr>
-    <td>**VS Code (Copilot)**</td>
-    <td>`.vscode/mcp.json` in your project root</td>
-  </tr>
-</tbody>
-</table>
+| Client | Common configuration location |
+|---|---|
+| Claude Code | `~/.claude.json` or project `.mcp.json` |
+| Claude Desktop (macOS) | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Claude Desktop (Linux) | `~/.config/Claude/claude_desktop_config.json` |
+| Claude Desktop (Windows) | `%APPDATA%\Claude\claude_desktop_config.json` |
+| Cursor | Project `.cursor/mcp.json` |
+| Codex CLI | `~/.codex/config.toml` or project `.codex/config.toml` |
+| VS Code | Project `.vscode/mcp.json` |
 
-> **Note:** Config format may vary slightly by client. Check your client's MCP documentation for exact syntax. Codex CLI uses TOML — see the [Codex MCP docs](https://developers.openai.com/codex/mcp) for setup.
+Configuration formats vary by client. Clients that use TOML require the
+equivalent TOML configuration.
 
-That's it. No `pip install`. No virtual environments. No Python version conflicts. Just paste, restart, create.
+## Tools
 
----
+| Area | Tools |
+|---|---|
+| Unified API and discovery | `runInference`, `listModels`, `modelDetails`, `modelExamples`, `modelPricing`, `listCapabilities`, `modelSchema`, `getTaskDetails` |
+| Images and creative controls | `imageInference`, `photoMaker`, `imageUpscale`, `imageBackgroundRemoval`, `imageCaption`, `imageMasking`, `imageUpload`, `vectorize`, `promptEnhance`, `controlNetPreprocess`, `styleTransfer` |
+| Video | `videoInference`, `listVideoModels`, `getVideoModelInfo` |
+| Audio, text, and 3D | `audioInference`, `transcription`, `textInference`, `threeDInference` |
+| Models, account, and storage | `modelSearch`, `costEstimate`, `accountBalance`, `accountManagement`, `mediaStorage`, `modelUpload`, `training` |
+| Batch and folders | `processFolder`, `batchImageInference`, `watchFolder` |
 
-## Capabilities at a Glance
+`listModels` uses Runware's live catalog. `listVideoModels` is an offline
+compatibility catalog and may not reflect newly released models.
 
-> **[View diagrams on GitHub](https://github.com/ul0gic/runware-mcp)**
+### Unified inference
 
----
+`runInference` retrieves the selected model's current JSON Schema from Runware
+and validates the request before submission. It supports allowlisted inference
+tasks while preventing callers from overriding internal task identifiers or
+delivery settings.
 
-## The Complete Toolset
+Administrative and destructive operations remain separate tools.
+`runInference` cannot perform account management, training, model uploads,
+media deletion, or webhook configuration.
 
-### Image Generation & Manipulation
+## Resources and prompts
 
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Key Features</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`imageInference`</td>
-    <td>Text/image to images</td>
-    <td>60+ parameters, LoRA, ControlNet, IP-Adapters</td>
-  </tr>
-  <tr>
-    <td>`photoMaker`</td>
-    <td>Preserve identity across generations</td>
-    <td>Face consistency, style transfer</td>
-  </tr>
-  <tr>
-    <td>`imageUpscale`</td>
-    <td>Enhance resolution up to 4x</td>
-    <td>Multiple algorithms, preserve details</td>
-  </tr>
-  <tr>
-    <td>`imageBackgroundRemoval`</td>
-    <td>Remove backgrounds instantly</td>
-    <td>Alpha matting, custom colors</td>
-  </tr>
-  <tr>
-    <td>`imageCaption`</td>
-    <td>Describe images in detail</td>
-    <td>Multiple models, structured output</td>
-  </tr>
-  <tr>
-    <td>`imageMasking`</td>
-    <td>Generate segmentation masks</td>
-    <td>Face, body, hands detection</td>
-  </tr>
-  <tr>
-    <td>`imageUpload`</td>
-    <td>Upload local images</td>
-    <td>Base64, URL, data URI support</td>
-  </tr>
-  <tr>
-    <td>`vectorize`</td>
-    <td>Convert raster to SVG</td>
-    <td>Perfect for logos, icons</td>
-  </tr>
-</tbody>
-</table>
+The server exposes six MCP resource providers:
 
-### Video Generation
+| Resource | Purpose |
+|---|---|
+| `runware://images/{id}` | Generated images and metadata |
+| `runware://videos/{id}` | Generated videos and metadata |
+| `runware://audio/{id}` | Generated audio and metadata |
+| `runware://session/history` | Current session history |
+| `runware://analytics/{period}` | Session usage analytics |
+| `runware://docs/...` | Built-in concepts, tools, features, providers, and guides |
 
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Providers</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`videoInference`</td>
-    <td>Create videos from text/images</td>
-    <td>Kling, Veo, MiniMax, PixVerse, Runway, Vidu, Wan, Sync</td>
-  </tr>
-  <tr>
-    <td>`listVideoModels`</td>
-    <td>Browse available models</td>
-    <td>All providers with specs</td>
-  </tr>
-  <tr>
-    <td>`getVideoModelInfo`</td>
-    <td>Get model details</td>
-    <td>Dimensions, duration, features</td>
-  </tr>
-</tbody>
-</table>
+Reusable prompt templates include `product-photo`, `avatar-generator`,
+`video-scene`, `style-transfer`, `ui-mockup`, `thumbnail`, and
+`music-composition`.
 
-### Audio Generation
+## Configuration
 
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Features</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`audioInference`</td>
-    <td>Generate music, SFX, speech</td>
-    <td>ElevenLabs, Mirelo, 14 voices</td>
-  </tr>
-  <tr>
-    <td>`transcription`</td>
-    <td>Video to text transcription</td>
-    <td>Multiple languages</td>
-  </tr>
-</tbody>
-</table>
+Only `RUNWARE_API_KEY` is required.
 
-### Creative Tools
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Use Cases</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`promptEnhance`</td>
-    <td>Supercharge your prompts</td>
-    <td>1-5 variations, AI enrichment</td>
-  </tr>
-  <tr>
-    <td>`controlNetPreprocess`</td>
-    <td>Prepare images for ControlNet</td>
-    <td>12 preprocessors</td>
-  </tr>
-  <tr>
-    <td>`styleTransfer`</td>
-    <td>Apply artistic styles</td>
-    <td>Combine with any model</td>
-  </tr>
-</tbody>
-</table>
-
-### Utilities
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Why It Matters</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`modelSearch`</td>
-    <td>Search 100,000+ models</td>
-    <td>Find the perfect model</td>
-  </tr>
-  <tr>
-    <td>`costEstimate`</td>
-    <td>Estimate before generating</td>
-    <td>Budget control</td>
-  </tr>
-  <tr>
-    <td>`getAccountBalance`</td>
-    <td>Check your credits</td>
-    <td>Never run dry</td>
-  </tr>
-</tbody>
-</table>
-
-### Batch Operations
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Tool</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What It Does</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Power Features</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`processFolder`</td>
-    <td>Process entire folders</td>
-    <td>Upscale, remove BG, caption, vectorize</td>
-  </tr>
-  <tr>
-    <td>`batchImageInference`</td>
-    <td>Generate from multiple prompts</td>
-    <td>Concurrent processing</td>
-  </tr>
-  <tr>
-    <td>`watchFolder`</td>
-    <td>Auto-process new files</td>
-    <td>Pipelines, debouncing</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## Provider-Specific Features
-
-This server exposes the **full capabilities** of each provider:
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Provider</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Exclusive Features</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>**Alibaba (Wan)**</td>
-    <td>Prompt extension, multi-shot videos, audio generation</td>
-  </tr>
-  <tr>
-    <td>**Black Forest Labs**</td>
-    <td>Safety tolerance, raw mode, prompt upsampling</td>
-  </tr>
-  <tr>
-    <td>**Bria**</td>
-    <td>Content moderation, medium selection, fast mode</td>
-  </tr>
-  <tr>
-    <td>**Ideogram**</td>
-    <td>65+ style types, color palettes, magic prompt</td>
-  </tr>
-  <tr>
-    <td>**ByteDance**</td>
-    <td>Sequential image narratives (1-15 images)</td>
-  </tr>
-  <tr>
-    <td>**KlingAI**</td>
-    <td>Sound generation, camera fixed mode</td>
-  </tr>
-  <tr>
-    <td>**PixVerse**</td>
-    <td>20 viral effects, 21 camera movements, multi-clip</td>
-  </tr>
-  <tr>
-    <td>**Google Veo**</td>
-    <td>Prompt enhancement, audio generation (Veo 3)</td>
-  </tr>
-  <tr>
-    <td>**Sync.so**</td>
-    <td>Lip sync, speaker detection, audio segments</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## MCP Resources
-
-Access your generated content programmatically:
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Resource URI</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Description</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`runware://images/{id}`</td>
-    <td>Generated images with metadata</td>
-  </tr>
-  <tr>
-    <td>`runware://videos/{id}`</td>
-    <td>Generated videos with metadata</td>
-  </tr>
-  <tr>
-    <td>`runware://audio/{id}`</td>
-    <td>Generated audio with metadata</td>
-  </tr>
-  <tr>
-    <td>`runware://session/history`</td>
-    <td>Full session generation history</td>
-  </tr>
-  <tr>
-    <td>`runware://analytics/{period}`</td>
-    <td>Usage analytics (day/week/month/all)</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## Prompt Templates
-
-Pre-built workflows for common tasks:
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Template</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Perfect For</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`product-photo`</td>
-    <td>E-commerce, catalogs, marketing</td>
-  </tr>
-  <tr>
-    <td>`avatar-generator`</td>
-    <td>Profile pictures, characters</td>
-  </tr>
-  <tr>
-    <td>`video-scene`</td>
-    <td>Storyboarding, content creation</td>
-  </tr>
-  <tr>
-    <td>`style-transfer`</td>
-    <td>Artistic transformations</td>
-  </tr>
-  <tr>
-    <td>`ui-mockup`</td>
-    <td>Web/mobile design prototypes</td>
-  </tr>
-  <tr>
-    <td>`thumbnail`</td>
-    <td>YouTube, articles, social media</td>
-  </tr>
-  <tr>
-    <td>`music-composition`</td>
-    <td>Background music, jingles</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## Documentation
-
-This MCP server includes **comprehensive built-in documentation** accessible as MCP resources. Any connected client can discover and read detailed API references, feature guides, and provider docs on demand.
-
-**42 documentation resources** organized across 5 categories:
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Category</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Count</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">What's Covered</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>**Concepts**</td>
-    <td>5</td>
-    <td>AIR identifiers, task responses, output types, async delivery, connection</td>
-  </tr>
-  <tr>
-    <td>**Tools**</td>
-    <td>13</td>
-    <td>Full parameter reference for every tool</td>
-  </tr>
-  <tr>
-    <td>**Features**</td>
-    <td>10</td>
-    <td>ControlNet, LoRA, IP-Adapters, prompt weighting, acceleration, and more</td>
-  </tr>
-  <tr>
-    <td>**Providers**</td>
-    <td>9</td>
-    <td>Provider-specific settings and capabilities</td>
-  </tr>
-  <tr>
-    <td>**Guides**</td>
-    <td>5</td>
-    <td>Batch processing, cost optimization, quality tuning, combining features</td>
-  </tr>
-</tbody>
-</table>
-
-Example URIs: `runware://docs/tools/image-inference`, `runware://docs/features/controlnet-guide`, `runware://docs/providers/kling-ai`, `runware://docs/guides/cost-optimization`
-
-Ask your AI assistant to list or read any `runware://docs/*` resource for detailed reference information.
-
----
-
-## Architecture
-
-> **[View diagrams on GitHub](https://github.com/ul0gic/runware-mcp)**
-
----
-
-## What's Included
-
-A ground-up TypeScript rewrite covering **100% of the Runware API**.
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Feature</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Details</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>**API Coverage**</td>
-    <td>100% — every endpoint, every parameter</td>
-  </tr>
-  <tr>
-    <td>**Tools**</td>
-    <td>22 tools across image, video, audio, and batch ops</td>
-  </tr>
-  <tr>
-    <td>**Providers**</td>
-    <td>9 providers with full provider-specific settings</td>
-  </tr>
-  <tr>
-    <td>**Type Safety**</td>
-    <td>Strict TypeScript + Zod validation on every input</td>
-  </tr>
-  <tr>
-    <td>**Security**</td>
-    <td>SSRF protection, rate limiting, path traversal prevention</td>
-  </tr>
-  <tr>
-    <td>**Testing**</td>
-    <td>80%+ coverage across 1300+ tests</td>
-  </tr>
-  <tr>
-    <td>**Install**</td>
-    <td>`npx runware-mcp` — zero setup</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## Video Model Comparison
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Provider</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Models</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Max Resolution</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Max Duration</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Special Features</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>**KlingAI**</td>
-    <td>10</td>
-    <td>1920x1080</td>
-    <td>10s</td>
-    <td>Sound, camera lock</td>
-  </tr>
-  <tr>
-    <td>**Google Veo**</td>
-    <td>3</td>
-    <td>1920x1080</td>
-    <td>8s</td>
-    <td>Audio gen (Veo 3)</td>
-  </tr>
-  <tr>
-    <td>**MiniMax**</td>
-    <td>4</td>
-    <td>1920x1080</td>
-    <td>5s</td>
-    <td>Fast generation</td>
-  </tr>
-  <tr>
-    <td>**PixVerse**</td>
-    <td>3</td>
-    <td>1280x720</td>
-    <td>4s</td>
-    <td>Viral effects</td>
-  </tr>
-  <tr>
-    <td>**Vidu**</td>
-    <td>4</td>
-    <td>1280x720</td>
-    <td>4s</td>
-    <td>Reference videos</td>
-  </tr>
-  <tr>
-    <td>**Wan/Alibaba**</td>
-    <td>2</td>
-    <td>1280x720</td>
-    <td>5s</td>
-    <td>Multi-shot</td>
-  </tr>
-  <tr>
-    <td>**Runway**</td>
-    <td>2</td>
-    <td>1920x1080</td>
-    <td>10s</td>
-    <td>Professional</td>
-  </tr>
-  <tr>
-    <td>**Sync.so**</td>
-    <td>1</td>
-    <td>1920x1080</td>
-    <td>60s</td>
-    <td>Lip sync</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## ControlNet Preprocessors
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Preprocessor</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Use Case</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Best For</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`canny`</td>
-    <td>Edge detection</td>
-    <td>Architectural, product</td>
-  </tr>
-  <tr>
-    <td>`depth`</td>
-    <td>Depth mapping</td>
-    <td>Scenes, landscapes</td>
-  </tr>
-  <tr>
-    <td>`mlsd`</td>
-    <td>Line segments</td>
-    <td>Interior design</td>
-  </tr>
-  <tr>
-    <td>`normalbae`</td>
-    <td>Normal maps</td>
-    <td>3D-like rendering</td>
-  </tr>
-  <tr>
-    <td>`openpose`</td>
-    <td>Human pose</td>
-    <td>Character art</td>
-  </tr>
-  <tr>
-    <td>`tile`</td>
-    <td>Tile processing</td>
-    <td>Textures, patterns</td>
-  </tr>
-  <tr>
-    <td>`seg`</td>
-    <td>Segmentation</td>
-    <td>Complex scenes</td>
-  </tr>
-  <tr>
-    <td>`lineart`</td>
-    <td>Line extraction</td>
-    <td>Illustrations</td>
-  </tr>
-  <tr>
-    <td>`lineart_anime`</td>
-    <td>Anime lines</td>
-    <td>Anime, manga</td>
-  </tr>
-  <tr>
-    <td>`shuffle`</td>
-    <td>Content shuffle</td>
-    <td>Abstract, creative</td>
-  </tr>
-  <tr>
-    <td>`scribble`</td>
-    <td>Scribble style</td>
-    <td>Concept art</td>
-  </tr>
-  <tr>
-    <td>`softedge`</td>
-    <td>Soft edges</td>
-    <td>Soft, dreamy</td>
-  </tr>
-</tbody>
-</table>
-
----
-
-## Configuration Reference
-
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Variable</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Default</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Description</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`RUNWARE_API_KEY`</td>
-    <td>**required**</td>
-    <td>Your Runware API key</td>
-  </tr>
-  <tr>
-    <td>`NODE_ENV`</td>
-    <td>`production`</td>
-    <td>Environment mode</td>
-  </tr>
-  <tr>
-    <td>`LOG_LEVEL`</td>
-    <td>`info`</td>
-    <td>Logging verbosity</td>
-  </tr>
-  <tr>
-    <td>`MAX_FILE_SIZE_MB`</td>
-    <td>`50`</td>
-    <td>Max upload size</td>
-  </tr>
-  <tr>
-    <td>`REQUEST_TIMEOUT_MS`</td>
-    <td>`60000`</td>
-    <td>API timeout</td>
-  </tr>
-  <tr>
-    <td>`POLL_MAX_ATTEMPTS`</td>
-    <td>`150`</td>
-    <td>Video poll attempts</td>
-  </tr>
-  <tr>
-    <td>`RATE_LIMIT_MAX_TOKENS`</td>
-    <td>`10`</td>
-    <td>Rate limit burst</td>
-  </tr>
-  <tr>
-    <td>`RATE_LIMIT_REFILL_RATE`</td>
-    <td>`1`</td>
-    <td>Tokens per second</td>
-  </tr>
-  <tr>
-    <td>`WATCH_FOLDERS`</td>
-    <td>—</td>
-    <td>Auto-watch folders</td>
-  </tr>
-  <tr>
-    <td>`WATCH_DEBOUNCE_MS`</td>
-    <td>`500`</td>
-    <td>Watch debounce</td>
-  </tr>
-</tbody>
-</table>
-
----
+| Variable | Default | Purpose |
+|---|---:|---|
+| `RUNWARE_API_KEY` | required | Runware API credential |
+| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, or `error` |
+| `MAX_FILE_SIZE_MB` | `50` | Maximum local upload size |
+| `ALLOWED_FILE_ROOTS` | safe system defaults | Comma-separated permitted filesystem roots |
+| `REQUEST_TIMEOUT_MS` | `60000` | Timeout for individual API requests |
+| `POLL_MAX_ATTEMPTS` | `150` | Maximum async polling attempts |
+| `RATE_LIMIT_MAX_TOKENS` | `10` | Local request burst capacity |
+| `RATE_LIMIT_REFILL_RATE` | `1` | Local tokens restored per second |
+| `WATCH_FOLDERS` | none | Comma-separated folders available to the watcher |
+| `WATCH_DEBOUNCE_MS` | `500` | Folder watcher debounce interval |
 
 ## Security
 
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Protection</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Implementation</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>**Input Validation**</td>
-    <td>Zod schemas on every tool</td>
-  </tr>
-  <tr>
-    <td>**Path Traversal**</td>
-    <td>Canonicalization + symlink resolution</td>
-  </tr>
-  <tr>
-    <td>**SSRF Protection**</td>
-    <td>Private IP + metadata endpoint blocking</td>
-  </tr>
-  <tr>
-    <td>**Rate Limiting**</td>
-    <td>Token bucket algorithm</td>
-  </tr>
-  <tr>
-    <td>**Error Sanitization**</td>
-    <td>No stack traces or paths leaked</td>
-  </tr>
-</tbody>
-</table>
+- Zod validation is applied to every MCP tool input.
+- Live model schemas validate unified inference parameters.
+- Filesystem access uses allowed roots, canonical paths, and symlink checks.
+- Remote media requests block private networks and metadata endpoints.
+- API errors are sanitized before they are returned to MCP clients.
+- Local rate limiting protects the Runware API from accidental bursts.
+- CI runs tests, CodeQL, dependency review, npm vulnerability audits, and
+  registry signature verification.
+- GitHub Actions are pinned to immutable commit SHAs with minimal permissions.
 
----
-
-## Example Workflows
-
-### Product Photography Pipeline
-```
-You: "Process all images in /photos/products - remove backgrounds,
-      upscale 2x, and save as PNGs to /photos/processed"
-Assistant uses processFolder with removeBackground and upscale pipeline
-```
-
-### Video Storyboard
-```
-You: "Create a 3-part video story: sunrise over mountains,
-      eagle soaring, landing on a branch. Use Kling, 5s each."
-
-Assistant generates 3 coordinated videos with consistent style
-```
-
-### Brand Asset Generation
-```
-You: "Generate 5 logo variations for 'TechFlow' - modern, minimal,
-      tech-focused. Then vectorize the best one."
-
-Assistant uses imageInference, selects best, then vectorize to SVG
-```
-
-### Music + Video
-```
-You: "Create a 30-second promo video with matching background music"
-
-Assistant uses videoInference + audioInference in parallel
-```
-
----
+Treat MCP tool access as account access: keep the API key out of source control
+and review model, training, upload, and deletion requests before approving them.
 
 ## Development
 
 ```bash
-git clone https://github.com/runware/mcp-server
-cd mcp-server
-npm install
-npm run build
-npm test
+git clone https://github.com/ul0gic/runware-mcp.git
+cd runware-mcp
+npm ci
+npm run check
 ```
 
-<table>
-<thead>
-  <tr>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Command</font></th>
-    <th bgcolor="#0d1117"><font color="#58a6ff">Purpose</font></th>
-  </tr>
-</thead>
-<tbody>
-  <tr>
-    <td>`npm run build`</td>
-    <td>Compile TypeScript</td>
-  </tr>
-  <tr>
-    <td>`npm run dev`</td>
-    <td>Watch mode</td>
-  </tr>
-  <tr>
-    <td>`npm run typecheck`</td>
-    <td>Type checking</td>
-  </tr>
-  <tr>
-    <td>`npm run lint`</td>
-    <td>Lint with strict rules</td>
-  </tr>
-  <tr>
-    <td>`npm run test`</td>
-    <td>Run tests</td>
-  </tr>
-  <tr>
-    <td>`npm run test:coverage`</td>
-    <td>Coverage report</td>
-  </tr>
-</tbody>
-</table>
+| Command | Purpose |
+|---|---|
+| `npm run dev` | Run in watch mode |
+| `npm run check` | Typecheck, lint, test, and build |
+| `npm run test:coverage` | Generate the coverage report |
+| `npm run audit:security` | Check known dependency vulnerabilities |
+| `npm run audit:signatures` | Verify registry signatures and provenance |
+| `npm run audit:outdated` | Check production dependency freshness |
 
----
-
-## Contributing
-
-See **[CONTRIBUTING.md](CONTRIBUTING.md)** for the full development guide including project structure, how to add new tools, testing patterns, and code style.
-
-1. Fork it
-2. Create a feature branch
-3. Make it pass: `npm run build && npm run lint && npm test`
-4. Submit PR
-
-For version history and release notes, see **[CHANGELOG.md](CHANGELOG.md)**.
-
----
+See [CONTRIBUTING.md](CONTRIBUTING.md) for implementation and testing guidance,
+and [CHANGELOG.md](CHANGELOG.md) for release history.
 
 ## License
 
 MIT
-
----
-
-<p align="center">
-  <strong>Built for creators who demand more from their AI tools.</strong>
-</p>
-
-<p align="center">
-  <sub>22 tools. 9 providers. 100% API coverage. Zero complexity.</sub>
-</p>

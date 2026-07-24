@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js 25+** (uses native `fetch`, modern ESM features)
+- **Node.js 26+** (uses native `fetch`, modern ESM features)
 - **npm** (ships with Node.js)
 - **Runware API key** -- get one at [runware.ai](https://runware.ai)
 

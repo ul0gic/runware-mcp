@@ -15,11 +15,15 @@ import { z } from 'zod';
  */
 export const MODEL_CATEGORIES = [
   'checkpoint',
+  'lora',
+  'lycoris',
+  'vae',
+  'embeddings',
+  // Legacy aliases retained for existing clients.
   'LoRA',
   'Lycoris',
   'ControlNet',
   'VAE',
-  'embeddings',
 ] as const;
 
 /**
@@ -52,6 +56,11 @@ export const modelSearchInputSchema = z.object({
   search: z.string().optional(),
 
   /**
+   * Filter by catalog source.
+   */
+  source: z.enum(['featured', 'community']).optional(),
+
+  /**
    * Filter by tags.
    */
   tags: z.array(z.string()).optional(),
@@ -77,9 +86,28 @@ export const modelSearchInputSchema = z.object({
   conditioning: z.string().optional(),
 
   /**
+   * Filter by current capability identifiers.
+   */
+  capabilities: z.array(z.string()).optional(),
+
+  /**
    * Visibility filter.
    */
-  visibility: z.enum(['public', 'private', 'all']).optional(),
+  visibility: z.enum(['public', 'private', 'favorite', 'owned', 'all']).optional(),
+
+  /**
+   * Result sort order.
+   */
+  sort: z.enum([
+    'popularity',
+    '-popularity',
+    'name',
+    '-name',
+    'addedUnixTimestamp',
+    '-addedUnixTimestamp',
+    'updatedDateUnixTimestamp',
+    '-updatedDateUnixTimestamp',
+  ]).optional(),
 
   /**
    * Results per page (1-100).
@@ -184,6 +212,11 @@ export const modelSearchResultSchema = z.object({
    * Trigger words for the model.
    */
   positiveTriggerWords: z.array(z.string()).optional(),
+  capabilities: z.array(z.string()).optional(),
+  source: z.enum(['featured', 'community']).optional(),
+  isFavorite: z.boolean().optional(),
+  provider: z.string().optional(),
+  shortDescription: z.string().optional(),
 });
 
 /**

@@ -59,7 +59,7 @@ const VALID_CATEGORY_SET = new Set<string>(VALID_CATEGORIES);
 
 const EXPECTED_COUNTS: Record<DocCategory, number> = {
   concepts: 5,
-  tools: 13,
+  tools: 14,
   features: 10,
   providers: 9,
   guides: 5,

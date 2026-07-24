@@ -306,8 +306,8 @@ export function createTaskRequest<T extends Record<string, unknown>>(
   params: T,
 ): BaseTaskRequest & T & { taskUUID: string } {
   return {
+    ...params,
     taskType,
     taskUUID: randomUUID(),
-    ...params,
   };
 }

@@ -58,21 +58,35 @@ describe('Tool Registry', () => {
     'modelSearch',
     'costEstimate',
     'accountBalance',
+    'accountManagement',
+    'listModels',
+    'modelDetails',
+    'modelExamples',
+    'modelPricing',
+    'listCapabilities',
+    'modelSchema',
+    'runInference',
+    'getTaskDetails',
+    'mediaStorage',
+    'modelUpload',
+    'training',
+    'textInference',
+    'threeDInference',
     'processFolder',
     'batchImageInference',
     'watchFolder',
   ] as const;
 
-  it('has 22 tool definitions registered', () => {
-    expect(toolDefinitions.length).toBe(22);
+  it('has all tool definitions registered', () => {
+    expect(toolDefinitions.length).toBe(EXPECTED_TOOL_NAMES.length);
   });
 
-  it('has 22 tool handlers registered', () => {
-    expect(Object.keys(toolHandlers).length).toBe(22);
+  it('has all tool handlers registered', () => {
+    expect(Object.keys(toolHandlers).length).toBe(EXPECTED_TOOL_NAMES.length);
   });
 
-  it('has 22 entries in toolNames', () => {
-    expect(toolNames.length).toBe(22);
+  it('has all entries in toolNames', () => {
+    expect(toolNames.length).toBe(EXPECTED_TOOL_NAMES.length);
   });
 
   it('every expected tool name exists in toolNames', () => {

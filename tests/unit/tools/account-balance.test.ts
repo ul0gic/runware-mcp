@@ -90,6 +90,28 @@ describe('accountBalance', () => {
   });
 
   describe('handler success case', () => {
+    it('should parse the current nested accountManagement balance response', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'accountManagement',
+        taskUUID: 'task-uuid',
+        balance: {
+          amount: 2450.75,
+          freeBalance: 120,
+          currency: 'USD',
+        },
+      });
+
+      const input = accountBalanceInputSchema.parse({});
+      const result = await accountBalance(input, mockClient);
+
+      expect(result.status).toBe('success');
+      expect(result.message).toContain('2450.75');
+      expect(result.data).toMatchObject({
+        balance: 2450.75,
+        currency: 'USD',
+      });
+    });
+
     it('should return success with balance', async () => {
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
         taskType: 'accountBalance',

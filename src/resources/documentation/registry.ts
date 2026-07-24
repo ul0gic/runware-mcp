@@ -24,6 +24,7 @@ import { modelSearchDoc } from './docs/tools/model-search.js';
 import { promptEnhancerDoc } from './docs/tools/prompt-enhancer.js';
 import { removeBackgroundDoc } from './docs/tools/remove-background.js';
 import { transcriptionDoc } from './docs/tools/transcription.js';
+import { unifiedApiDoc } from './docs/tools/unified-api.js';
 import { upscaleDoc } from './docs/tools/upscale.js';
 import { vectorizeDoc } from './docs/tools/vectorize.js';
 import { videoInferenceDoc } from './docs/tools/video-inference.js';
@@ -109,7 +110,7 @@ registerDoc(outputTypesDoc);
 registerDoc(asyncDeliveryDoc);
 registerDoc(connectionDoc);
 
-// Tools (13)
+// Tools
 registerDoc(imageInferenceDoc);
 registerDoc(videoInferenceDoc);
 registerDoc(audioInferenceDoc);
@@ -123,3 +124,4 @@ registerDoc(vectorizeDoc);
 registerDoc(imageUploadDoc);
 registerDoc(modelSearchDoc);
 registerDoc(transcriptionDoc);
+registerDoc(unifiedApiDoc);

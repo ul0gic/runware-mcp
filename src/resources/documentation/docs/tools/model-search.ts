@@ -10,7 +10,7 @@ export const modelSearchDoc: DocResource = {
     description:
       'The modelSearch tool discovers available AI models on the Runware platform. It searches across model ' +
       'names, versions, tags, and metadata with weighted relevance scoring. Results can be filtered by category ' +
-      '(checkpoint, LoRA, Lycoris, ControlNet, VAE, embeddings), type (base, inpainting, refiner), ' +
+      '(checkpoint, lora, lycoris, vae, embeddings), source, capabilities, type, ' +
       'architecture (FLUX.1-dev, FLUX.1-schnell, SDXL, SD1.5, SD3, etc.), and visibility (public, private). ' +
       'Each result includes the AIR identifier needed for API calls, plus recommended defaults (width, height, ' +
       'steps, CFG scale, scheduler) and trigger words. Pagination is supported with limit and offset.',
@@ -28,7 +28,7 @@ export const modelSearchDoc: DocResource = {
       {
         name: 'category',
         type: 'string',
-        description: 'Filter by category: "checkpoint", "LoRA", "Lycoris", "ControlNet", "VAE", or "embeddings".',
+        description: 'Filter by category: "checkpoint", "lora", "lycoris", "vae", or "embeddings".',
       },
       {
         name: 'type',
@@ -46,10 +46,15 @@ export const modelSearchDoc: DocResource = {
         description: 'Filter by ControlNet conditioning type.',
       },
       {
+        name: 'capabilities',
+        type: 'array of strings',
+        description: 'Filter by current capability identifiers.',
+      },
+      {
         name: 'visibility',
         type: 'string',
         default: 'all',
-        description: 'Visibility filter: "public", "private", or "all".',
+        description: 'Visibility filter: "public", "private", "favorite", "owned", or legacy "all".',
       },
       {
         name: 'limit',

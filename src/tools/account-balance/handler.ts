@@ -21,9 +21,13 @@ import type { AccountBalanceInput, AccountBalanceOutput } from './schema.js';
 // ============================================================================
 
 interface AccountBalanceApiResponse {
-  readonly taskType: 'accountBalance';
+  readonly taskType: 'accountManagement' | 'accountBalance';
   readonly taskUUID: string;
-  readonly balance?: number;
+  readonly balance?: number | {
+    readonly amount?: number;
+    readonly freeBalance?: number;
+    readonly currency?: string;
+  };
   readonly currency?: string;
 }
 
@@ -61,9 +65,16 @@ export async function accountBalance(
     });
 
     // Process response
+    const currentBalance = typeof response.balance === 'object'
+      ? response.balance.amount
+      : response.balance;
+    const currentCurrency = typeof response.balance === 'object'
+      ? response.balance.currency
+      : response.currency;
+
     const output: AccountBalanceOutput = {
-      balance: response.balance ?? 0,
-      currency: response.currency ?? 'USD',
+      balance: currentBalance ?? 0,
+      currency: currentCurrency ?? 'USD',
       retrievedAt: new Date().toISOString(),
     };
 
