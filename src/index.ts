@@ -88,7 +88,7 @@ type ToolHandlerFunction = (typeof toolHandlers)[keyof typeof toolHandlers];
 function findToolHandler(name: string): ToolHandlerFunction | undefined {
   for (const [key, handler] of Object.entries(toolHandlers)) {
     if (key === name) {
-      return handler as ToolHandlerFunction;
+      return handler;
     }
   }
   return undefined;
