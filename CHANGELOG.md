@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.1] - 2026-08-08
+
+### Fixed
+
+- Server advertised version `1.0.0` over MCP while the package was on `2.x`. The
+  version is now read from `package.json` at startup instead of being duplicated
+  in `src/index.ts`, so the two cannot drift apart again.
+
+### Changed
+
+- Comments across `src` now carry only non-obvious rationale; prose headers,
+  section dividers, and JSDoc restating signatures were removed.
+- Removed code unreachable from the server entry point: the URL validation,
+  cache, and capabilities modules, two constant barrels, and the
+  `zod-to-json-schema` dependency.
+- Added `knip` to detect unused files, exports, and dependencies.
+
 ## [2.0.0] - 2026-07-24
 
 ### Added
