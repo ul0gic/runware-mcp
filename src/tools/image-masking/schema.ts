@@ -11,7 +11,7 @@ export const imageMaskingInputSchema = z.object({
   /** Accepts an image UUID, URL, base64 payload, or data URI. */
   inputImage: imageInputSchema,
 
-  /** Default is face_yolov8n; see constants/masking-models.ts for the full set. */
+  /** Default is face_yolov8n. */
   model: z.string().optional().default('runware:35@1'),
 
   /** Lower values yield more detections, higher values fewer but more accurate ones. */
