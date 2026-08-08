@@ -1,7 +1,3 @@
-/**
- * Audio inference tool barrel export.
- */
-
 export { audioInference, audioInferenceToolDefinition } from './handler.js';
 
 export {

@@ -1,10 +1,3 @@
-/**
- * Black Forest Labs (BFL) Provider — Provider Documentation
- *
- * Image generation provider for FLUX models with prompt
- * upsampling, safety tolerance, and raw output mode.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const bflDoc: DocResource = {

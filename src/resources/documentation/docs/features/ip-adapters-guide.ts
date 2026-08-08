@@ -1,10 +1,3 @@
-/**
- * IP-Adapter Image Prompts — Feature Guide Documentation
- *
- * Covers image prompt adapters for style transfer,
- * composition transfer, and face-based generation.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const ipAdaptersGuideDoc: DocResource = {

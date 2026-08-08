@@ -1,7 +1,3 @@
-/**
- * Video inference tool barrel export.
- */
-
 export {
   videoInference,
   videoInferenceToolDefinition,

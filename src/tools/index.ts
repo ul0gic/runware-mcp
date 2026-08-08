@@ -1,13 +1,3 @@
-/**
- * Tools index - Registry of all MCP tools.
- *
- * This module exports all tool handlers and definitions for the Runware MCP server.
- */
-
-// ============================================================================
-// Imports (for local use in registries)
-// ============================================================================
-
 import {
   accountBalance,
   accountBalanceToolDefinition,
@@ -180,10 +170,6 @@ import {
 
 import type { z } from 'zod';
 
-// ============================================================================
-// Re-exports - Core Image Tools
-// ============================================================================
-
 export {
   imageInference,
   imageInferenceToolDefinition,
@@ -247,10 +233,6 @@ export {
   type ImageUploadOutput,
 } from './image-upload/index.js';
 
-// ============================================================================
-// Re-exports - Video Tools
-// ============================================================================
-
 export {
   videoInference,
   videoInferenceToolDefinition,
@@ -278,10 +260,6 @@ export {
   type GetVideoModelInfoOutput,
 } from './get-video-model-info/index.js';
 
-// ============================================================================
-// Re-exports - Audio Tools
-// ============================================================================
-
 export {
   audioInference,
   audioInferenceToolDefinition,
@@ -299,10 +277,6 @@ export {
   type TranscriptionInput,
   type TranscriptionOutput,
 } from './transcription/index.js';
-
-// ============================================================================
-// Re-exports - Creative Tools
-// ============================================================================
 
 export {
   vectorize,
@@ -349,10 +323,6 @@ export {
   type ColorPalette,
 } from './style-transfer/index.js';
 
-// ============================================================================
-// Re-exports - Utility Tools
-// ============================================================================
-
 export {
   modelSearch,
   modelSearchToolDefinition,
@@ -389,10 +359,6 @@ export * from './task-details/index.js';
 export * from './text-inference/index.js';
 export * from './three-d-inference/index.js';
 export * from './training/index.js';
-
-// ============================================================================
-// Re-exports - Batch & Folder Tools
-// ============================================================================
 
 export {
   processFolder,
@@ -439,15 +405,7 @@ export {
   type WatchOperation,
 } from './watch-folder/index.js';
 
-// ============================================================================
-// Tool Registry
-// ============================================================================
-
-/**
- * Map of all tool handlers by name.
- */
 export const toolHandlers = {
-  // Core Image Tools
   imageInference,
   photoMaker,
   imageUpscale,
@@ -455,19 +413,15 @@ export const toolHandlers = {
   imageCaption,
   imageMasking,
   imageUpload,
-  // Video Tools
   videoInference,
   listVideoModels,
   getVideoModelInfo,
-  // Audio Tools
   audioInference,
   transcription,
-  // Creative Tools
   vectorize,
   promptEnhance,
   controlNetPreprocess,
   styleTransfer,
-  // Utility Tools
   modelSearch,
   costEstimate,
   accountBalance,
@@ -485,20 +439,13 @@ export const toolHandlers = {
   training,
   textInference,
   threeDInference,
-  // Batch & Folder Tools
   processFolder,
   batchImageInference,
   watchFolder,
 } as const;
 
-/**
- * Map of all tool input schemas by name.
- *
- * Used by the MCP dispatch layer to validate and apply Zod defaults
- * to raw JSON arguments before passing them to handlers.
- */
+/** Used by the dispatch layer to validate raw JSON args and apply Zod defaults. */
 export const toolInputSchemas: Record<string, z.ZodType> = {
-  // Core Image Tools
   imageInference: imageInferenceInputSchema,
   photoMaker: photoMakerInputSchema,
   imageUpscale: imageUpscaleInputSchema,
@@ -506,19 +453,15 @@ export const toolInputSchemas: Record<string, z.ZodType> = {
   imageCaption: imageCaptionInputSchema,
   imageMasking: imageMaskingInputSchema,
   imageUpload: imageUploadInputSchema,
-  // Video Tools
   videoInference: videoInferenceInputSchema,
   listVideoModels: listVideoModelsInputSchema,
   getVideoModelInfo: getVideoModelInfoInputSchema,
-  // Audio Tools
   audioInference: audioInferenceInputSchema,
   transcription: transcriptionInputSchema,
-  // Creative Tools
   vectorize: vectorizeInputSchema,
   promptEnhance: promptEnhanceInputSchema,
   controlNetPreprocess: controlNetPreprocessInputSchema,
   styleTransfer: styleTransferInputSchema,
-  // Utility Tools
   modelSearch: modelSearchInputSchema,
   costEstimate: costEstimateInputSchema,
   accountBalance: accountBalanceInputSchema,
@@ -536,17 +479,12 @@ export const toolInputSchemas: Record<string, z.ZodType> = {
   training: trainingInputSchema,
   textInference: textInferenceInputSchema,
   threeDInference: threeDInferenceInputSchema,
-  // Batch & Folder Tools
   processFolder: processFolderInputSchema,
   batchImageInference: batchImageInferenceInputSchema,
   watchFolder: watchFolderInputSchema,
 };
 
-/**
- * Array of all tool definitions for MCP registration.
- */
 export const toolDefinitions = [
-  // Core Image Tools
   imageInferenceToolDefinition,
   photoMakerToolDefinition,
   imageUpscaleToolDefinition,
@@ -554,19 +492,15 @@ export const toolDefinitions = [
   imageCaptionToolDefinition,
   imageMaskingToolDefinition,
   imageUploadToolDefinition,
-  // Video Tools
   videoInferenceToolDefinition,
   listVideoModelsToolDefinition,
   getVideoModelInfoToolDefinition,
-  // Audio Tools
   audioInferenceToolDefinition,
   transcriptionToolDefinition,
-  // Creative Tools
   vectorizeToolDefinition,
   promptEnhanceToolDefinition,
   controlNetPreprocessToolDefinition,
   styleTransferToolDefinition,
-  // Utility Tools
   modelSearchToolDefinition,
   costEstimateToolDefinition,
   accountBalanceToolDefinition,
@@ -584,18 +518,11 @@ export const toolDefinitions = [
   trainingToolDefinition,
   textInferenceToolDefinition,
   threeDInferenceToolDefinition,
-  // Batch & Folder Tools
   processFolderToolDefinition,
   batchImageInferenceToolDefinition,
   watchFolderToolDefinition,
 ] as const;
 
-/**
- * Type for valid tool names.
- */
 export type ToolName = keyof typeof toolHandlers;
 
-/**
- * Array of all tool names.
- */
 export const toolNames = Object.keys(toolHandlers) as ToolName[];

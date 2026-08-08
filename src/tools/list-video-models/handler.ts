@@ -1,10 +1,3 @@
-/**
- * Handler for the list video models tool.
- *
- * This is a local tool that returns video model information
- * from the constants, without making an API call.
- */
-
 import {
   VIDEO_MODELS,
   type VideoModel,
@@ -14,49 +7,32 @@ import { type ToolResult, successResult } from '../../shared/types.js';
 import type { listVideoModelsInputSchema, ListVideoModelsOutput } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 type ListVideoModelsInput = z.infer<typeof listVideoModelsInputSchema>;
 
-// ============================================================================
-// Filtering
-// ============================================================================
-
-/**
- * Filters video models based on input criteria.
- */
 function filterModels(input: ListVideoModelsInput): VideoModel[] {
   let models = Object.values(VIDEO_MODELS) as VideoModel[];
 
-  // Filter by provider
   if (input.provider !== undefined) {
     models = models.filter((model) => model.provider === input.provider);
   }
 
-  // Filter by minimum duration
   if (input.minDuration !== undefined) {
     const minDuration = input.minDuration;
     models = models.filter((model) => model.maxDuration >= minDuration);
   }
 
-  // Filter by audio support
   if (input.supportsAudio !== undefined) {
     models = models.filter((model) => model.supportsAudio === input.supportsAudio);
   }
 
-  // Filter by image input support
   if (input.supportsImageInput !== undefined) {
     models = models.filter((model) => model.supportsImageInput === input.supportsImageInput);
   }
 
-  // Filter by video input support
   if (input.supportsVideoInput !== undefined) {
     models = models.filter((model) => model.supportsVideoInput === input.supportsVideoInput);
   }
 
-  // Filter by feature
   if (input.feature !== undefined) {
     const feature = input.feature.toLowerCase();
     models = models.filter((model) =>
@@ -64,7 +40,6 @@ function filterModels(input: ListVideoModelsInput): VideoModel[] {
     );
   }
 
-  // Filter by minimum resolution
   if (input.minWidth !== undefined) {
     const minWidth = input.minWidth;
     models = models.filter((model) => model.maxWidth >= minWidth);
@@ -77,9 +52,6 @@ function filterModels(input: ListVideoModelsInput): VideoModel[] {
   return models;
 }
 
-/**
- * Converts a VideoModel to a summary object.
- */
 function toSummary(model: VideoModel): ListVideoModelsOutput['models'][number] {
   return {
     id: model.id,
@@ -97,24 +69,12 @@ function toSummary(model: VideoModel): ListVideoModelsOutput['models'][number] {
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Lists video models with optional filtering.
- *
- * This is a local operation that doesn't call the API.
- *
- * @param input - Filter criteria
- * @returns Tool result with matching models
- */
+/** Local operation over the bundled catalog — never calls the API. */
 export function listVideoModels(
   input: ListVideoModelsInput,
 ): ToolResult {
   const models = filterModels(input);
 
-  // Get unique providers sorted
   const providersSet = new Set(models.map((m) => m.provider));
   const providers = [...providersSet].toSorted((a, b) => a.localeCompare(b));
 
@@ -132,9 +92,6 @@ export function listVideoModels(
   return successResult(message, output);
 }
 
-/**
- * Builds a description of the applied filters.
- */
 function buildFilterDescription(input: ListVideoModelsInput): string {
   const filters: string[] = [];
 

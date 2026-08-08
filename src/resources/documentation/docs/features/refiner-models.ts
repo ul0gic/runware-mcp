@@ -1,10 +1,3 @@
-/**
- * Refiner Models — Feature Guide Documentation
- *
- * Covers SDXL two-stage generation with refiner models
- * for enhanced detail and quality.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const refinerModelsDoc: DocResource = {

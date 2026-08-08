@@ -1,10 +1,3 @@
-/**
- * Sync.so Provider — Provider Documentation
- *
- * Lip sync video provider specializing in audio-driven
- * face animation with speaker detection.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const syncDoc: DocResource = {

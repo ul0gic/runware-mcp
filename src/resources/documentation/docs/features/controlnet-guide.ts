@@ -1,10 +1,3 @@
-/**
- * ControlNet Guidance — Feature Guide Documentation
- *
- * Covers structural guidance for image generation using
- * preprocessed guide images with ControlNet.
- */
-
 import type { DocResource } from '../../types.js';
 
 const EXAMPLE_CHECKPOINT_MODEL = 'civitai:133005@357609';

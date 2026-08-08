@@ -1,10 +1,3 @@
-/**
- * Handler for the audio inference tool.
- *
- * Implements audio generation using the Runware API.
- * Audio generation can be async for longer durations or complex compositions.
- */
-
 import { isValidAudioModel, isValidTTSVoice } from '../../constants/audio-models.js';
 import {
   type RunwareClient,
@@ -24,10 +17,6 @@ import {
 
 import type { AudioInferenceInput, AudioInferenceOutput } from './schema.js';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 interface AudioResultItem {
   readonly audioUUID: string;
   readonly audioURL?: string;
@@ -46,13 +35,6 @@ interface AudioInferenceApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Validation
-// ============================================================================
-
-/**
- * Validates the audio model against known models.
- */
 function validateModel(model: string): void {
   if (!isValidAudioModel(model)) {
     throw new RunwareApiError(
@@ -62,9 +44,6 @@ function validateModel(model: string): void {
   }
 }
 
-/**
- * Validates voice if provided for speech generation.
- */
 function validateVoice(voice: string | undefined, audioType: string | undefined): void {
   if (voice !== undefined && !isValidTTSVoice(voice)) {
     throw new RunwareApiError(
@@ -73,19 +52,11 @@ function validateVoice(voice: string | undefined, audioType: string | undefined)
     );
   }
 
-  // Warn if voice is provided but not for speech
   if (voice !== undefined && audioType !== undefined && audioType !== 'speech') {
-    // Voice is only used for speech type, but we don't error - just ignore it
+    // Voice applies only to speech generation; other types ignore it rather than erroring.
   }
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     positivePrompt: input.positivePrompt,
@@ -95,13 +66,10 @@ function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
     includeCost: input.includeCost,
   };
 
-  // Optional parameters
-  // NOTE: audioType is intentionally NOT sent to the API — Runware rejects it
-  // as an unsupported parameter. It remains in the schema for informational use only.
+  // audioType is never sent: Runware rejects it as an unsupported parameter.
   if (input.voice !== undefined) {
     request.voice = input.voice;
   }
-  // numberResults has a default, so always set it
   request.numberResults = input.numberResults;
 
   if (input.outputType !== undefined) {
@@ -111,7 +79,6 @@ function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
     request.outputFormat = input.outputFormat;
   }
 
-  // Audio settings
   if (input.audioSettings !== undefined) {
     if (input.audioSettings.sampleRate !== undefined) {
       request.sampleRate = input.audioSettings.sampleRate;
@@ -121,12 +88,10 @@ function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
     }
   }
 
-  // ElevenLabs-specific settings
   if (input.elevenlabs?.compositionPlan !== undefined) {
     request.compositionPlan = input.elevenlabs.compositionPlan;
   }
 
-  // Mirelo-specific settings
   if (input.mirelo?.startOffset !== undefined) {
     request.startOffset = input.mirelo.startOffset;
   }
@@ -134,13 +99,6 @@ function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API response into the output format.
- */
 function processResponse(
   response: AudioInferenceApiResponse,
   pollingAttempts: number,
@@ -162,25 +120,6 @@ function processResponse(
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Generates audio using the Runware API.
- *
- * Audio generation is typically asynchronous. This handler:
- * 1. Validates the model and voice (if provided)
- * 2. Submits the request with deliveryMethod: 'async'
- * 3. Polls for the result using the polling module
- * 4. Reports progress via the context
- * 5. Supports cancellation via the context signal
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with generated audio
- */
 export async function audioInference(
   input: AudioInferenceInput,
   client?: RunwareClient,
@@ -189,41 +128,33 @@ export async function audioInference(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Validate model and voice
     validateModel(input.model);
     validateVoice(input.voice, input.audioType);
 
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('audioInference', requestParams);
 
-    // Submit the task — use request() instead of requestSingle() because
-    // async tasks may return { data: [] } on submission, which requestSingle() rejects.
+    // request() not requestSingle(): async submission may return { data: [] }, which requestSingle() rejects.
     await runwareClient.request<AudioInferenceApiResponse>([task], {
       signal: context?.signal,
     });
 
-    // Report progress: task submitted
     context?.progress?.report({
       progress: 0,
       total: 100,
       message: 'Audio generation task submitted, polling for result...',
     });
 
-    // Poll for result
     const pollResult = await pollForResult<AudioInferenceApiResponse>(task.taskUUID as TaskUUID, {
       client: runwareClient,
       signal: context?.signal,
       progress: context?.progress,
     });
 
-    // Process response
     const output = processResponse(pollResult.result, pollResult.attempts, pollResult.elapsedMs);
 
-    // Report progress: complete
     context?.progress?.report({
       progress: 100,
       total: 100,
@@ -242,9 +173,6 @@ export async function audioInference(
   }
 }
 
-/**
- * MCP tool definition for audio inference.
- */
 export const audioInferenceToolDefinition = {
   name: 'audioInference',
   description:

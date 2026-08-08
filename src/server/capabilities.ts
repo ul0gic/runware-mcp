@@ -1,21 +1,7 @@
-/**
- * MCP server capabilities declaration.
- *
- * Aggregates all tool definitions, resource providers, and prompt templates
- * into a single capabilities object for the MCP server.
- */
-
 import { PROMPT_TEMPLATES } from '../prompts/index.js';
 import { RESOURCE_PROVIDERS } from '../resources/index.js';
 import { toolDefinitions } from '../tools/index.js';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Resource provider summary for capability negotiation.
- */
 interface ResourceProviderSummary {
   readonly uri: string;
   readonly name: string;
@@ -23,9 +9,6 @@ interface ResourceProviderSummary {
   readonly mimeType: string;
 }
 
-/**
- * Prompt template summary for capability negotiation.
- */
 interface PromptTemplateSummary {
   readonly name: string;
   readonly description: string;
@@ -36,9 +19,6 @@ interface PromptTemplateSummary {
   }[];
 }
 
-/**
- * Server capabilities aggregation.
- */
 interface ServerCapabilitiesInfo {
   readonly tools: typeof toolDefinitions;
   readonly resources: {
@@ -47,18 +27,7 @@ interface ServerCapabilitiesInfo {
   readonly prompts: readonly PromptTemplateSummary[];
 }
 
-// ============================================================================
-// Capabilities
-// ============================================================================
-
-/**
- * Builds the full server capabilities declaration.
- *
- * This is used for logging and introspection. The MCP SDK handles
- * actual capability negotiation via the Server constructor options.
- *
- * @returns Aggregated server capabilities info
- */
+/** Logging and introspection only; the SDK negotiates capabilities via the Server constructor. */
 export function getServerCapabilities(): ServerCapabilitiesInfo {
   return {
     tools: toolDefinitions,

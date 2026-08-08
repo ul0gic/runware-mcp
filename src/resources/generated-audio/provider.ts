@@ -1,41 +1,12 @@
-/**
- * Resource provider for generated audio.
- *
- * Maintains an in-memory session store of all audio clips generated
- * during the current session.
- *
- * URI pattern: runware://audio/{audioId}
- */
-
 import { truncate } from '../../shared/utils.js';
 
 import type { GeneratedAudioEntry } from './types.js';
 import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.js';
 
-// ============================================================================
-// Session Store
-// ============================================================================
-
-/**
- * Maximum number of entries in the session store.
- * When exceeded, the oldest entries are evicted.
- */
 const MAX_SESSION_SIZE = 10_000;
 
-/**
- * In-memory store for audio clips generated in the current session.
- * Cleared when the server restarts.
- */
 const SESSION_AUDIO = new Map<string, GeneratedAudioEntry>();
 
-/**
- * Registers a generated audio clip in the session store.
- *
- * Called by tool handlers after a successful audio generation.
- * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
- *
- * @param audio - The generated audio entry to register
- */
 export function registerAudio(audio: GeneratedAudioEntry): void {
   SESSION_AUDIO.set(audio.id, audio);
   if (SESSION_AUDIO.size > MAX_SESSION_SIZE) {
@@ -46,42 +17,19 @@ export function registerAudio(audio: GeneratedAudioEntry): void {
   }
 }
 
-/**
- * Gets all audio clips from the session store.
- *
- * @returns Array of all session audio entries
- */
 export function getSessionAudio(): readonly GeneratedAudioEntry[] {
   return [...SESSION_AUDIO.values()];
 }
 
-/**
- * Clears the session audio store.
- * Primarily used for testing.
- */
+/** Test-support hook — production code never clears the store. */
 export function clearSessionAudio(): void {
   SESSION_AUDIO.clear();
 }
 
-// ============================================================================
-// Provider
-// ============================================================================
-
-/**
- * Maximum prompt length for resource entry names.
- */
 const MAX_PROMPT_DISPLAY_LENGTH = 50;
 
-/**
- * URI prefix for audio resources.
- */
 const URI_PREFIX = 'runware://audio/';
 
-/**
- * Resource provider for generated audio.
- *
- * Exposes all audio clips generated in the current session as MCP resources.
- */
 export const generatedAudioProvider: ResourceProvider = {
   uri: 'runware://audio/{id}',
   name: 'Generated Audio',

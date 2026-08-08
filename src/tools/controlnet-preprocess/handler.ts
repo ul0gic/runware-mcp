@@ -1,10 +1,3 @@
-/**
- * Handler for the ControlNet preprocess tool.
- *
- * Implements ControlNet preprocessing using the Runware API.
- * Transforms input images into guide images for controlled generation.
- */
-
 import { getPreprocessor, isValidApiPreprocessor } from '../../constants/controlnet.js';
 import {
   type RunwareClient,
@@ -17,10 +10,6 @@ import { type ToolContext, type ToolResult, errorResult, successResult } from '.
 
 import type { ControlNetPreprocessInput, ControlNetPreprocessOutput } from './schema.js';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 interface ControlNetPreprocessApiResponse {
   readonly taskType: 'imageControlNetPreProcess';
   readonly taskUUID: string;
@@ -32,15 +21,8 @@ interface ControlNetPreprocessApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Validation
-// ============================================================================
-
-/**
- * Validates the preprocessor type.
- */
 function validatePreprocessor(preprocessor: string): void {
-  // Check both internal and API format
+  // Accepts both the internal preprocessor name and the raw API identifier.
   const preprocessorInfo = getPreprocessor(preprocessor);
 
   if (preprocessorInfo === undefined && !isValidApiPreprocessor(preprocessor)) {
@@ -51,21 +33,11 @@ function validatePreprocessor(preprocessor: string): void {
   }
 }
 
-/**
- * Gets the API identifier for a preprocessor.
- */
 function getApiPreprocessorId(preprocessor: string): string {
   const info = getPreprocessor(preprocessor);
   return info?.apiId ?? preprocessor;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: ControlNetPreprocessInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     inputImage: input.inputImage,
@@ -73,7 +45,6 @@ function buildApiRequest(input: ControlNetPreprocessInput): Record<string, unkno
     includeCost: input.includeCost,
   };
 
-  // Optional dimension parameters
   if (input.height !== undefined) {
     request.height = input.height;
   }
@@ -81,7 +52,6 @@ function buildApiRequest(input: ControlNetPreprocessInput): Record<string, unkno
     request.width = input.width;
   }
 
-  // Output parameters
   if (input.outputType !== undefined) {
     request.outputType = input.outputType;
   }
@@ -92,7 +62,6 @@ function buildApiRequest(input: ControlNetPreprocessInput): Record<string, unkno
     request.outputQuality = input.outputQuality;
   }
 
-  // Canny-specific parameters
   if (input.lowThresholdCanny !== undefined) {
     request.lowThresholdCanny = input.lowThresholdCanny;
   }
@@ -100,7 +69,6 @@ function buildApiRequest(input: ControlNetPreprocessInput): Record<string, unkno
     request.highThresholdCanny = input.highThresholdCanny;
   }
 
-  // OpenPose-specific parameters
   if (input.includeHandsAndFaceOpenPose !== undefined) {
     request.includeHandsAndFaceOpenPose = input.includeHandsAndFaceOpenPose;
   }
@@ -108,13 +76,6 @@ function buildApiRequest(input: ControlNetPreprocessInput): Record<string, unkno
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API response into the output format.
- */
 function processResponse(response: ControlNetPreprocessApiResponse): ControlNetPreprocessOutput {
   return {
     guideImageUUID: response.guideImageUUID ?? response.taskUUID,
@@ -130,21 +91,6 @@ function processResponse(response: ControlNetPreprocessApiResponse): ControlNetP
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Preprocesses an image for ControlNet using the Runware API.
- *
- * Transforms input images into guide images that can be used
- * for controlled image generation with ControlNet.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with preprocessed guide image
- */
 export async function controlNetPreprocess(
   input: ControlNetPreprocessInput,
   client?: RunwareClient,
@@ -153,25 +99,19 @@ export async function controlNetPreprocess(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Validate preprocessor
     validatePreprocessor(input.preprocessor);
 
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('imageControlNetPreProcess', requestParams);
 
-    // Make API call (synchronous)
     const response = await runwareClient.requestSingle<ControlNetPreprocessApiResponse>(task, {
       signal: context?.signal,
     });
 
-    // Process response
     const output = processResponse(response);
 
-    // Return result
     const preprocessorInfo = getPreprocessor(input.preprocessor);
     const preprocessorName = preprocessorInfo?.name ?? input.preprocessor;
     return successResult(
@@ -185,9 +125,6 @@ export async function controlNetPreprocess(
   }
 }
 
-/**
- * MCP tool definition for ControlNet preprocess.
- */
 export const controlNetPreprocessToolDefinition = {
   name: 'controlNetPreprocess',
   description:

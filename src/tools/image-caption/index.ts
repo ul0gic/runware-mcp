@@ -1,7 +1,3 @@
-/**
- * Image caption tool barrel export.
- */
-
 export {
   imageCaption,
   imageCaptionToolDefinition,

@@ -1,51 +1,16 @@
-/**
- * Cache module for the Runware MCP server.
- *
- * Provides an LRU (Least Recently Used) cache with optional TTL support.
- * Used for caching API responses and reducing redundant requests.
- */
-
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Internal cache entry with metadata.
- */
 interface CacheEntry<V> {
   readonly value: V;
   readonly expiresAt: number | null;
 }
 
-/**
- * Options for creating an LRU cache.
- */
 export interface LRUCacheOptions {
-  /**
-   * Maximum number of entries in the cache.
-   */
   readonly maxSize: number;
 
-  /**
-   * Time-to-live in milliseconds.
-   * If not specified, entries never expire.
-   */
+  /** Milliseconds; unset means entries never expire. */
   readonly ttlMs?: number;
 }
 
-// ============================================================================
-// LRU Cache Class
-// ============================================================================
-
-/**
- * LRU (Least Recently Used) cache with optional TTL.
- *
- * Entries are evicted in LRU order when the cache exceeds maxSize.
- * Entries with TTL are automatically invalidated after expiration.
- *
- * @typeParam K - Key type
- * @typeParam V - Value type
- */
+/** Least-recently-used eviction at maxSize, with optional per-entry TTL. */
 export class LRUCache<K, V> {
   private readonly maxSize: number;
   private readonly ttlMs: number | null;
@@ -64,15 +29,7 @@ export class LRUCache<K, V> {
     this.cache = new Map();
   }
 
-  /**
-   * Gets a value from the cache.
-   *
-   * If the entry exists and is not expired, it is moved to the end
-   * of the LRU order (most recently used).
-   *
-   * @param key - Cache key
-   * @returns The cached value, or undefined if not found or expired
-   */
+  /** A hit promotes the entry to most-recently-used. */
   get(key: K): V | undefined {
     const entry = this.cache.get(key);
 
@@ -80,33 +37,22 @@ export class LRUCache<K, V> {
       return undefined;
     }
 
-    // Check expiration
     if (this.isExpired(entry)) {
       this.cache.delete(key);
       return undefined;
     }
 
-    // Move to end (most recently used)
+    // Re-inserting moves the key to the end of Map iteration order, which is the LRU order
     this.cache.delete(key);
     this.cache.set(key, entry);
 
     return entry.value;
   }
 
-  /**
-   * Sets a value in the cache.
-   *
-   * If the cache exceeds maxSize, the least recently used entry is evicted.
-   *
-   * @param key - Cache key
-   * @param value - Value to cache
-   * @param ttlMs - Optional TTL override for this entry
-   */
+  /** `ttlMs` overrides the cache-wide TTL for this entry only. */
   set(key: K, value: V, ttlMs?: number): void {
-    // Remove existing entry if present
     this.cache.delete(key);
 
-    // Evict LRU entries if at capacity
     while (this.cache.size >= this.maxSize) {
       const iteratorResult = this.cache.keys().next();
       if (iteratorResult.done === true) {
@@ -115,23 +61,13 @@ export class LRUCache<K, V> {
       this.cache.delete(iteratorResult.value);
     }
 
-    // Calculate expiration
     const effectiveTtl = ttlMs ?? this.ttlMs;
     const expiresAt = effectiveTtl === null ? null : Date.now() + effectiveTtl;
 
-    // Add new entry
     this.cache.set(key, { value, expiresAt });
   }
 
-  /**
-   * Checks if a key exists in the cache.
-   *
-   * Does not update LRU order.
-   * Returns false for expired entries (without removing them).
-   *
-   * @param key - Cache key
-   * @returns true if the key exists and is not expired
-   */
+  /** Does not update LRU order, and leaves expired entries in place. */
   has(key: K): boolean {
     const entry = this.cache.get(key);
 
@@ -146,55 +82,32 @@ export class LRUCache<K, V> {
     return true;
   }
 
-  /**
-   * Deletes a key from the cache.
-   *
-   * @param key - Cache key
-   * @returns true if the key was deleted, false if it didn't exist
-   */
   delete(key: K): boolean {
     return this.cache.delete(key);
   }
 
-  /**
-   * Clears all entries from the cache.
-   */
   clear(): void {
     this.cache.clear();
   }
 
-  /**
-   * Gets the current number of entries in the cache.
-   *
-   * Note: This may include expired entries that haven't been evicted yet.
-   */
+  /** Counts expired-but-unpruned entries too. */
   get size(): number {
     return this.cache.size;
   }
 
-  /**
-   * Gets all keys in the cache (including potentially expired ones).
-   */
+  /** Includes expired-but-unpruned entries. */
   keys(): IterableIterator<K> {
     return this.cache.keys();
   }
 
-  /**
-   * Gets all values in the cache (including potentially expired ones).
-   */
+  /** Includes expired-but-unpruned entries. */
   *values(): Generator<V, void, undefined> {
     for (const entry of this.cache.values()) {
       yield entry.value;
     }
   }
 
-  /**
-   * Removes all expired entries from the cache.
-   *
-   * Call this periodically if you have many entries with TTL.
-   *
-   * @returns Number of entries removed
-   */
+  /** Expiry is otherwise lazy — call periodically when many TTL entries accumulate. */
   prune(): number {
     let removed = 0;
     const now = Date.now();
@@ -209,16 +122,7 @@ export class LRUCache<K, V> {
     return removed;
   }
 
-  /**
-   * Gets or sets a value using a factory function.
-   *
-   * If the key exists and is not expired, returns the cached value.
-   * Otherwise, calls the factory function, caches the result, and returns it.
-   *
-   * @param key - Cache key
-   * @param factory - Function to create the value if not cached
-   * @returns The cached or newly created value
-   */
+  /** Concurrent misses each run the factory — no in-flight deduplication. */
   async getOrSet(key: K, factory: () => Promise<V>): Promise<V> {
     const existing = this.get(key);
     if (existing !== undefined) {
@@ -230,13 +134,6 @@ export class LRUCache<K, V> {
     return value;
   }
 
-  /**
-   * Synchronous version of getOrSet.
-   *
-   * @param key - Cache key
-   * @param factory - Function to create the value if not cached
-   * @returns The cached or newly created value
-   */
   getOrSetSync(key: K, factory: () => V): V {
     const existing = this.get(key);
     if (existing !== undefined) {
@@ -248,83 +145,40 @@ export class LRUCache<K, V> {
     return value;
   }
 
-  /**
-   * Checks if an entry is expired.
-   */
   private isExpired(entry: CacheEntry<V>): boolean {
     return entry.expiresAt !== null && entry.expiresAt <= Date.now();
   }
 }
 
-// ============================================================================
-// Preset Caches
-// ============================================================================
-
-/**
- * Cache for model metadata.
- *
- * Models don't change frequently, so we use a longer TTL.
- * Max 500 entries, 1 hour TTL.
- */
+/** Model metadata changes rarely, hence the long TTL. */
 export const modelCache = new LRUCache<string, unknown>({
   maxSize: 500,
-  ttlMs: 60 * 60 * 1000, // 1 hour
+  ttlMs: 60 * 60 * 1000,
 });
 
-/**
- * Cache for image data.
- *
- * Used for caching uploaded images and intermediate results.
- * Max 100 entries, 15 minute TTL.
- */
+/** Uploaded images and intermediate results. */
 export const imageCache = new LRUCache<string, unknown>({
   maxSize: 100,
-  ttlMs: 15 * 60 * 1000, // 15 minutes
+  ttlMs: 15 * 60 * 1000,
 });
 
-/**
- * Cache for API responses.
- *
- * Short-lived cache for deduplicating identical requests.
- * Max 50 entries, 30 second TTL.
- */
+/** Short window for deduplicating identical in-flight requests. */
 export const responseCache = new LRUCache<string, unknown>({
   maxSize: 50,
-  ttlMs: 30 * 1000, // 30 seconds
+  ttlMs: 30 * 1000,
 });
 
-// ============================================================================
-// Factory Function
-// ============================================================================
-
-/**
- * Creates a new LRU cache with custom options.
- *
- * @param options - Cache configuration
- * @returns New LRUCache instance
- */
 export function createCache<K, V>(options: LRUCacheOptions): LRUCache<K, V> {
   return new LRUCache<K, V>(options);
 }
 
-// ============================================================================
-// Cache Key Helpers
-// ============================================================================
-
-/**
- * Creates a cache key from an object by JSON-serializing it.
- *
- * @param obj - Object to create key from
- * @returns Stable string key
- */
+/** Key ordering is stable regardless of the object's insertion order. */
 export function createCacheKey(obj: Record<string, unknown>): string {
-  // Sort keys for consistent ordering and create stable JSON
   const sortedKeys = Object.keys(obj).toSorted((a, b) => a.localeCompare(b));
 
-  // Build the JSON string manually for stable ordering
   const parts: string[] = [];
   for (const key of sortedKeys) {
-    // Using Object.prototype.hasOwnProperty ensures we only access own properties
+    // Guards against inherited/prototype-polluted keys reaching the serialized key
     if (Object.prototype.hasOwnProperty.call(obj, key)) {
       const value = Reflect.get(obj, key);
       parts.push(`${JSON.stringify(key)}:${JSON.stringify(value)}`);

@@ -1,7 +1,3 @@
-/**
- * Batch image inference tool barrel export.
- */
-
 export {
   batchImageInference,
   batchImageInferenceToolDefinition,

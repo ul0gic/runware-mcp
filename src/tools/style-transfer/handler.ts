@@ -1,10 +1,3 @@
-/**
- * Handler for the style transfer tool.
- *
- * Composite tool that orchestrates imageCaption and imageInference
- * to apply artistic styles to source images via img2img generation.
- */
-
 import {
   type RunwareClient,
   getDefaultClient,
@@ -28,22 +21,8 @@ import type {
 } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for style transfer.
- */
 type StyleTransferInput = z.infer<typeof styleTransferInputSchema>;
 
-// ============================================================================
-// Style Descriptors (switch-based for lint compliance)
-// ============================================================================
-
-/**
- * Returns the rich visual descriptor for the given art style.
- */
 function getStyleDescriptor(style: ArtStyle): string {
   switch (style) {
     case 'oil-painting': {
@@ -79,9 +58,6 @@ function getStyleDescriptor(style: ArtStyle): string {
   }
 }
 
-/**
- * Returns the descriptive text for the given intensity level.
- */
 function getIntensityDescriptor(intensity: Intensity): string {
   switch (intensity) {
     case 'subtle': {
@@ -96,9 +72,6 @@ function getIntensityDescriptor(intensity: Intensity): string {
   }
 }
 
-/**
- * Returns the descriptive text for the given color palette.
- */
 function getPaletteDescriptor(palette: ColorPalette): string {
   switch (palette) {
     case 'warm': {
@@ -119,9 +92,6 @@ function getPaletteDescriptor(palette: ColorPalette): string {
   }
 }
 
-/**
- * Returns the CFGScale value for the given intensity level.
- */
 function getCfgScale(intensity: Intensity): number {
   switch (intensity) {
     case 'subtle': {
@@ -136,13 +106,6 @@ function getCfgScale(intensity: Intensity): number {
   }
 }
 
-// ============================================================================
-// Prompt Building
-// ============================================================================
-
-/**
- * Builds a rich style-enhanced prompt from the subject, style, intensity, and palette.
- */
 function buildStyledPrompt(
   subject: string,
   style: ArtStyle,
@@ -162,15 +125,6 @@ function buildStyledPrompt(
   ].join(' ');
 }
 
-// ============================================================================
-// Auto-captioning
-// ============================================================================
-
-/**
- * Auto-captions an image to determine its subject matter.
- *
- * @returns The caption text and its cost, or an error result.
- */
 async function captionImage(
   inputImage: string,
   client: RunwareClient,
@@ -199,13 +153,6 @@ async function captionImage(
   };
 }
 
-// ============================================================================
-// Inference Input Building
-// ============================================================================
-
-/**
- * Builds the imageInference input parameters from style transfer input.
- */
 function buildInferenceInput(
   input: StyleTransferInput,
   styledPrompt: string,
@@ -228,13 +175,6 @@ function buildInferenceInput(
   };
 }
 
-// ============================================================================
-// Result Extraction
-// ============================================================================
-
-/**
- * Extracts the output from the inference result and aggregates costs.
- */
 function extractOutput(
   inferenceResult: ToolResult,
   input: StyleTransferInput,
@@ -273,23 +213,7 @@ function extractOutput(
   );
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Applies an artistic style to a source image.
- *
- * Orchestrates imageCaption (optional) and imageInference to:
- * 1. Optionally auto-caption the source image if no subject is provided
- * 2. Build a rich prompt with style, intensity, and palette descriptors
- * 3. Generate a styled image via img2img with the source as seed image
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with styled image data
- */
+/** Auto-captions the source image when no subject is given, then runs img2img with it as seed. */
 export async function styleTransfer(
   input: StyleTransferInput,
   client?: RunwareClient,
@@ -302,7 +226,6 @@ export async function styleTransfer(
     let captionUsed: string | undefined;
     let captionCost = 0;
 
-    // Step 1: Auto-caption if no subject provided
     if (subject === undefined) {
       const captionResult = await captionImage(input.inputImage, runwareClient, context);
 
@@ -315,10 +238,8 @@ export async function styleTransfer(
       captionCost = captionResult.cost;
     }
 
-    // Step 2: Build the styled prompt
     const styledPrompt = buildStyledPrompt(subject, input.style, input.intensity, input.colorPalette);
 
-    // Step 3: Generate the styled image via img2img
     const cfgScale = getCfgScale(input.intensity);
     const inferenceInput = buildInferenceInput(input, styledPrompt, cfgScale);
 
@@ -328,7 +249,6 @@ export async function styleTransfer(
       return errorResult(`Style transfer generation failed: ${inferenceResult.message}`);
     }
 
-    // Step 4: Extract result and aggregate costs
     return extractOutput(inferenceResult, input, styledPrompt, captionUsed, captionCost);
   } catch (error) {
     const mcpError = wrapError(error);
@@ -336,9 +256,6 @@ export async function styleTransfer(
   }
 }
 
-/**
- * MCP tool definition for style transfer.
- */
 export const styleTransferToolDefinition = {
   name: 'styleTransfer',
   description:

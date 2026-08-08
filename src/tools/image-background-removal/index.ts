@@ -1,7 +1,3 @@
-/**
- * Image background removal tool barrel export.
- */
-
 export {
   imageBackgroundRemoval,
   imageBackgroundRemovalToolDefinition,

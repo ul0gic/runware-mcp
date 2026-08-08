@@ -1,16 +1,4 @@
-/**
- * Style Transfer prompt template.
- *
- * Applies artistic styles to image generation with configurable
- * style type, intensity, and color palette. Instructs the LLM to use
- * the imageInference tool with prompts crafted for artistic stylization.
- */
-
 import type { PromptMessage, PromptTemplate } from '../types.js';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PROMPT_NAME = 'style-transfer';
 const PROMPT_DESCRIPTION = 'Apply artistic styles to image generation with configurable style, intensity, and color palette.';
@@ -25,10 +13,6 @@ const VALID_STYLES = [
 ] as const;
 const VALID_INTENSITIES = ['subtle', 'moderate', 'strong'] as const;
 const VALID_PALETTES = ['warm', 'cool', 'monochrome', 'vibrant', 'pastel'] as const;
-
-// ============================================================================
-// Descriptors
-// ============================================================================
 
 const STYLE_DESCRIPTORS: Record<string, string> = {
   'oil-painting': 'classical oil painting, visible brushstrokes, rich texture, canvas feel, impasto technique',
@@ -57,13 +41,6 @@ const PALETTE_DESCRIPTORS: Record<string, string> = {
   pastel: 'soft pastel palette, muted colors, gentle tones, dreamy quality',
 };
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Returns the CFGScale value based on intensity.
- */
 function getCfgScale(intensity: string): number {
   if (intensity === 'subtle') {
     return 5;
@@ -74,9 +51,6 @@ function getCfgScale(intensity: string): number {
   return 7;
 }
 
-/**
- * Returns the style-specific tip based on the selected art style.
- */
 function getStyleTip(style: string): string {
   if (style === 'pencil-sketch') {
     return '- For pencil sketches, consider using a monochrome palette and lower saturation in the prompt.';
@@ -90,13 +64,6 @@ function getStyleTip(style: string): string {
   return `- For "${style}" style, the default model works well. Experiment with CFGScale between 5-10.`;
 }
 
-// ============================================================================
-// Template
-// ============================================================================
-
-/**
- * Style transfer prompt template.
- */
 export const styleTransfer: PromptTemplate = {
   name: PROMPT_NAME,
   description: PROMPT_DESCRIPTION,

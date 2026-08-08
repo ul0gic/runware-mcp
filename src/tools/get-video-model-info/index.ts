@@ -1,7 +1,3 @@
-/**
- * Get video model info tool barrel export.
- */
-
 export {
   getVideoModelInfo,
   getVideoModelInfoToolDefinition,

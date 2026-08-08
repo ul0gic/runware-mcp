@@ -1,7 +1,3 @@
-/**
- * Model search tool barrel export.
- */
-
 export {
   modelSearch,
   modelSearchToolDefinition,

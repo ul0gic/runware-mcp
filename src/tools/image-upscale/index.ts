@@ -1,7 +1,3 @@
-/**
- * Image upscale tool barrel export.
- */
-
 export {
   imageUpscale,
   imageUpscaleToolDefinition,

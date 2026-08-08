@@ -1,10 +1,3 @@
-/**
- * Handler for the vectorize tool.
- *
- * Implements raster-to-SVG conversion using the Runware API.
- * This is a synchronous operation.
- */
-
 import {
   type RunwareClient,
   createTaskRequest,
@@ -16,10 +9,6 @@ import { type ToolContext, type ToolResult, errorResult, successResult } from '.
 
 import { VECTORIZE_MODELS, type VectorizeInput, type VectorizeOutput } from './schema.js';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 interface VectorizeApiResponse {
   readonly taskType: 'vectorize';
   readonly taskUUID: string;
@@ -30,13 +19,6 @@ interface VectorizeApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Validation
-// ============================================================================
-
-/**
- * Validates the vectorize model against known models.
- */
 function validateModel(model: string): void {
   if (!(VECTORIZE_MODELS as readonly string[]).includes(model)) {
     throw new RunwareApiError(
@@ -46,13 +28,6 @@ function validateModel(model: string): void {
   }
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: VectorizeInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     model: input.model,
@@ -70,13 +45,6 @@ function buildApiRequest(input: VectorizeInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API response into the output format.
- */
 function processResponse(response: VectorizeApiResponse): VectorizeOutput {
   return {
     imageUUID: response.imageUUID ?? response.taskUUID,
@@ -87,21 +55,7 @@ function processResponse(response: VectorizeApiResponse): VectorizeOutput {
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Vectorizes an image using the Runware API.
- *
- * Converts raster images (PNG, JPG, WEBP) to scalable vector graphics (SVG).
- * This is a synchronous operation that returns the result immediately.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with vectorized SVG
- */
+/** Synchronous raster-to-SVG conversion — no polling involved. */
 export async function vectorize(
   input: VectorizeInput,
   client?: RunwareClient,
@@ -110,25 +64,19 @@ export async function vectorize(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Validate model
     validateModel(input.model);
 
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('vectorize', requestParams);
 
-    // Make API call (synchronous)
     const response = await runwareClient.requestSingle<VectorizeApiResponse>(task, {
       signal: context?.signal,
     });
 
-    // Process response
     const output = processResponse(response);
 
-    // Return result
     return successResult('Image vectorized to SVG successfully', output, output.cost);
   } catch (error) {
     const mcpError = wrapError(error);
@@ -136,9 +84,6 @@ export async function vectorize(
   }
 }
 
-/**
- * MCP tool definition for vectorize.
- */
 export const vectorizeToolDefinition = {
   name: 'vectorize',
   description:

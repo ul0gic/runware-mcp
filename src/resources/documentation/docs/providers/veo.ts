@@ -1,10 +1,3 @@
-/**
- * Google Veo Provider — Provider Documentation
- *
- * Video generation provider from Google with prompt enhancement
- * and native audio generation (Veo 3).
- */
-
 import type { DocResource } from '../../types.js';
 
 export const veoDoc: DocResource = {

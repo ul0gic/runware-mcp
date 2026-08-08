@@ -1,64 +1,25 @@
-/**
- * Masking Models Constants
- *
- * Complete catalog of image masking/segmentation models supported by Runware API.
- * These models detect and generate masks for specific elements in images.
- * All models use the 'runware:35@N' AIR format where N is the variant number.
- *
- * @remarks
- * The object keys use the AIR format which contains colons and at-signs.
- * This is intentional as it matches the Runware API model identifiers.
- */
-
-// =============================================================================
-// Category Constants
-// =============================================================================
-
 const CATEGORY_FACE = 'face' as const;
 const CATEGORY_BODY = 'body' as const;
 const CATEGORY_FACIAL_FEATURE = 'facial-feature' as const;
 
-/**
- * Masking model categories
- */
 export type MaskingCategory = 'face' | 'body' | 'facial-feature' | 'general';
 
-/**
- * Masking model definition
- */
 export interface MaskingModel {
   /** AIR identifier (e.g., 'runware:35@1') */
   readonly id: string;
-  /** Human-readable display name */
   readonly name: string;
-  /** Technical model name */
   readonly modelName: string;
-  /** Description of what this model detects */
   readonly description: string;
-  /** Category of detection */
   readonly category: MaskingCategory;
-  /** What elements this model detects */
   readonly detects: readonly string[];
-  /** Recommended confidence threshold */
   readonly recommendedConfidence: number;
-  /** Whether this model works well with realistic/2D content */
   readonly worksWithRealistic: boolean;
-  /** Whether this model works well with anime/illustrated content */
   readonly worksWithAnime: boolean;
-  /** Additional notes */
   readonly notes?: string;
 }
 
-/**
- * Complete catalog of masking models
- *
- * Keys use AIR format (runware:35@variant) which is required by the Runware API.
- */
+/** Keys use the AIR format (runware:35@variant) required by the Runware API. */
 export const MASKING_MODELS = {
-  // =============================================================================
-  // Face Detection Models (5 models)
-  // =============================================================================
-
   'runware:35@1': {
     id: 'runware:35@1',
     name: 'Face Detection',
@@ -123,10 +84,6 @@ export const MASKING_MODELS = {
     worksWithAnime: false,
     notes: 'Provides detailed facial mesh for precise mask generation',
   },
-
-  // =============================================================================
-  // Facial Feature Models (7 models)
-  // =============================================================================
 
   'runware:35@9': {
     id: 'runware:35@9',
@@ -219,10 +176,6 @@ export const MASKING_MODELS = {
     notes: 'Useful for lower face feature editing',
   },
 
-  // =============================================================================
-  // Body Part Models (3 models)
-  // =============================================================================
-
   'runware:35@3': {
     id: 'runware:35@3',
     name: 'Hand Detection',
@@ -263,14 +216,8 @@ export const MASKING_MODELS = {
   },
 } as const satisfies Record<string, MaskingModel>;
 
-/**
- * Type for valid masking model IDs
- */
 export type MaskingModelId = keyof typeof MASKING_MODELS;
 
-/**
- * Array of all masking model IDs
- */
 export const MASKING_MODEL_IDS: readonly MaskingModelId[] = [
   'runware:35@1',
   'runware:35@2',
@@ -289,9 +236,6 @@ export const MASKING_MODEL_IDS: readonly MaskingModelId[] = [
   'runware:35@15',
 ] as const;
 
-/**
- * Get a masking model by its AIR identifier
- */
 export function getMaskingModel(id: string): MaskingModel | undefined {
   if (isValidMaskingModel(id)) {
     return MASKING_MODELS[id];
@@ -299,83 +243,47 @@ export function getMaskingModel(id: string): MaskingModel | undefined {
   return undefined;
 }
 
-/**
- * Get all masking models in a specific category
- */
 export function getMaskingModelsByCategory(category: MaskingCategory): MaskingModel[] {
   return Object.values(MASKING_MODELS).filter((model) => model.category === category);
 }
 
-/**
- * Get the default masking model (Face Detection - most common use case)
- */
 export function getDefaultMaskingModel(): MaskingModel {
   return MASKING_MODELS['runware:35@1'];
 }
 
-/**
- * Get masking models that detect a specific element
- */
 export function getMaskingModelsByDetection(element: string): MaskingModel[] {
   return Object.values(MASKING_MODELS).filter((model: MaskingModel) =>
     (model.detects).includes(element),
   );
 }
 
-/**
- * Get masking models that work with anime/illustrated content
- */
 export function getMaskingModelsForAnime(): MaskingModel[] {
   return Object.values(MASKING_MODELS).filter((model) => model.worksWithAnime);
 }
 
-/**
- * Get masking models that work with realistic/photographic content
- *
- * Note: All current masking models support realistic content.
- * This function exists for API consistency with getMaskingModelsForAnime().
- */
+/** Every current masking model handles realistic content; the filter exists to mirror getMaskingModelsForAnime(). */
 export function getMaskingModelsForRealistic(): MaskingModel[] {
-  // All models work with realistic content
   return getAllMaskingModels();
 }
 
-/**
- * Check if a model ID is a valid masking model
- */
 export function isValidMaskingModel(id: string): id is MaskingModelId {
   return MASKING_MODEL_IDS.includes(id as MaskingModelId);
 }
 
-/**
- * Get all face detection models
- */
 export function getFaceDetectionModels(): MaskingModel[] {
   return getMaskingModelsByCategory(CATEGORY_FACE);
 }
 
-/**
- * Get all facial feature models
- */
 export function getFacialFeatureModels(): MaskingModel[] {
   return getMaskingModelsByCategory(CATEGORY_FACIAL_FEATURE);
 }
 
-/**
- * Get all body detection models
- */
 export function getBodyDetectionModels(): MaskingModel[] {
   return getMaskingModelsByCategory(CATEGORY_BODY);
 }
 
-/**
- * Use case types for masking model recommendations
- */
 export type MaskingUseCase = 'face' | 'eyes' | 'lips' | 'nose' | 'hands' | 'person' | 'animeFace';
 
-/**
- * Recommendations mapping for masking use cases
- */
 const MASKING_RECOMMENDATIONS: Record<MaskingUseCase, MaskingModelId> = {
   face: 'runware:35@1',
   eyes: 'runware:35@15',
@@ -386,24 +294,15 @@ const MASKING_RECOMMENDATIONS: Record<MaskingUseCase, MaskingModelId> = {
   animeFace: 'runware:35@1', // YOLOv8 works with anime
 };
 
-/**
- * Get the recommended model for a specific use case
- */
 export function getRecommendedMaskingModel(useCase: MaskingUseCase): MaskingModel {
   const modelId = MASKING_RECOMMENDATIONS[useCase];
   return MASKING_MODELS[modelId];
 }
 
-/**
- * Get all masking models as an array
- */
 export function getAllMaskingModels(): MaskingModel[] {
   return Object.values(MASKING_MODELS);
 }
 
-/**
- * Get all masking model IDs
- */
 export function getAllMaskingModelIds(): MaskingModelId[] {
   return [...MASKING_MODEL_IDS];
 }

@@ -1,10 +1,3 @@
-/**
- * Prompt Weighting — Feature Guide Documentation
- *
- * Covers Compel syntax for emphasis, de-emphasis,
- * blending, and conjunction in prompts.
- */
-
 import type { DocResource } from '../../types.js';
 
 const PROMPT_SYNTAX_TYPE = 'prompt syntax';

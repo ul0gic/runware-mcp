@@ -1,17 +1,4 @@
-/**
- * Music Composition prompt template.
- *
- * Generates music and audio compositions with configurable genre,
- * mood, tempo, and instrumentation. Instructs the LLM to use the
- * audioInference tool with appropriate model selection and settings
- * for the desired musical output.
- */
-
 import type { PromptMessage, PromptTemplate } from '../types.js';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PROMPT_NAME = 'music-composition';
 const PROMPT_DESCRIPTION = 'Generate music and audio compositions with configurable genre, mood, tempo, and instrumentation.';
@@ -24,10 +11,6 @@ const VALID_GENRES = ['ambient', 'electronic', 'classical', 'jazz', 'rock', 'hip
 const VALID_MOODS = ['uplifting', 'melancholic', 'energetic', 'peaceful', 'dramatic', 'mysterious'] as const;
 const VALID_PURPOSES = ['background', 'intro', 'outro', 'highlight', 'meditation'] as const;
 const VALID_TEMPOS = ['slow', 'moderate', 'fast'] as const;
-
-// ============================================================================
-// Descriptors
-// ============================================================================
 
 const GENRE_DESCRIPTORS: Record<string, string> = {
   ambient: 'ambient soundscape, evolving textures, atmospheric pads, drone elements',
@@ -63,13 +46,6 @@ const TEMPO_BPM: Record<string, string> = {
   fast: '130-160 BPM, high energy, driving rhythm, urgent pace',
 };
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Returns the model recommendation based on genre.
- */
 function getModelRecommendation(genre: string): string {
   if (genre === 'classical' || genre === 'cinematic') {
     return 'elevenlabs:1@1 (best for orchestral and cinematic compositions)';
@@ -80,9 +56,6 @@ function getModelRecommendation(genre: string): string {
   return 'elevenlabs:1@1 or mirelo:1@1 (both support music generation)';
 }
 
-/**
- * Returns the purpose-specific tip.
- */
 function getPurposeTip(purpose: string): string {
   if (purpose === 'background') {
     return '- For background music, ensure the composition is non-intrusive and maintains consistent energy for seamless looping.';
@@ -93,9 +66,6 @@ function getPurposeTip(purpose: string): string {
   return `- For "${purpose}" purpose, shape the energy arc of the composition accordingly.`;
 }
 
-/**
- * Returns the instrument tip based on whether instruments were specified.
- */
 function getInstrumentTip(instruments: string | undefined): string {
   if (instruments !== undefined && instruments.length > 0) {
     return `- The specified instruments (${instruments}) should be prominently featured in the composition.`;
@@ -103,9 +73,6 @@ function getInstrumentTip(instruments: string | undefined): string {
   return '- Consider specifying instruments for more targeted results (e.g., "piano, strings, synth").';
 }
 
-/**
- * Parses and clamps the duration to a safe value.
- */
 function parseSafeDuration(duration: string): number {
   const parsed = Number.parseInt(duration, 10);
   if (Number.isNaN(parsed) || parsed < 10) {
@@ -114,13 +81,6 @@ function parseSafeDuration(duration: string): number {
   return Math.min(parsed, 300);
 }
 
-// ============================================================================
-// Template
-// ============================================================================
-
-/**
- * Music composition prompt template.
- */
 export const musicComposition: PromptTemplate = {
   name: PROMPT_NAME,
   description: PROMPT_DESCRIPTION,

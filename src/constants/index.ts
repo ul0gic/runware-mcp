@@ -1,13 +1,3 @@
-/**
- * Constants Module
- *
- * Barrel export for all constant definitions used throughout the Runware MCP server.
- * This includes model catalogs, preprocessor definitions, and related helper functions.
- */
-
-// =============================================================================
-// Video Models
-// =============================================================================
 export {
   VIDEO_MODELS,
   getVideoModel,
@@ -24,9 +14,6 @@ export {
 
 export type { VideoModel, VideoProvider, VideoModelId } from './video-models.js';
 
-// =============================================================================
-// Audio Models
-// =============================================================================
 export {
   AUDIO_MODELS,
   TTS_VOICES,
@@ -55,9 +42,6 @@ export type {
   TTSVoiceInfo,
 } from './audio-models.js';
 
-// =============================================================================
-// ControlNet Preprocessors
-// =============================================================================
 export {
   CONTROLNET_PREPROCESSORS,
   CONTROLNET_PREPROCESSOR_IDS,
@@ -79,9 +63,6 @@ export type {
   ControlNetOutputType,
 } from './controlnet.js';
 
-// =============================================================================
-// Masking Models
-// =============================================================================
 export {
   MASKING_MODELS,
   MASKING_MODEL_IDS,

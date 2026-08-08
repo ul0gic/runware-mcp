@@ -1,7 +1,3 @@
-/**
- * Vectorize tool barrel export.
- */
-
 export { vectorize, vectorizeToolDefinition } from './handler.js';
 
 export {

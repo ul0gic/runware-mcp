@@ -1,7 +1,3 @@
-/**
- * ControlNet preprocess tool barrel export.
- */
-
 export { controlNetPreprocess, controlNetPreprocessToolDefinition } from './handler.js';
 
 export {

@@ -1,10 +1,3 @@
-/**
- * PixVerse Provider — Provider Documentation
- *
- * Video generation provider specializing in viral effects,
- * camera movements, and multi-clip cinematic generation.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const pixverseDoc: DocResource = {

@@ -1,10 +1,3 @@
-/**
- * Handler for the batch image inference tool.
- *
- * Generates multiple images from multiple prompts with shared settings.
- * Supports concurrent generation with progress reporting.
- */
-
 import {
   type RunwareClient,
   createTaskRequest,
@@ -27,18 +20,8 @@ import type {
 } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for batch image inference.
- */
 type BatchImageInferenceInputType = z.infer<typeof batchImageInferenceInputSchema>;
 
-/**
- * Raw API response for image inference.
- */
 interface ImageInferenceApiResponse {
   readonly taskType: 'imageInference';
   readonly taskUUID: string;
@@ -52,13 +35,6 @@ interface ImageInferenceApiResponse {
   readonly NSFWContent?: boolean;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request for a single prompt.
- */
 function buildApiRequest(
   prompt: string,
   input: BatchImageInferenceInputType,
@@ -97,13 +73,6 @@ function buildApiRequest(
   return request;
 }
 
-// ============================================================================
-// Single Prompt Processing
-// ============================================================================
-
-/**
- * Processes a single prompt and returns the result.
- */
 async function processPrompt(
   prompt: string,
   index: number,
@@ -112,14 +81,11 @@ async function processPrompt(
   context?: ToolContext,
 ): Promise<BatchPromptResult> {
   try {
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(prompt, input);
     const task = createTaskRequest('imageInference', requestParams);
 
-    // Make API call
     const response = await client.requestSingle<ImageInferenceApiResponse>(
       task,
       { signal: context?.signal },
@@ -151,18 +117,6 @@ async function processPrompt(
   }
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Generates multiple images from multiple prompts.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with batch generation summary
- */
 export async function batchImageInference(
   input: BatchImageInferenceInputType,
   client?: RunwareClient,
@@ -173,18 +127,15 @@ export async function batchImageInference(
   try {
     const { prompts, concurrency, stopOnError } = input;
 
-    // Process prompts with concurrency control
     const results = await mapWithConcurrency(
       prompts,
       async (prompt, index) => {
-        // Report progress
         context?.progress?.report({
           progress: index,
           total: prompts.length,
           message: `Generating image ${String(index + 1)}/${String(prompts.length)}: "${truncate(prompt, 50)}"`,
         });
 
-        // Check for cancellation
         if (context?.signal?.aborted === true) {
           return {
             prompt,
@@ -196,7 +147,6 @@ export async function batchImageInference(
 
         const result = await processPrompt(prompt, index, input, runwareClient, context);
 
-        // Check if we should stop on error
         if (stopOnError && result.status === 'failed') {
           throw new Error(`Generation failed for prompt ${String(index + 1)}: ${result.error ?? 'Unknown error'}`);
         }
@@ -206,12 +156,10 @@ export async function batchImageInference(
       concurrency,
     );
 
-    // Calculate summary
     const successful = results.filter((r) => r.status === 'success').length;
     const failed = results.filter((r) => r.status === 'failed').length;
     const totalCost = results.reduce((sum, r) => sum + (r.cost ?? 0), 0);
 
-    // Report final progress
     context?.progress?.report({
       progress: prompts.length,
       total: prompts.length,
@@ -242,9 +190,6 @@ export async function batchImageInference(
   }
 }
 
-/**
- * MCP tool definition for batch image inference.
- */
 export const batchImageInferenceToolDefinition = {
   name: 'batchImageInference',
   description:

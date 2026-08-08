@@ -1,10 +1,3 @@
-/**
- * Textual Inversion Embeddings — Feature Guide Documentation
- *
- * Covers custom concept embeddings for image generation
- * using Textual Inversion models.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const embeddingsDoc: DocResource = {

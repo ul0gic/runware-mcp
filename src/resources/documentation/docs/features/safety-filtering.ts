@@ -1,10 +1,3 @@
-/**
- * Safety & Content Moderation — Feature Guide Documentation
- *
- * Covers NSFW detection, content safety checking, and
- * provider-specific moderation settings.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const safetyFilteringDoc: DocResource = {

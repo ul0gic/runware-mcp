@@ -1,62 +1,29 @@
-/**
- * Audio Models Constants
- *
- * Complete catalog of audio generation models and TTS voices supported by Runware API.
- * Models use AIR (AI Resource) identifiers in the format: provider:version@variant
- *
- * @remarks
- * The object keys use the AIR format which contains colons and at-signs.
- * This is intentional as it matches the Runware API model identifiers.
- */
-
-/**
- * Audio model capabilities
- */
 export type AudioCapability = 'music' | 'sfx' | 'speech' | 'ambient' | 'composition';
 
-/**
- * Audio provider identifiers
- */
 export type AudioProvider = 'elevenlabs' | 'mirelo';
 
-/**
- * Audio model definition
- */
 export interface AudioModel {
   /** AIR identifier (e.g., 'elevenlabs:1@1') */
   readonly id: string;
-  /** Human-readable display name */
   readonly name: string;
-  /** Provider name */
   readonly provider: AudioProvider;
-  /** Supported audio generation capabilities */
   readonly capabilities: readonly AudioCapability[];
-  /** Minimum duration in seconds */
+  /** Seconds. */
   readonly minDuration: number;
-  /** Maximum duration in seconds */
+  /** Seconds. */
   readonly maxDuration: number;
-  /** Whether model supports structured composition plans */
   readonly supportsComposition: boolean;
-  /** Default sample rate in Hz */
+  /** Hz. */
   readonly defaultSampleRate: number;
-  /** Default bitrate in kbps */
+  /** kbps. */
   readonly defaultBitrate: number;
-  /** Estimated cost per second (USD) */
+  /** USD. */
   readonly costPerSecond?: number;
-  /** Additional notes */
   readonly notes?: string;
 }
 
-/**
- * Complete catalog of audio generation models
- *
- * Keys use AIR format (provider:version@variant) which is required by the Runware API.
- */
+/** Keys use the AIR format (provider:version@variant) required by the Runware API. */
 export const AUDIO_MODELS = {
-  // =============================================================================
-  // ElevenLabs Models
-  // =============================================================================
-
   'elevenlabs:1@1': {
     id: 'elevenlabs:1@1',
     name: 'ElevenLabs Music',
@@ -84,10 +51,6 @@ export const AUDIO_MODELS = {
     costPerSecond: 0.015,
     notes: 'High-definition audio output with enhanced fidelity',
   },
-
-  // =============================================================================
-  // Mirelo Models
-  // =============================================================================
 
   'mirelo:1@1': {
     id: 'mirelo:1@1',
@@ -118,15 +81,8 @@ export const AUDIO_MODELS = {
   },
 } as const satisfies Record<string, AudioModel>;
 
-/**
- * Type for valid audio model IDs
- */
 export type AudioModelId = keyof typeof AUDIO_MODELS;
 
-/**
- * Text-to-Speech voice options
- * These are the available voices for TTS in video and audio generation
- */
 export const TTS_VOICES = [
   // OpenAI-style voices
   'alloy',
@@ -146,30 +102,16 @@ export const TTS_VOICES = [
   'harry',
 ] as const;
 
-/**
- * Type for valid TTS voice names
- */
 export type TTSVoice = (typeof TTS_VOICES)[number];
 
-/**
- * TTS voice metadata
- */
 export interface TTSVoiceInfo {
-  /** Voice identifier */
   readonly id: TTSVoice;
-  /** Display name */
   readonly name: string;
-  /** Voice gender */
   readonly gender: 'male' | 'female' | 'neutral';
-  /** Voice style/character description */
   readonly style: string;
-  /** Best use cases */
   readonly bestFor: readonly string[];
 }
 
-/**
- * Detailed TTS voice information
- */
 export const TTS_VOICE_INFO: Record<TTSVoice, TTSVoiceInfo> = {
   // OpenAI-style voices
   alloy: {
@@ -273,9 +215,6 @@ export const TTS_VOICE_INFO: Record<TTSVoice, TTSVoiceInfo> = {
   },
 } as const;
 
-/**
- * Get an audio model by its AIR identifier
- */
 export function getAudioModel(modelId: string): AudioModel | undefined {
   if (isValidAudioModel(modelId)) {
     return AUDIO_MODELS[modelId];
@@ -283,89 +222,53 @@ export function getAudioModel(modelId: string): AudioModel | undefined {
   return undefined;
 }
 
-/**
- * Get all audio models with a specific capability
- */
 export function getAudioModelsByCapability(capability: AudioCapability): AudioModel[] {
   return Object.values(AUDIO_MODELS).filter((model: AudioModel) =>
     (model.capabilities).includes(capability),
   );
 }
 
-/**
- * Get all audio models from a specific provider
- */
 export function getAudioModelsByProvider(provider: AudioProvider): AudioModel[] {
   return Object.values(AUDIO_MODELS).filter((model) => model.provider === provider);
 }
 
-/**
- * Get all unique audio provider names
- */
 export function getAllAudioProviders(): AudioProvider[] {
   const providers = new Set(Object.values(AUDIO_MODELS).map((model) => model.provider));
   return [...providers];
 }
 
-/**
- * Get the default audio model (ElevenLabs Music)
- */
 export function getDefaultAudioModel(): AudioModel {
   return AUDIO_MODELS['elevenlabs:1@1'];
 }
 
-/**
- * Get audio models that support composition plans
- */
 export function getAudioModelsWithComposition(): AudioModel[] {
   return Object.values(AUDIO_MODELS).filter((model) => model.supportsComposition);
 }
 
-/**
- * Get audio models that support the specified minimum duration
- */
 export function getAudioModelsByMinDuration(minDurationSeconds: number): AudioModel[] {
   return Object.values(AUDIO_MODELS).filter((model) => model.maxDuration >= minDurationSeconds);
 }
 
-/**
- * Check if a model ID is a valid audio model
- */
 export function isValidAudioModel(modelId: string): modelId is AudioModelId {
   return modelId in AUDIO_MODELS;
 }
 
-/**
- * Check if a voice name is a valid TTS voice
- */
 export function isValidTTSVoice(voice: string): voice is TTSVoice {
   return TTS_VOICES.includes(voice as TTSVoice);
 }
 
-/**
- * Get TTS voice information
- */
 export function getTTSVoiceInfo(voice: TTSVoice): TTSVoiceInfo {
   return TTS_VOICE_INFO[voice];
 }
 
-/**
- * Get TTS voices by gender
- */
 export function getTTSVoicesByGender(gender: 'male' | 'female' | 'neutral'): TTSVoice[] {
   return TTS_VOICES.filter((voice) => TTS_VOICE_INFO[voice].gender === gender);
 }
 
-/**
- * Get all audio model IDs
- */
 export function getAllAudioModelIds(): AudioModelId[] {
   return Object.keys(AUDIO_MODELS) as AudioModelId[];
 }
 
-/**
- * Get all TTS voices as array
- */
 export function getAllTTSVoices(): TTSVoice[] {
   return [...TTS_VOICES];
 }

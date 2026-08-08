@@ -1,7 +1,3 @@
-/**
- * Image masking tool barrel export.
- */
-
 export {
   imageMasking,
   imageMaskingToolDefinition,

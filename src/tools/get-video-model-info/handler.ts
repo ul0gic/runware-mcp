@@ -1,34 +1,12 @@
-/**
- * Handler for the get video model info tool.
- *
- * This is a local tool that returns detailed information
- * about a specific video model.
- */
-
 import { getVideoModel } from '../../constants/video-models.js';
 import { type ToolResult, successResult, errorResult } from '../../shared/types.js';
 
 import type { getVideoModelInfoInputSchema, GetVideoModelInfoOutput } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 type GetVideoModelInfoInput = z.infer<typeof getVideoModelInfoInputSchema>;
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Gets detailed information about a specific video model.
- *
- * This is a local operation that doesn't call the API.
- *
- * @param input - Model identifier
- * @returns Tool result with model information
- */
+/** Local lookup against the bundled model table — makes no API call. */
 export function getVideoModelInfo(
   input: GetVideoModelInfoInput,
 ): ToolResult {

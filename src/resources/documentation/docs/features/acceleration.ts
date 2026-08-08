@@ -1,10 +1,3 @@
-/**
- * Generation Acceleration — Feature Guide Documentation
- *
- * Covers TeaCache, DeepCache, and FBCache for faster
- * image generation with quality tradeoffs.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const accelerationDoc: DocResource = {

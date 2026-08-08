@@ -1,7 +1,3 @@
-/**
- * Photo maker tool barrel export.
- */
-
 export {
   photoMaker,
   photoMakerToolDefinition,

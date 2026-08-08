@@ -1,7 +1,3 @@
-/**
- * List video models tool barrel export.
- */
-
 export {
   listVideoModels,
   listVideoModelsToolDefinition,

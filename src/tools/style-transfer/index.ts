@@ -1,7 +1,3 @@
-/**
- * Style transfer tool barrel export.
- */
-
 export {
   styleTransfer,
   styleTransferToolDefinition,

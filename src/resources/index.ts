@@ -1,13 +1,3 @@
-/**
- * Resource registry for the Runware MCP server.
- *
- * Central registry that manages all resource providers. Each provider
- * handles a specific category of resources (images, videos, audio,
- * session history, analytics, documentation).
- *
- * Re-exports the shared types and all provider modules for convenience.
- */
-
 export type { ResourceContent, ResourceEntry, ResourceProvider } from './types.js';
 
 export {
@@ -69,10 +59,6 @@ export type {
   DocResource,
 } from './documentation/index.js';
 
-// ============================================================================
-// Provider Registry
-// ============================================================================
-
 import { analyticsProvider } from './analytics/provider.js';
 import { documentationProvider } from './documentation/provider.js';
 import { generatedAudioProvider } from './generated-audio/provider.js';
@@ -82,12 +68,7 @@ import { sessionHistoryProvider } from './session-history/provider.js';
 
 import type { ResourceProvider } from './types.js';
 
-/**
- * All registered resource providers.
- *
- * The server iterates this array to handle resource listing and retrieval.
- * Order determines listing priority.
- */
+/** Order determines listing priority. */
 export const RESOURCE_PROVIDERS: readonly ResourceProvider[] = [
   generatedImagesProvider,
   generatedVideosProvider,
@@ -97,19 +78,9 @@ export const RESOURCE_PROVIDERS: readonly ResourceProvider[] = [
   documentationProvider,
 ];
 
-/**
- * Finds the resource provider that matches a given URI.
- *
- * Matches by checking if the URI starts with the provider's
- * URI prefix (everything before the first '{').
- *
- * @param uri - The resource URI to look up
- * @returns The matching provider, or undefined if none matches
- */
+/** Matches on the provider's static URI prefix — everything before the first `{`. */
 export function findProviderForUri(uri: string): ResourceProvider | undefined {
   return RESOURCE_PROVIDERS.find((provider) => {
-    // Extract the static prefix from the URI pattern
-    // e.g., 'runware://images/{id}' -> 'runware://images/'
     const braceIndex = provider.uri.indexOf('{');
     const prefix = braceIndex === -1
       ? provider.uri

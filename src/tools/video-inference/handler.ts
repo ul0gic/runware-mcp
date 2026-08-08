@@ -1,10 +1,3 @@
-/**
- * Handler for the video inference tool.
- *
- * Implements video generation using the Runware API.
- * Video generation is asynchronous and requires polling for results.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
@@ -13,10 +6,6 @@ import { type ToolContext, type ToolResult, type TaskUUID, successResult, errorR
 
 import type { videoInferenceInputSchema, VideoInferenceOutput } from './schema.js';
 import type { z } from 'zod';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 type VideoInferenceInput = z.infer<typeof videoInferenceInputSchema>;
 
@@ -30,14 +19,7 @@ interface VideoInferenceApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Request Building Helpers
-// ============================================================================
-
-/**
- * Adds optional parameters to request if defined.
- * Keys are compile-time constants, not user input.
- */
+/** Keys are compile-time constants, not user input. */
 function addOptionalParams(
   request: Record<string, unknown>,
   input: VideoInferenceInput,
@@ -53,23 +35,14 @@ function addOptionalParams(
   }
 }
 
-/**
- * Adds dimension parameters.
- */
 function addDimensionParams(request: Record<string, unknown>, input: VideoInferenceInput): void {
   addOptionalParams(request, input, ['width', 'height']);
 }
 
-/**
- * Adds quality control parameters.
- */
 function addQualityParams(request: Record<string, unknown>, input: VideoInferenceInput): void {
   addOptionalParams(request, input, ['fps', 'steps', 'CFGScale', 'seed']);
 }
 
-/**
- * Adds frame and reference parameters.
- */
 function addFrameParams(request: Record<string, unknown>, input: VideoInferenceInput): void {
   addOptionalParams(request, input, [
     'frameImages',
@@ -81,9 +54,6 @@ function addFrameParams(request: Record<string, unknown>, input: VideoInferenceI
   ]);
 }
 
-/**
- * Adds provider-specific settings (flattened into request).
- */
 function addProviderParams(request: Record<string, unknown>, input: VideoInferenceInput): void {
   if (input.alibaba !== undefined) {
     Object.assign(request, input.alibaba);
@@ -102,28 +72,18 @@ function addProviderParams(request: Record<string, unknown>, input: VideoInferen
   }
 }
 
-/**
- * Adds output configuration parameters.
- */
 function addOutputParams(request: Record<string, unknown>, input: VideoInferenceInput): void {
   addOptionalParams(request, input, ['outputFormat', 'outputQuality', 'outputType', 'safety']);
   // includeCost always has a default value from schema
   request.includeCost = input.includeCost;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: VideoInferenceInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     positivePrompt: input.positivePrompt,
     model: input.model,
     duration: input.duration,
-    deliveryMethod: 'async', // Video always uses async
+    deliveryMethod: 'async',
   };
 
   addDimensionParams(request, input);
@@ -134,10 +94,6 @@ function buildApiRequest(input: VideoInferenceInput): Record<string, unknown> {
 
   return request;
 }
-
-// ============================================================================
-// Response Processing
-// ============================================================================
 
 function processResponse(
   response: VideoInferenceApiResponse,
@@ -154,24 +110,7 @@ function processResponse(
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Generates a video using the Runware API.
- *
- * Video generation is asynchronous. This handler:
- * 1. Submits the request with deliveryMethod: 'async'
- * 2. Polls for the result using the polling module
- * 3. Reports progress via the context
- * 4. Supports cancellation via the context signal
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with generated video
- */
+/** Always async: the submit is acknowledged, then the video arrives via polling. */
 export async function videoInference(
   input: VideoInferenceInput,
   client?: RunwareClient,
@@ -180,27 +119,22 @@ export async function videoInference(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('videoInference', requestParams);
 
-    // Submit the task
     await runwareClient.requestSingle<VideoInferenceApiResponse>(
       task,
       { signal: context?.signal },
     );
 
-    // Report progress: task submitted
     context?.progress?.report({
       progress: 0,
       total: 100,
       message: 'Video generation task submitted, polling for result...',
     });
 
-    // Poll for result
     const pollResult = await pollForResult<VideoInferenceApiResponse>(
       task.taskUUID as TaskUUID,
       {
@@ -210,14 +144,12 @@ export async function videoInference(
       },
     );
 
-    // Process response
     const output = processResponse(
       pollResult.result,
       pollResult.attempts,
       pollResult.elapsedMs,
     );
 
-    // Report progress: complete
     context?.progress?.report({
       progress: 100,
       total: 100,

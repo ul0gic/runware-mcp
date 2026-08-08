@@ -1,10 +1,3 @@
-/**
- * Identity Preservation — Feature Guide Documentation
- *
- * Covers PuLID, ACE++, and PhotoMaker for face and
- * identity consistency in generated images.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const identityPreservationDoc: DocResource = {

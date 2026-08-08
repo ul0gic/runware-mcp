@@ -1,7 +1,3 @@
-/**
- * Process folder tool barrel export.
- */
-
 export {
   processFolder,
   processFolderToolDefinition,

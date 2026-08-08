@@ -1,7 +1,3 @@
-/**
- * Watch folder tool barrel export.
- */
-
 export {
   watchFolder,
   watchFolderToolDefinition,

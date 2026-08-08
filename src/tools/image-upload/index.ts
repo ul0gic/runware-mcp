@@ -1,7 +1,3 @@
-/**
- * Image upload tool barrel export.
- */
-
 export {
   imageUpload,
   imageUploadToolDefinition,

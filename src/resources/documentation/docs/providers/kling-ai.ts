@@ -1,10 +1,3 @@
-/**
- * Kling AI Provider — Provider Documentation
- *
- * Video generation provider specializing in native audio,
- * camera control, and multi-version model lineup.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const klingAiDoc: DocResource = {

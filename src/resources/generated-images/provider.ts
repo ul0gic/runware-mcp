@@ -1,41 +1,12 @@
-/**
- * Resource provider for generated images.
- *
- * Maintains an in-memory session store of all images generated
- * during the current session.
- *
- * URI pattern: runware://images/{imageId}
- */
-
 import { truncate } from '../../shared/utils.js';
 
 import type { GeneratedImageEntry } from './types.js';
 import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.js';
 
-// ============================================================================
-// Session Store
-// ============================================================================
-
-/**
- * Maximum number of entries in the session store.
- * When exceeded, the oldest entries are evicted.
- */
 const MAX_SESSION_SIZE = 10_000;
 
-/**
- * In-memory store for images generated in the current session.
- * Cleared when the server restarts.
- */
 const SESSION_IMAGES = new Map<string, GeneratedImageEntry>();
 
-/**
- * Registers a generated image in the session store.
- *
- * Called by tool handlers after a successful image generation.
- * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
- *
- * @param image - The generated image entry to register
- */
 export function registerImage(image: GeneratedImageEntry): void {
   SESSION_IMAGES.set(image.id, image);
   if (SESSION_IMAGES.size > MAX_SESSION_SIZE) {
@@ -46,42 +17,19 @@ export function registerImage(image: GeneratedImageEntry): void {
   }
 }
 
-/**
- * Gets all images from the session store.
- *
- * @returns Array of all session image entries
- */
 export function getSessionImages(): readonly GeneratedImageEntry[] {
   return [...SESSION_IMAGES.values()];
 }
 
-/**
- * Clears the session image store.
- * Primarily used for testing.
- */
+/** Test-support hook — production code never clears the store. */
 export function clearSessionImages(): void {
   SESSION_IMAGES.clear();
 }
 
-// ============================================================================
-// Provider
-// ============================================================================
-
-/**
- * Maximum prompt length for resource entry names.
- */
 const MAX_PROMPT_DISPLAY_LENGTH = 50;
 
-/**
- * URI prefix for image resources.
- */
 const URI_PREFIX = 'runware://images/';
 
-/**
- * Resource provider for generated images.
- *
- * Exposes all images generated in the current session as MCP resources.
- */
 export const generatedImagesProvider: ResourceProvider = {
   uri: 'runware://images/{id}',
   name: 'Generated Images',

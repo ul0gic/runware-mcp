@@ -1,9 +1,3 @@
-/**
- * Handler for the image caption tool.
- *
- * Implements image captioning using vision-language models.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -11,10 +5,6 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 
 import type { imageCaptionInputSchema, ImageCaptionOutput } from './schema.js';
 import type { z } from 'zod';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 type ImageCaptionInput = z.infer<typeof imageCaptionInputSchema>;
 
@@ -25,10 +15,6 @@ interface ImageCaptionApiResponse {
   readonly structuredData?: Record<string, unknown>;
   readonly cost?: number;
 }
-
-// ============================================================================
-// Request Building
-// ============================================================================
 
 function buildApiRequest(input: ImageCaptionInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
@@ -44,10 +30,6 @@ function buildApiRequest(input: ImageCaptionInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
 function processResponse(response: ImageCaptionApiResponse): ImageCaptionOutput {
   return {
     text: response.text ?? '',
@@ -56,18 +38,6 @@ function processResponse(response: ImageCaptionApiResponse): ImageCaptionOutput 
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Generates a caption/description for an image.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context
- * @returns Tool result with caption
- */
 export async function imageCaption(
   input: ImageCaptionInput,
   client?: RunwareClient,

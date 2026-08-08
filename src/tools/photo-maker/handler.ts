@@ -1,10 +1,3 @@
-/**
- * Handler for the photo maker tool.
- *
- * Implements identity-preserving image generation using the PhotoMaker API.
- * Automatically prepends the "img" trigger word if not present in the prompt.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -13,18 +6,8 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 import type { photoMakerInputSchema, PhotoMakerOutput } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for photo maker.
- */
 type PhotoMakerInput = z.infer<typeof photoMakerInputSchema>;
 
-/**
- * Raw API response for photo maker.
- */
 interface PhotoMakerApiResponse {
   readonly taskType: 'photoMaker';
   readonly taskUUID: string;
@@ -36,41 +19,19 @@ interface PhotoMakerApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Trigger Word Handling
-// ============================================================================
-
-/**
- * PhotoMaker trigger word that must be present in the prompt.
- */
 const TRIGGER_WORD = 'img';
 
-/**
- * Ensures the trigger word is present in the prompt.
- * Prepends "img " if not already present.
- */
 function ensureTriggerWord(prompt: string): string {
   const lowerPrompt = prompt.toLowerCase();
 
-  // Check if trigger word is already present
-  // Match "img" as a standalone word
   if (lowerPrompt.includes(TRIGGER_WORD)) {
     return prompt;
   }
 
-  // Prepend trigger word
   return `${TRIGGER_WORD} ${prompt}`;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: PhotoMakerInput): Record<string, unknown> {
-  // model, width, height, numberResults, and includeCost have defaults from schema
   const request: Record<string, unknown> = {
     positivePrompt: ensureTriggerWord(input.positivePrompt),
     model: input.model,
@@ -81,7 +42,6 @@ function buildApiRequest(input: PhotoMakerInput): Record<string, unknown> {
     includeCost: input.includeCost,
   };
 
-  // Generation control
   if (input.steps !== undefined) {
     request.steps = input.steps;
   }
@@ -98,13 +58,11 @@ function buildApiRequest(input: PhotoMakerInput): Record<string, unknown> {
     request.negativePrompt = input.negativePrompt;
   }
 
-  // Identity control (both have defaults from schema)
   request.styleStrength = input.styleStrength;
   if (input.strength !== undefined) {
     request.strength = input.strength;
   }
 
-  // Output configuration
   if (input.outputType !== undefined) {
     request.outputType = input.outputType;
   }
@@ -118,13 +76,6 @@ function buildApiRequest(input: PhotoMakerInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API responses into the output format.
- */
 function processResponse(
   responses: readonly PhotoMakerApiResponse[],
 ): PhotoMakerOutput {
@@ -150,18 +101,6 @@ function processResponse(
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Generates identity-preserving images using the PhotoMaker API.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with generated images
- */
 export async function photoMaker(
   input: PhotoMakerInput,
   client?: RunwareClient,
@@ -170,24 +109,19 @@ export async function photoMaker(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('photoMaker', requestParams);
 
-    // Make API call
     const response = await runwareClient.request<PhotoMakerApiResponse>(
       [task],
       { signal: context?.signal },
     );
 
-    // Process response
     const output = processResponse(response.data);
     const imageCount = output.images.length;
 
-    // Return result
     const message = imageCount === 1
       ? 'Generated 1 identity-preserving image'
       : `Generated ${String(imageCount)} identity-preserving images`;
@@ -199,9 +133,6 @@ export async function photoMaker(
   }
 }
 
-/**
- * MCP tool definition for photo maker.
- */
 export const photoMakerToolDefinition = {
   name: 'photoMaker',
   description: 'Generate identity-preserving images from 1-4 reference photos. Maintains facial identity while allowing creative transformations.',

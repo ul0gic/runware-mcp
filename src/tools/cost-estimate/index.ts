@@ -1,7 +1,3 @@
-/**
- * Cost estimate tool barrel export.
- */
-
 export {
   costEstimate,
   costEstimateToolDefinition,

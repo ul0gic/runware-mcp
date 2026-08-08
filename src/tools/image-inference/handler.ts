@@ -1,10 +1,3 @@
-/**
- * Handler for the image inference tool.
- *
- * Implements text-to-image, image-to-image, inpainting, and outpainting
- * operations using the Runware API.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { detectProvider } from '../../shared/provider-settings.js';
@@ -14,19 +7,8 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 import type { imageInferenceInputSchema, ImageInferenceOutput } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for image inference.
- */
 type ImageInferenceInput = z.infer<typeof imageInferenceInputSchema>;
 
-/**
- * Raw API response for image inference.
- * Note: NSFWContent uses API naming convention.
- */
 interface ImageInferenceApiResponse {
   readonly taskType: 'imageInference';
   readonly taskUUID: string;
@@ -40,14 +22,6 @@ interface ImageInferenceApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Request Building Helpers
-// ============================================================================
-
-/**
- * Adds optional parameters to request if defined.
- * Keys are compile-time constants, not user input.
- */
 function addOptionalParams(
   request: Record<string, unknown>,
   input: ImageInferenceInput,
@@ -63,9 +37,6 @@ function addOptionalParams(
   }
 }
 
-/**
- * Adds generation control parameters.
- */
 function addGenerationParams(request: Record<string, unknown>, input: ImageInferenceInput): void {
   addOptionalParams(request, input, [
     'steps',
@@ -73,17 +44,12 @@ function addGenerationParams(request: Record<string, unknown>, input: ImageInfer
     'scheduler',
     'negativePrompt',
   ]);
-  // CFGScale uses API naming convention
   if (input.CFGScale !== undefined) {
     request.CFGScale = input.CFGScale;
   }
-  // numberResults always has a default value from schema
   request.numberResults = input.numberResults;
 }
 
-/**
- * Adds image input parameters.
- */
 function addImageInputParams(request: Record<string, unknown>, input: ImageInferenceInput): void {
   addOptionalParams(request, input, [
     'seedImage',
@@ -95,9 +61,6 @@ function addImageInputParams(request: Record<string, unknown>, input: ImageInfer
   ]);
 }
 
-/**
- * Adds advanced feature parameters.
- */
 function addAdvancedParams(request: Record<string, unknown>, input: ImageInferenceInput): void {
   addOptionalParams(request, input, [
     'controlNet',
@@ -115,9 +78,6 @@ function addAdvancedParams(request: Record<string, unknown>, input: ImageInferen
   ]);
 }
 
-/**
- * Adds output configuration parameters.
- */
 function addOutputParams(request: Record<string, unknown>, input: ImageInferenceInput): void {
   addOptionalParams(request, input, [
     'outputType',
@@ -126,13 +86,9 @@ function addOutputParams(request: Record<string, unknown>, input: ImageInference
     'safety',
     'ttl',
   ]);
-  // includeCost always has a default value from schema
   request.includeCost = input.includeCost;
 }
 
-/**
- * Adds provider-specific settings.
- */
 function addProviderSettings(
   request: Record<string, unknown>,
   input: ImageInferenceInput,
@@ -153,13 +109,6 @@ function addProviderSettings(
   }
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: ImageInferenceInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     positivePrompt: input.positivePrompt,
@@ -177,13 +126,6 @@ function buildApiRequest(input: ImageInferenceInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API responses into the output format.
- */
 function processResponse(
   responses: readonly ImageInferenceApiResponse[],
 ): ImageInferenceOutput {
@@ -210,24 +152,6 @@ function processResponse(
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Generates images using the Runware API.
- *
- * Supports:
- * - Text-to-image: Provide only positivePrompt
- * - Image-to-image: Add seedImage and strength
- * - Inpainting: Add seedImage and maskImage
- * - Outpainting: Add seedImage and outpaint config
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with generated images
- */
 export async function imageInference(
   input: ImageInferenceInput,
   client?: RunwareClient,
@@ -236,24 +160,19 @@ export async function imageInference(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('imageInference', requestParams);
 
-    // Make API call
     const response = await runwareClient.request<ImageInferenceApiResponse>(
       [task],
       { signal: context?.signal },
     );
 
-    // Process response
     const output = processResponse(response.data);
     const imageCount = output.images.length;
 
-    // Return result
     const message = imageCount === 1
       ? 'Generated 1 image successfully'
       : `Generated ${String(imageCount)} images successfully`;
@@ -265,9 +184,6 @@ export async function imageInference(
   }
 }
 
-/**
- * MCP tool definition for image inference.
- */
 export const imageInferenceToolDefinition = {
   name: 'imageInference',
   description:

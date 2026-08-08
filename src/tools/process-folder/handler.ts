@@ -1,10 +1,3 @@
-/**
- * Handler for the process folder tool.
- *
- * Processes all images in a folder using a specified operation.
- * Supports concurrent processing with progress reporting.
- */
-
 import path from 'node:path';
 
 import {
@@ -38,18 +31,8 @@ import type {
 } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for process folder.
- */
 type ProcessFolderInputType = z.infer<typeof processFolderInputSchema>;
 
-/**
- * Operation parameters interface for type-safe access.
- */
 interface OperationParams {
   readonly model?: string;
   readonly upscaleFactor?: 2 | 4;
@@ -64,9 +47,6 @@ interface OperationParams {
   readonly includeHandsAndFaceOpenPose?: boolean;
 }
 
-/**
- * Safely extracts operation params from unknown record.
- */
 function extractOperationParams(params: Record<string, unknown>): OperationParams {
   return {
     model: typeof params.model === 'string' ? params.model : undefined,
@@ -83,13 +63,6 @@ function extractOperationParams(params: Record<string, unknown>): OperationParam
   };
 }
 
-// ============================================================================
-// Operation Handlers
-// ============================================================================
-
-/**
- * Runs the upscale operation.
- */
 async function runUpscale(
   imageData: string,
   params: OperationParams,
@@ -110,9 +83,6 @@ async function runUpscale(
   );
 }
 
-/**
- * Runs the background removal operation.
- */
 async function runRemoveBackground(
   imageData: string,
   params: OperationParams,
@@ -133,9 +103,6 @@ async function runRemoveBackground(
   );
 }
 
-/**
- * Runs the caption operation.
- */
 async function runCaption(
   imageData: string,
   params: OperationParams,
@@ -155,9 +122,6 @@ async function runCaption(
   );
 }
 
-/**
- * Runs the vectorize operation.
- */
 async function runVectorize(
   imageData: string,
   params: OperationParams,
@@ -178,9 +142,6 @@ async function runVectorize(
   );
 }
 
-/**
- * Runs the ControlNet preprocessing operation.
- */
 async function runControlNetPreprocess(
   imageData: string,
   params: OperationParams,
@@ -217,9 +178,6 @@ async function runControlNetPreprocess(
   );
 }
 
-/**
- * Runs the specified operation on an image.
- */
 async function runOperation(
   operation: FolderOperation,
   imageData: string,
@@ -246,13 +204,6 @@ async function runOperation(
   }
 }
 
-// ============================================================================
-// File Processing
-// ============================================================================
-
-/**
- * Gets the file extension for MIME type detection.
- */
 function getExtension(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase().slice(1);
   switch (ext) {
@@ -278,9 +229,6 @@ function getExtension(filePath: string): string {
   }
 }
 
-/**
- * Generates the output path for a processed file.
- */
 function getOutputPath(
   inputPath: string,
   outputFolder: string | undefined,
@@ -291,7 +239,6 @@ function getOutputPath(
   const ext = path.extname(inputPath);
   const basename = path.basename(inputPath, ext);
 
-  // Determine output extension based on operation
   let outputExt = ext;
   if (operation === 'vectorize') {
     outputExt = '.svg';
@@ -302,9 +249,6 @@ function getOutputPath(
   return path.join(dir, `${basename}${outputSuffix}${outputExt}`);
 }
 
-/**
- * Processes a single image file.
- */
 async function processFile(
   imagePath: string,
   operation: FolderOperation,
@@ -315,11 +259,9 @@ async function processFile(
   context?: ToolContext,
 ): Promise<FileResult> {
   try {
-    // Read and encode the image
     const imageBase64 = await readFileAsBase64(imagePath);
     const imageData = `data:image/${getExtension(imagePath)};base64,${imageBase64}`;
 
-    // Execute the operation
     const result = await runOperation(operation, imageData, operationParams, client, context);
 
     if (result.status === 'error') {
@@ -330,10 +272,8 @@ async function processFile(
       };
     }
 
-    // Determine output path
     const outputPath = getOutputPath(imagePath, outputFolder, outputSuffix, operation);
 
-    // Extract result data
     const resultData = result.data as Record<string, unknown> | undefined;
 
     return {
@@ -353,18 +293,6 @@ async function processFile(
   }
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Processes all images in a folder with the specified operation.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with processing summary
- */
 export async function processFolder(
   input: ProcessFolderInputType,
   client?: RunwareClient,
@@ -373,13 +301,10 @@ export async function processFolder(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Validate folder path
     const folderPath = await validateFolder(input.folderPath);
 
-    // Get images in folder
     const allImages = await getImagesInFolder(folderPath, input.recursive);
 
-    // Limit to maxFiles
     const images = allImages.slice(0, input.maxFiles);
 
     if (images.length === 0) {
@@ -392,26 +317,21 @@ export async function processFolder(
       } satisfies ProcessFolderOutput);
     }
 
-    // Validate output folder if specified
     if (input.outputFolder !== undefined) {
       await validateFolder(input.outputFolder);
     }
 
-    // Extract operation params safely
     const operationParams = extractOperationParams(input.operationParams ?? {});
 
-    // Process images with concurrency control
     const results = await mapWithConcurrency(
       images,
       async (imagePath, index) => {
-        // Report progress
         context?.progress?.report({
           progress: index,
           total: images.length,
           message: `Processing ${path.basename(imagePath)} (${String(index + 1)}/${String(images.length)})`,
         });
 
-        // Check for cancellation
         if (context?.signal?.aborted === true) {
           return {
             inputPath: imagePath,
@@ -430,7 +350,6 @@ export async function processFolder(
           context,
         );
 
-        // Check if we should stop on error
         if (input.stopOnError && result.status === 'failed') {
           throw new Error(`Processing failed: ${result.error ?? 'Unknown error'}`);
         }
@@ -440,13 +359,11 @@ export async function processFolder(
       input.concurrency,
     );
 
-    // Calculate summary
     const processed = results.filter((r) => r.status === 'success').length;
     const failed = results.filter((r) => r.status === 'failed').length;
     const skipped = results.filter((r) => r.status === 'skipped').length;
     const totalCost = results.reduce((sum, r) => sum + (r.cost ?? 0), 0);
 
-    // Report final progress
     context?.progress?.report({
       progress: images.length,
       total: images.length,
@@ -473,9 +390,6 @@ export async function processFolder(
   }
 }
 
-/**
- * MCP tool definition for process folder.
- */
 export const processFolderToolDefinition = {
   name: 'processFolder',
   description:

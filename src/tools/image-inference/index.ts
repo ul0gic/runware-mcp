@@ -1,7 +1,3 @@
-/**
- * Image inference tool barrel export.
- */
-
 export {
   imageInference,
   imageInferenceToolDefinition,

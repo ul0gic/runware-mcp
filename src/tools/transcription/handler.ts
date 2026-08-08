@@ -1,11 +1,3 @@
-/**
- * Handler for the transcription tool.
- *
- * Implements video transcription using the Runware caption API
- * with the memories:1@1 model. The API is async — submit with
- * `inputs: { video: "..." }` then poll with `getResponse`.
- */
-
 import {
   type RunwareClient,
   createTaskRequest,
@@ -24,10 +16,6 @@ import {
 
 import type { TranscriptionInput, TranscriptionOutput } from './schema.js';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 interface TranscriptionApiResponse {
   readonly taskType: 'caption';
   readonly taskUUID: string;
@@ -37,16 +25,7 @@ interface TranscriptionApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- *
- * The memories:1@1 model uses `inputs: { video: "..." }` format
- * for the video source. The API is async and requires polling.
- */
+// The memories:1@1 model takes the video source as `inputs: { video: "..." }`.
 function buildApiRequest(input: TranscriptionInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     inputs: { video: input.inputMedia },
@@ -61,13 +40,6 @@ function buildApiRequest(input: TranscriptionInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API response into the output format.
- */
 function processResponse(
   response: TranscriptionApiResponse,
   pollingAttempts: number,
@@ -82,24 +54,7 @@ function processResponse(
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Transcribes video using the Runware caption API.
- *
- * Uses the caption taskType with the memories:1@1 model
- * to convert speech in video content to text. The API is async:
- * 1. Submit the task with `inputs: { video: "..." }`
- * 2. Poll with `getResponse` until `status: "success"`
- * 3. The poll result contains the transcribed `text`
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context for cancellation and progress
- * @returns Tool result with transcribed text
- */
+/** Transcribes video via the caption taskType; the transcript arrives from the poll, not the submit. */
 export async function transcription(
   input: TranscriptionInput,
   client?: RunwareClient,
@@ -108,38 +63,31 @@ export async function transcription(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request — uses inputs: { video: "..." } for the caption API
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('caption', requestParams);
 
-    // Submit the task — the API is async for memories:1@1, the initial
-    // response is just an acknowledgment with taskType and taskUUID.
+    // The submit response is only an acknowledgment; the text comes from polling.
     await runwareClient.requestSingle<TranscriptionApiResponse>(
       task,
       { signal: context?.signal },
     );
 
-    // Report progress: task submitted
     context?.progress?.report({
       progress: 0,
       total: 100,
       message: 'Transcription task submitted, polling for result...',
     });
 
-    // Poll for result — the actual text comes from the poll response
     const pollResult = await pollForResult<TranscriptionApiResponse>(task.taskUUID as TaskUUID, {
       client: runwareClient,
       signal: context?.signal,
       progress: context?.progress,
     });
 
-    // Process response
     const output = processResponse(pollResult.result, pollResult.attempts, pollResult.elapsedMs);
 
-    // Report progress: complete
     context?.progress?.report({
       progress: 100,
       total: 100,
@@ -158,9 +106,6 @@ export async function transcription(
   }
 }
 
-/**
- * MCP tool definition for transcription.
- */
 export const transcriptionToolDefinition = {
   name: 'transcription',
   description:

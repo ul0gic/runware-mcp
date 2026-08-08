@@ -1,7 +1,3 @@
-/**
- * Transcription tool barrel export.
- */
-
 export { transcription, transcriptionToolDefinition } from './handler.js';
 
 export {

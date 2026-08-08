@@ -1,10 +1,3 @@
-/**
- * Registers all how-to guide documentation resources.
- *
- * Imports the 5 guide documents and calls registerDoc() for each,
- * populating the documentation registry with practical workflow guides.
- */
-
 import { batchProcessingDoc } from './docs/guides/batch-processing.js';
 import { choosingProvidersDoc } from './docs/guides/choosing-providers.js';
 import { combiningFeaturesDoc } from './docs/guides/combining-features.js';

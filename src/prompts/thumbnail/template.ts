@@ -1,17 +1,4 @@
-/**
- * Thumbnail prompt template.
- *
- * Creates engaging thumbnails for videos, articles, and social media
- * with configurable platform targeting, visual style, and emotional hooks.
- * Instructs the LLM to use the imageInference tool with dimensions and
- * composition optimized for each target platform.
- */
-
 import type { PromptMessage, PromptTemplate } from '../types.js';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PROMPT_NAME = 'thumbnail';
 const PROMPT_DESCRIPTION = 'Create engaging thumbnails for YouTube, blogs, social media, and more with platform-optimized dimensions.';
@@ -23,10 +10,6 @@ const DEFAULT_EMOTION = 'curious';
 const VALID_PLATFORMS = ['youtube', 'blog', 'twitter', 'instagram', 'linkedin'] as const;
 const VALID_STYLES = ['bold-text', 'face-reaction', 'split-screen', 'before-after', 'minimal'] as const;
 const VALID_EMOTIONS = ['shocking', 'curious', 'exciting', 'informative'] as const;
-
-// ============================================================================
-// Platform Dimensions
-// ============================================================================
 
 interface PlatformDimensions {
   readonly width: number;
@@ -41,10 +24,6 @@ const PLATFORM_DIMENSIONS: Record<string, PlatformDimensions> = {
   instagram: { width: 1080, height: 1080, label: '1:1 Instagram square post' },
   linkedin: { width: 1200, height: 627, label: '1.91:1 LinkedIn post image' },
 };
-
-// ============================================================================
-// Descriptors
-// ============================================================================
 
 const STYLE_DESCRIPTORS: Record<string, string> = {
   'bold-text': 'bold, large text overlay, attention-grabbing typography, high contrast text on vibrant background',
@@ -61,13 +40,6 @@ const EMOTION_DESCRIPTORS: Record<string, string> = {
   informative: 'clear, educational, structured layout, trustworthy, value-promising visual',
 };
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Returns the platform-specific note based on platform selection.
- */
 function getPlatformNote(platform: string, dimensionLabel: string): string {
   if (platform === 'youtube') {
     return '- YouTube: Ensure the thumbnail works at small sizes (126x70). Keep text large and readable. Faces and bold text perform best.';
@@ -78,9 +50,6 @@ function getPlatformNote(platform: string, dimensionLabel: string): string {
   return `- ${platform}: Optimize for the ${dimensionLabel} aspect ratio. Ensure key elements are centered for cropping.`;
 }
 
-/**
- * Returns the text overlay tip based on whether text overlay is provided.
- */
 function getTextOverlayTip(textOverlay: string | undefined): string {
   if (textOverlay !== undefined && textOverlay.length > 0) {
     return '- Note: AI image generation may struggle with exact text rendering. Consider adding text overlay in post-processing or use a model known for text accuracy (e.g., Ideogram via provider settings).';
@@ -88,13 +57,6 @@ function getTextOverlayTip(textOverlay: string | undefined): string {
   return '- Consider adding a textOverlay argument if you want bold text on the thumbnail.';
 }
 
-// ============================================================================
-// Template
-// ============================================================================
-
-/**
- * Thumbnail prompt template.
- */
 export const thumbnail: PromptTemplate = {
   name: PROMPT_NAME,
   description: PROMPT_DESCRIPTION,

@@ -1,9 +1,3 @@
-/**
- * Handler for the image background removal tool.
- *
- * Implements background removal using the Runware API.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -11,10 +5,6 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 
 import type { imageBackgroundRemovalInputSchema, ImageBackgroundRemovalOutput } from './schema.js';
 import type { z } from 'zod';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 type ImageBackgroundRemovalInput = z.infer<typeof imageBackgroundRemovalInputSchema>;
 
@@ -28,17 +18,12 @@ interface ImageBackgroundRemovalApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
 function buildApiRequest(input: ImageBackgroundRemovalInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     inputImage: input.inputImage,
     model: input.model,
   };
 
-  // Flatten settings into request if present
   if (input.settings !== undefined) {
     Object.assign(request, input.settings);
   }
@@ -53,15 +38,10 @@ function buildApiRequest(input: ImageBackgroundRemovalInput): Record<string, unk
     request.outputQuality = input.outputQuality;
   }
 
-  // includeCost always has a default value from schema
   request.includeCost = input.includeCost;
 
   return request;
 }
-
-// ============================================================================
-// Response Processing
-// ============================================================================
 
 function processResponse(response: ImageBackgroundRemovalApiResponse): ImageBackgroundRemovalOutput {
   return {
@@ -73,18 +53,6 @@ function processResponse(response: ImageBackgroundRemovalApiResponse): ImageBack
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Removes the background from an image.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context
- * @returns Tool result with processed image
- */
 export async function imageBackgroundRemoval(
   input: ImageBackgroundRemovalInput,
   client?: RunwareClient,

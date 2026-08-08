@@ -1,10 +1,3 @@
-/**
- * Bria Provider — Provider Documentation
- *
- * Image generation provider focused on commercial use
- * with content moderation, medium selection, and generation modes.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const briaDoc: DocResource = {

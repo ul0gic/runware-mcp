@@ -1,9 +1,3 @@
-/**
- * Handler for the model search tool.
- *
- * Searches for available models on the Runware platform.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -11,10 +5,6 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 
 import type { modelSearchInputSchema, ModelSearchOutput } from './schema.js';
 import type { z } from 'zod';
-
-// ============================================================================
-// Types
-// ============================================================================
 
 type ModelSearchInput = z.infer<typeof modelSearchInputSchema>;
 type ModelSearchResult = ModelSearchOutput['models'][number];
@@ -26,9 +16,6 @@ const CATEGORY_ALIASES = new Map<string, string>([
   ['VAE', 'vae'],
 ]);
 
-/**
- * Individual model result from the API.
- */
 interface ModelSearchApiModel {
   readonly air: string;
   readonly name?: string;
@@ -53,19 +40,12 @@ interface ModelSearchApiModel {
   readonly shortDescription?: string;
 }
 
-/**
- * Raw API response item for model search.
- *
- * The API returns a single data item containing totalResults and
- * an array of model objects, rather than returning models directly
- * in the data array.
- */
+/** The API may wrap models in a single data item, or return them flat — both shapes are modelled here. */
 interface ModelSearchApiResult {
   readonly taskType?: string;
   readonly taskUUID?: string;
   readonly totalResults?: number;
   readonly results?: readonly ModelSearchApiModel[];
-  // Flat model fields (for backwards compatibility if API returns flat items)
   readonly air?: string;
   readonly name?: string;
   readonly version?: string;
@@ -89,12 +69,7 @@ interface ModelSearchApiResult {
   readonly shortDescription?: string;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
 function buildApiRequest(input: ModelSearchInput): Record<string, unknown> {
-  // limit and offset have defaults from schema, so always include them
   const request: Record<string, unknown> = {
     limit: input.limit,
     offset: input.offset,
@@ -134,13 +109,6 @@ function buildApiRequest(input: ModelSearchInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Maps a single model API result to the output format.
- */
 function mapModelDefaults(result: ModelSearchApiModel): Partial<ModelSearchResult> {
   return {
     ...(result.defaultWidth !== undefined && { defaultWidth: result.defaultWidth }),
@@ -185,15 +153,7 @@ function mapModelResult(result: ModelSearchApiModel): ModelSearchResult {
   };
 }
 
-/**
- * Extracts model data from the API response.
- *
- * The API can return results in two formats:
- * 1. Wrapper format: data contains a single item with `totalResults` and nested `models` array
- * 2. Flat format: data contains model objects directly (each with `air`, `name`, etc.)
- *
- * This function handles both transparently.
- */
+/** Handles both API shapes: a single wrapper item with `totalResults` plus nested `results`, or model objects directly in `data`. */
 function processResponse(
   results: readonly ModelSearchApiResult[],
   input: ModelSearchInput,
@@ -201,12 +161,10 @@ function processResponse(
   const limit = input.limit;
   const offset = input.offset;
 
-  // Check if the API returned a wrapper format (single item with nested models array)
   const firstResult = results.length > 0 ? results[0] : undefined;
 
   const nestedModels = firstResult?.results;
   if (nestedModels !== undefined) {
-    // Wrapper format: extract models from the nested array
     const totalResults = firstResult?.totalResults ?? nestedModels.length;
     const models = nestedModels.map((m) => mapModelResult(m));
 
@@ -218,7 +176,6 @@ function processResponse(
     };
   }
 
-  // Flat format: each item in data is a model (filter out items without 'air' field)
   const flatModels = results.filter((r): r is ModelSearchApiResult & { readonly air: string } => r.air !== undefined);
   const totalResults = firstResult?.totalResults ?? flatModels.length;
   const models = flatModels.map((m) => mapModelResult(m));
@@ -231,18 +188,6 @@ function processResponse(
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Searches for models on the Runware platform.
- *
- * @param input - Search criteria
- * @param client - Optional Runware client
- * @param context - Optional tool context
- * @returns Tool result with matching models
- */
 export async function modelSearch(
   input: ModelSearchInput,
   client?: RunwareClient,

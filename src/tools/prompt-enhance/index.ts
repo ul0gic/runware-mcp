@@ -1,7 +1,3 @@
-/**
- * Prompt enhance tool barrel export.
- */
-
 export { promptEnhance, promptEnhanceToolDefinition } from './handler.js';
 
 export {

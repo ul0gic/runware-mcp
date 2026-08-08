@@ -1,17 +1,4 @@
-/**
- * UI Mockup prompt template.
- *
- * Generates UI/UX design mockups for various application types with
- * configurable design system, color scheme, and fidelity level.
- * Instructs the LLM to use the imageInference tool with settings
- * optimized for clean, readable interface designs.
- */
-
 import type { PromptMessage, PromptTemplate } from '../types.js';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PROMPT_NAME = 'ui-mockup';
 const PROMPT_DESCRIPTION = 'Generate UI/UX design mockups for mobile apps, web apps, dashboards, and more.';
@@ -24,10 +11,6 @@ const VALID_APP_TYPES = ['mobile-app', 'web-app', 'dashboard', 'landing-page', '
 const VALID_DESIGN_SYSTEMS = ['material', 'ios', 'fluent', 'tailwind', 'custom'] as const;
 const VALID_COLOR_SCHEMES = ['light', 'dark', 'blue', 'purple', 'green'] as const;
 const VALID_COMPLEXITIES = ['wireframe', 'low-fidelity', 'high-fidelity'] as const;
-
-// ============================================================================
-// Descriptors
-// ============================================================================
 
 const APP_TYPE_DESCRIPTORS: Record<string, string> = {
   'mobile-app': 'mobile application UI on a smartphone screen, native mobile interface, touch-friendly elements',
@@ -59,13 +42,6 @@ const COMPLEXITY_DESCRIPTORS: Record<string, string> = {
   'high-fidelity': 'high-fidelity mockup, pixel-perfect, realistic content, proper typography, production-ready visual',
 };
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Returns the layout consideration line based on app type and mobile flag.
- */
 function getLayoutConsideration(appType: string, isMobile: boolean): string {
   if (isMobile) {
     return '- Mobile: Use portrait orientation (512x1024). Include status bar, navigation, and bottom bar elements.';
@@ -76,13 +52,6 @@ function getLayoutConsideration(appType: string, isMobile: boolean): string {
   return `- ${appType}: Use landscape orientation (1280x832) for optimal readability.`;
 }
 
-// ============================================================================
-// Template
-// ============================================================================
-
-/**
- * UI mockup prompt template.
- */
 export const uiMockup: PromptTemplate = {
   name: PROMPT_NAME,
   description: PROMPT_DESCRIPTION,
