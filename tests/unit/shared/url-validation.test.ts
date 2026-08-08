@@ -292,3 +292,68 @@ describe('validateUrlWithResult', () => {
     expect(result.error).toBeDefined();
   });
 });
+
+describe('IPv6 literals', () => {
+  const bracketed = [
+    'http://[fe80::1]',
+    'http://[fc00::1]',
+    'http://[fd00::1]',
+    'http://[::1]',
+    'http://[::]',
+    'http://[ff02::1]',
+    'http://[2001:db8::1]',
+    'http://[::ffff:127.0.0.1]',
+    'http://[64:ff9b::127.0.0.1]',
+    'http://[2002:7f00:1::]',
+  ];
+
+  it.each(bracketed)('blocks %s', (url) => {
+    expect(isBlockedUrl(url)).toBe(true);
+  });
+
+  it('blocks an unparseable bracketed literal rather than treating it as a hostname', () => {
+    expect(isBlockedUrl('http://[garbage::zz]')).toBe(true);
+  });
+
+  it('allows a globally routable IPv6 address', () => {
+    expect(isBlockedUrl('http://[2606:4700:4700::1111]')).toBe(false);
+  });
+
+  it('classifies bracketed literals through isPrivateIP', () => {
+    expect(isPrivateIP('[fe80::1]')).toBe(true);
+    expect(isPrivateIP('[2606:4700:4700::1111]')).toBe(false);
+  });
+});
+
+describe('non-global IPv4 ranges', () => {
+  const blocked = [
+    'http://100.64.0.1',
+    'http://100.100.100.200',
+    'http://224.0.0.1',
+    'http://240.0.0.1',
+    'http://255.255.255.255',
+    'http://198.18.0.1',
+    'http://192.0.2.1',
+    'http://203.0.113.1',
+    'http://0.0.0.0',
+  ];
+
+  it.each(blocked)('blocks %s', (url) => {
+    expect(isBlockedUrl(url)).toBe(true);
+  });
+
+  it('rejects octal-ambiguous leading zeros', () => {
+    expect(isBlockedUrl('http://0177.0.0.1')).toBe(true);
+  });
+
+  it('allows public IPv4', () => {
+    expect(isBlockedUrl('http://8.8.8.8')).toBe(false);
+  });
+});
+
+describe('isPrivateIP on non-IP input', () => {
+  it('returns false for DNS names', () => {
+    expect(isPrivateIP('garbage')).toBe(false);
+    expect(isPrivateIP('example.com')).toBe(false);
+  });
+});
