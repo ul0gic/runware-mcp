@@ -1,18 +1,12 @@
 import { randomUUID } from 'node:crypto';
 
 import {
-  type ImageUUID,
   type TaskUUID,
-  createImageUUID,
   createTaskUUID,
 } from './types.js';
 
 export function generateTaskUUID(): TaskUUID {
   return createTaskUUID(randomUUID());
-}
-
-export function generateImageUUID(): ImageUUID {
-  return createImageUUID(randomUUID());
 }
 
 export function sleep(ms: number): Promise<void> {

@@ -25,11 +25,14 @@ vi.mock('../../../src/shared/config.js', () => ({
 // Imports
 // ============================================================================
 
+// Initialize the registry through the same entry point used in production.
+import '../../../src/resources/documentation/provider.js';
+
 import {
   getDocCount,
   getDocResource,
   listDocResources,
-} from '../../../src/resources/documentation/index.js';
+} from '../../../src/resources/documentation/registry.js';
 
 import type {
   DocCategory,
@@ -37,7 +40,7 @@ import type {
   DocExample,
   DocParameter,
   DocResource,
-} from '../../../src/resources/documentation/index.js';
+} from '../../../src/resources/documentation/types.js';
 
 // ============================================================================
 // Valid categories

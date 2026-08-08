@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const textMessageSchema = z.object({
+const textMessageSchema = z.object({
   role: z.enum(['user', 'assistant']),
   content: z.string().min(1),
 });

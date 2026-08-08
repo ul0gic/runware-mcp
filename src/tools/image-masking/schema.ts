@@ -34,9 +34,7 @@ export const imageMaskingInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type ImageMaskingInput = z.infer<typeof imageMaskingInputSchema>;
-
-export const detectionBoxSchema = z.object({
+const detectionBoxSchema = z.object({
   // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   x_min: z.number(),
   // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
@@ -47,7 +45,8 @@ export const detectionBoxSchema = z.object({
   y_max: z.number(),
 });
 
-export const imageMaskingOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const imageMaskingOutputSchema = z.object({
   inputImageUUID: z.string().optional(),
 
   maskImageUUID: z.string(),

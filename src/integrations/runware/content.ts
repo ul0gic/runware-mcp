@@ -5,7 +5,7 @@
 const CONTENT_BASE_URL = 'https://content.runware.ai';
 const DEFAULT_TIMEOUT_MS = 10_000;
 
-export type ModelCategory = 'image' | 'video' | 'audio' | 'text' | '3d';
+type ModelCategory = 'image' | 'video' | 'audio' | 'text' | '3d';
 
 export interface ModelListOptions {
   readonly capability?: string;

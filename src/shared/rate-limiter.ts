@@ -131,25 +131,3 @@ export const defaultRateLimiter = new RateLimiter({
 export function createRateLimiter(options: RateLimiterOptions): RateLimiter {
   return new RateLimiter(options);
 }
-
-/** Rejects immediately when the bucket is empty; use withRateLimitWait to queue instead. */
-export function withRateLimit<TArgs extends unknown[], TResult>(
-  fn: (...args: TArgs) => Promise<TResult>,
-  limiter: RateLimiter = defaultRateLimiter,
-): (...args: TArgs) => Promise<TResult> {
-  return async (...args: TArgs): Promise<TResult> => {
-    limiter.acquireOrThrow();
-    return fn(...args);
-  };
-}
-
-/** Waits for a token rather than rejecting; the wait is uncancellable through this wrapper. */
-export function withRateLimitWait<TArgs extends unknown[], TResult>(
-  fn: (...args: TArgs) => Promise<TResult>,
-  limiter: RateLimiter = defaultRateLimiter,
-): (...args: TArgs) => Promise<TResult> {
-  return async (...args: TArgs): Promise<TResult> => {
-    await limiter.waitForToken();
-    return fn(...args);
-  };
-}

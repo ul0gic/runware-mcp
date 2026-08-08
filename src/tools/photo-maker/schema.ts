@@ -55,9 +55,7 @@ export const photoMakerInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type PhotoMakerInput = z.infer<typeof photoMakerInputSchema>;
-
-export const photoMakerResultSchema = z.object({
+const photoMakerResultSchema = z.object({
   imageUUID: z.string(),
 
   imageURL: z.string().optional(),
@@ -69,7 +67,8 @@ export const photoMakerResultSchema = z.object({
   seed: z.number().optional(),
 });
 
-export const photoMakerOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const photoMakerOutputSchema = z.object({
   images: z.array(photoMakerResultSchema),
 
   cost: z.number().optional(),

@@ -19,13 +19,13 @@ import {
   strengthSchema,
 } from '../../shared/validation.js';
 
-export const embeddingConfigSchema = z.object({
+const embeddingConfigSchema = z.object({
   model: z.string(),
 
   weight: z.number().min(-2).max(2).optional().default(1),
 });
 
-export const ipAdapterConfigSchema = z.object({
+const ipAdapterConfigSchema = z.object({
   model: z.string(),
 
   guideImages: z.array(imageInputSchema).min(1).max(4),
@@ -41,7 +41,7 @@ export const ipAdapterConfigSchema = z.object({
   mode: z.enum(['style_transfer', 'composition', 'face_id', 'plus', 'plus_face']).optional(),
 });
 
-export const refinerConfigSchema = z.object({
+const refinerConfigSchema = z.object({
   model: z.string(),
 
   /** Fraction of the diffusion run at which the refiner takes over. */
@@ -49,7 +49,7 @@ export const refinerConfigSchema = z.object({
 });
 
 /** PuLID identity preservation. */
-export const pulidConfigSchema = z.object({
+const pulidConfigSchema = z.object({
   /** Identity reference images. */
   inputImages: z.array(imageInputSchema).min(1).max(4),
 
@@ -63,7 +63,7 @@ export const pulidConfigSchema = z.object({
 });
 
 /** ACE++ character-consistent generation. */
-export const acePlusPlusConfigSchema = z.object({
+const acePlusPlusConfigSchema = z.object({
   referenceImage: imageInputSchema,
 
   mode: z.enum(['portrait', 'subject', 'local_editing']).optional(),
@@ -72,7 +72,7 @@ export const acePlusPlusConfigSchema = z.object({
 });
 
 /** Pixels to extend the image by on each side. */
-export const outpaintConfigSchema = z.object({
+const outpaintConfigSchema = z.object({
   left: z.number().int().min(0).max(512).optional(),
 
   right: z.number().int().min(0).max(512).optional(),
@@ -85,12 +85,12 @@ export const outpaintConfigSchema = z.object({
   blur: z.number().int().min(0).max(64).optional(),
 });
 
-export const safetyConfigSchema = z.object({
+const safetyConfigSchema = z.object({
   checkContent: z.boolean().optional(),
 });
 
 /** Ultralytics face detection and enhancement. */
-export const ultralyticsConfigSchema = z.object({
+const ultralyticsConfigSchema = z.object({
   confidence: z.number().min(0).max(1).optional(),
 
   // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter name
@@ -189,9 +189,7 @@ export const imageInferenceInputSchema = z.object({
   ttl: z.number().int().min(60).optional(),
 });
 
-export type ImageInferenceInput = z.infer<typeof imageInferenceInputSchema>;
-
-export const imageResultSchema = z.object({
+const imageResultSchema = z.object({
   imageUUID: z.string(),
 
   /** Present when outputType is URL. */
@@ -209,7 +207,8 @@ export const imageResultSchema = z.object({
   nsfwContent: z.boolean().optional(),
 });
 
-export const imageInferenceOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const imageInferenceOutputSchema = z.object({
   images: z.array(imageResultSchema),
 
   /** Total cost in USD. */

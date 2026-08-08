@@ -40,7 +40,8 @@ export const controlNetPreprocessInputSchema = z.object({
 
 export type ControlNetPreprocessInput = z.infer<typeof controlNetPreprocessInputSchema>;
 
-export const controlNetPreprocessOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const controlNetPreprocessOutputSchema = z.object({
   guideImageUUID: z.string(),
 
   inputImageUUID: z.string().optional(),

@@ -1,4 +1,5 @@
-// Side-effect import: populates the registry, without which list()/get() return nothing.
+// Side-effect imports populate the registry, without which list()/get() return nothing.
+import './register-features-providers.js';
 import './register-guides.js';
 
 import { getDocResource, listDocResources } from './registry.js';

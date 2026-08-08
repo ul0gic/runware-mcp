@@ -2,13 +2,11 @@ import { z } from 'zod';
 
 import { folderPathSchema } from '../../shared/validation.js';
 
-export const WATCH_ACTIONS = ['start', 'stop', 'list', 'status'] as const;
+const WATCH_ACTIONS = ['start', 'stop', 'list', 'status'] as const;
 
-export const watchActionSchema = z.enum(WATCH_ACTIONS);
+const watchActionSchema = z.enum(WATCH_ACTIONS);
 
-export type WatchAction = z.infer<typeof watchActionSchema>;
-
-export const WATCH_OPERATIONS = [
+const WATCH_OPERATIONS = [
   'upscale',
   'removeBackground',
   'caption',
@@ -16,7 +14,7 @@ export const WATCH_OPERATIONS = [
   'controlNetPreprocess',
 ] as const;
 
-export const watchOperationSchema = z.enum(WATCH_OPERATIONS);
+const watchOperationSchema = z.enum(WATCH_OPERATIONS);
 
 export type WatchOperation = z.infer<typeof watchOperationSchema>;
 
@@ -52,9 +50,7 @@ export const watchFolderInputSchema = z.object({
   },
 );
 
-export type WatchFolderInput = z.infer<typeof watchFolderInputSchema>;
-
-export const watcherInfoSchema = z.object({
+const watcherInfoSchema = z.object({
   id: z.string(),
 
   folderPath: z.string(),
@@ -76,7 +72,8 @@ export const watcherInfoSchema = z.object({
 
 export type WatcherInfo = z.infer<typeof watcherInfoSchema>;
 
-export const watchFolderOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const watchFolderOutputSchema = z.object({
   action: z.string(),
 
   watcherId: z.string().optional(),

@@ -28,9 +28,7 @@ export const listVideoModelsInputSchema = z.object({
   minHeight: z.number().int().min(256).optional(),
 });
 
-export type ListVideoModelsInput = z.infer<typeof listVideoModelsInputSchema>;
-
-export const videoModelSummarySchema = z.object({
+const videoModelSummarySchema = z.object({
   id: z.string(),
   name: z.string(),
   provider: z.string(),
@@ -45,7 +43,8 @@ export const videoModelSummarySchema = z.object({
   costPerSecond: z.number().optional(),
 });
 
-export const listVideoModelsOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const listVideoModelsOutputSchema = z.object({
   models: z.array(videoModelSummarySchema),
 
   count: z.number(),

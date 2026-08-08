@@ -3,9 +3,4 @@ export {
   imageInferenceToolDefinition,
 } from './handler.js';
 
-export {
-  imageInferenceInputSchema,
-  imageInferenceOutputSchema,
-  type ImageInferenceInput,
-  type ImageInferenceOutput,
-} from './schema.js';
+export { imageInferenceInputSchema } from './schema.js';

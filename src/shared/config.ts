@@ -9,7 +9,6 @@ export const LOG_LEVELS = ['debug', 'info', 'warn', 'error'] as const;
 export type LogLevel = (typeof LOG_LEVELS)[number];
 
 export const NODE_ENVIRONMENTS = ['development', 'production', 'test'] as const;
-export type NodeEnvironment = (typeof NODE_ENVIRONMENTS)[number];
 
 function splitCommaSeparated(value: string): string[] {
   return value.split(',').filter((path) => path.trim().length > 0);

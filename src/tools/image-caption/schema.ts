@@ -15,9 +15,8 @@ export const imageCaptionInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type ImageCaptionInput = z.infer<typeof imageCaptionInputSchema>;
-
-export const imageCaptionOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const imageCaptionOutputSchema = z.object({
   text: z.string(),
 
   /** Populated only by specialized models such as age detection. */

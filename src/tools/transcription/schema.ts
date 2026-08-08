@@ -14,7 +14,8 @@ export const transcriptionInputSchema = z.object({
 
 export type TranscriptionInput = z.infer<typeof transcriptionInputSchema>;
 
-export const transcriptionOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const transcriptionOutputSchema = z.object({
   text: z.string(),
 
   structuredData: z.record(z.string(), z.unknown()).optional(),

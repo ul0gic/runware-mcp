@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const ESTIMABLE_TASK_TYPES = [
+const ESTIMABLE_TASK_TYPES = [
   'imageInference',
   'photoMaker',
   'upscale',
@@ -32,9 +32,8 @@ export const costEstimateInputSchema = z.object({
   steps: z.number().int().min(1).max(100).optional(),
 });
 
-export type CostEstimateInput = z.infer<typeof costEstimateInputSchema>;
-
-export const costEstimateOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const costEstimateOutputSchema = z.object({
   taskType: z.string(),
 
   /** USD per unit. */

@@ -20,25 +20,25 @@ import {
   fpsSchema,
 } from '../../shared/validation.js';
 
-export const framePositionSchema = z.union([
+const framePositionSchema = z.union([
   z.literal('first'),
   z.literal('last'),
   z.number().int().min(0),
 ]);
 
-export const frameImageSchema = z.object({
+const frameImageSchema = z.object({
   inputImage: imageInputSchema,
 
   frame: framePositionSchema.optional(),
 });
 
-export const speechConfigSchema = z.object({
+const speechConfigSchema = z.object({
   text: z.string().min(1),
 
   voice: z.string(),
 });
 
-export const videoSafetyConfigSchema = z.object({
+const videoSafetyConfigSchema = z.object({
   mode: z.enum(['none', 'fast', 'full']).optional(),
 });
 
@@ -101,9 +101,8 @@ export const videoInferenceInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type VideoInferenceInput = z.infer<typeof videoInferenceInputSchema>;
-
-export const videoInferenceOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const videoInferenceOutputSchema = z.object({
   videoUUID: z.string(),
 
   videoURL: z.string().optional(),

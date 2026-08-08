@@ -3,9 +3,4 @@ export {
   imageUpscaleToolDefinition,
 } from './handler.js';
 
-export {
-  imageUpscaleInputSchema,
-  imageUpscaleOutputSchema,
-  type ImageUpscaleInput,
-  type ImageUpscaleOutput,
-} from './schema.js';
+export { imageUpscaleInputSchema } from './schema.js';

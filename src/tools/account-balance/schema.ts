@@ -6,7 +6,8 @@ export const accountBalanceInputSchema = z.object({
 
 export type AccountBalanceInput = z.infer<typeof accountBalanceInputSchema>;
 
-export const accountBalanceOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const accountBalanceOutputSchema = z.object({
   balance: z.number(),
 
   currency: z.string().default('USD'),

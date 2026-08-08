@@ -4,7 +4,7 @@ import { imageInputSchema, outputTypeSchema } from '../../shared/validation.js';
 
 export const VECTORIZE_MODELS = ['recraft:1@1', 'picsart:1@1'] as const;
 
-export const vectorizeModelSchema = z.enum(VECTORIZE_MODELS);
+const vectorizeModelSchema = z.enum(VECTORIZE_MODELS);
 
 export const vectorizeInputSchema = z.object({
   /** Raster source only — PNG, JPG, or WEBP. */
@@ -21,7 +21,8 @@ export const vectorizeInputSchema = z.object({
 
 export type VectorizeInput = z.infer<typeof vectorizeInputSchema>;
 
-export const vectorizeOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const vectorizeOutputSchema = z.object({
   imageUUID: z.string(),
 
   imageURL: z.string().optional(),

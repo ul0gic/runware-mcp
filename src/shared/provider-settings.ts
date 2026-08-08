@@ -11,8 +11,6 @@ export const alibabaSettingsSchema = z.object({
   audio: z.boolean().optional(),
 });
 
-export type AlibabaSettings = z.infer<typeof alibabaSettingsSchema>;
-
 /** Black Forest Labs (FLUX) models support prompt upsampling, safety controls, and raw output mode. */
 export const bflSettingsSchema = z.object({
   /** Enrich the prompt for better results. Default: false. */
@@ -29,8 +27,6 @@ export const bflSettingsSchema = z.object({
   /** Minimal post-processing: less polished but more authentic. Default: false. */
   raw: z.boolean().optional(),
 });
-
-export type BFLSettings = z.infer<typeof bflSettingsSchema>;
 
 /** Bria models support prompt enhancement, medium selection, image enhancement, content moderation, and generation mode. */
 export const briaSettingsSchema = z.object({
@@ -49,24 +45,6 @@ export const briaSettingsSchema = z.object({
   /** base: standard. high_control: more control over output. fast: quicker, potentially lower quality. */
   mode: z.enum(['base', 'high_control', 'fast']).optional(),
 });
-
-export type BriaSettings = z.infer<typeof briaSettingsSchema>;
-
-/** Over 65 artistic style options are available; this is a non-exhaustive sample. */
-export const IDEOGRAM_STYLE_TYPES = [
-  'AUTO',
-  'GENERAL',
-  'REALISTIC',
-  'DESIGN',
-  'FICTION',
-  'ANIME',
-  '3D_RENDERING',
-  'CINEMATIC',
-  'FASHION',
-  'FOOD',
-  'INTERIOR',
-  'ARCHITECTURE',
-] as const;
 
 /** Ideogram supports rendering speed control, magic prompt enhancement, extensive style options, and color palette customization. */
 export const ideogramSettingsSchema = z.object({
@@ -89,8 +67,6 @@ export const ideogramSettingsSchema = z.object({
     .optional(),
 });
 
-export type IdeogramSettings = z.infer<typeof ideogramSettingsSchema>;
-
 /** ByteDance models support sequential image generation for narratives and prompt optimization modes. */
 export const byteDanceSettingsSchema = z.object({
   /** Creates a series of related images. Range: 1-15. */
@@ -105,8 +81,6 @@ export const byteDanceSettingsSchema = z.object({
   optimizePromptMode: z.enum(['standard', 'fast']).optional(),
 });
 
-export type ByteDanceSettings = z.infer<typeof byteDanceSettingsSchema>;
-
 /** KlingAI supports native audio generation, original audio preservation, and camera position control. */
 export const klingAISettingsSchema = z.object({
   sound: z.boolean().optional(),
@@ -118,70 +92,17 @@ export const klingAISettingsSchema = z.object({
   cameraFixed: z.boolean().optional(),
 });
 
-export type KlingAISettings = z.infer<typeof klingAISettingsSchema>;
-
-/** 20 unique effects for creative video generation. */
-export const PIXVERSE_EFFECTS = [
-  'jiggle',
-  'inflate',
-  'melt',
-  'explode',
-  'squish',
-  'transform',
-  'dance',
-  'swim',
-  'fly',
-  'grow',
-  'shrink',
-  'bounce',
-  'spin',
-  'wave',
-  'pulse',
-  'shake',
-  'twist',
-  'morph',
-  'dissolve',
-  'emerge',
-] as const;
-
-/** 21 camera movement options for cinematic control. */
-export const PIXVERSE_CAMERA_MOVEMENTS = [
-  'zoom_in',
-  'zoom_out',
-  'pan_left',
-  'pan_right',
-  'pan_up',
-  'pan_down',
-  'dolly_in',
-  'dolly_out',
-  'dolly_left',
-  'dolly_right',
-  'tilt_up',
-  'tilt_down',
-  'orbit_left',
-  'orbit_right',
-  'crane_up',
-  'crane_down',
-  'track_left',
-  'track_right',
-  'push_in',
-  'pull_out',
-  'static',
-] as const;
-
 /** PixVerse supports viral effects, camera movements, and multi-clip cinematic generation. */
 export const pixVerseSettingsSchema = z.object({
-  /** One of PIXVERSE_EFFECTS. */
+  /** PixVerse effect identifier. */
   effect: z.string().optional(),
 
-  /** One of PIXVERSE_CAMERA_MOVEMENTS. */
+  /** PixVerse camera movement identifier. */
   cameraMovement: z.string().optional(),
 
   /** Creates multiple connected shots. */
   multiClip: z.boolean().optional(),
 });
-
-export type PixVerseSettings = z.infer<typeof pixVerseSettingsSchema>;
 
 /** Veo supports prompt enhancement (always on for Veo 3) and audio generation (Veo 3 only). */
 export const veoSettingsSchema = z.object({
@@ -192,15 +113,11 @@ export const veoSettingsSchema = z.object({
   generateAudio: z.boolean().optional(),
 });
 
-export type VeoSettings = z.infer<typeof veoSettingsSchema>;
-
-export const audioSegmentSchema = z.object({
+const audioSegmentSchema = z.object({
   start: z.number().min(0, 'Audio segment start must be >= 0'),
   end: z.number().min(0, 'Audio segment end must be >= 0'),
   audio: z.string().min(1, 'Audio segment audio source is required'),
 });
-
-export type AudioSegment = z.infer<typeof audioSegmentSchema>;
 
 /** Sync.so specializes in lip-sync with audio, supporting speaker detection, occlusion handling, and segment-based editing. */
 export const syncSettingsSchema = z.object({
@@ -212,8 +129,6 @@ export const syncSettingsSchema = z.object({
   /** Different audio tracks for different time ranges. */
   audioSegments: z.array(audioSegmentSchema).optional(),
 });
-
-export type SyncSettings = z.infer<typeof syncSettingsSchema>;
 
 /** Only one provider's settings should be specified at a time, matching the model being used. */
 export const providerSettingsSchema = z.object({

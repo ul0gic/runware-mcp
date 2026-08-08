@@ -53,9 +53,7 @@ export const batchImageInferenceInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type BatchImageInferenceInput = z.infer<typeof batchImageInferenceInputSchema>;
-
-export const batchImageResultSchema = z.object({
+const batchImageResultSchema = z.object({
   imageUUID: z.string(),
 
   imageURL: z.string().optional(),
@@ -67,7 +65,7 @@ export const batchImageResultSchema = z.object({
   seed: z.number().optional(),
 });
 
-export const batchPromptResultSchema = z.object({
+const batchPromptResultSchema = z.object({
   prompt: z.string(),
 
   index: z.number(),
@@ -84,7 +82,8 @@ export const batchPromptResultSchema = z.object({
 
 export type BatchPromptResult = z.infer<typeof batchPromptResultSchema>;
 
-export const batchImageInferenceOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const batchImageInferenceOutputSchema = z.object({
   total: z.number(),
 
   successful: z.number(),

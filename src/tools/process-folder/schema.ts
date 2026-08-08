@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { concurrencySchema, folderPathSchema } from '../../shared/validation.js';
 
-export const FOLDER_OPERATIONS = [
+const FOLDER_OPERATIONS = [
   'upscale',
   'removeBackground',
   'caption',
@@ -10,7 +10,7 @@ export const FOLDER_OPERATIONS = [
   'controlNetPreprocess',
 ] as const;
 
-export const folderOperationSchema = z.enum(FOLDER_OPERATIONS);
+const folderOperationSchema = z.enum(FOLDER_OPERATIONS);
 
 export type FolderOperation = z.infer<typeof folderOperationSchema>;
 
@@ -46,11 +46,9 @@ export const processFolderInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type ProcessFolderInput = z.infer<typeof processFolderInputSchema>;
+const fileResultStatusSchema = z.enum(['success', 'failed', 'skipped']);
 
-export const fileResultStatusSchema = z.enum(['success', 'failed', 'skipped']);
-
-export const fileResultSchema = z.object({
+const fileResultSchema = z.object({
   inputPath: z.string(),
 
   outputPath: z.string().optional(),
@@ -72,7 +70,8 @@ export const fileResultSchema = z.object({
 
 export type FileResult = z.infer<typeof fileResultSchema>;
 
-export const processFolderOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const processFolderOutputSchema = z.object({
   processed: z.number(),
 
   failed: z.number(),

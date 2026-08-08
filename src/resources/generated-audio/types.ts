@@ -1,4 +1,4 @@
-export type AudioType = 'music' | 'sfx' | 'speech' | 'ambient';
+type AudioType = 'music' | 'sfx' | 'speech' | 'ambient';
 
 export interface GeneratedAudioEntry {
   readonly id: string;

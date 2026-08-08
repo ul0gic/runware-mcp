@@ -25,12 +25,10 @@ vi.mock('../../../src/shared/config.js', () => ({
 // Imports
 // ============================================================================
 
-import {
-  documentationProvider,
-  getDocCount,
-} from '../../../src/resources/documentation/index.js';
+import { documentationProvider } from '../../../src/resources/documentation/provider.js';
+import { getDocCount } from '../../../src/resources/documentation/registry.js';
 
-import type { DocResource } from '../../../src/resources/documentation/index.js';
+import type { DocResource } from '../../../src/resources/documentation/types.js';
 
 // ============================================================================
 // Valid categories for URI validation

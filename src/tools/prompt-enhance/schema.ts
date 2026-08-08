@@ -13,7 +13,8 @@ export const promptEnhanceInputSchema = z.object({
 
 export type PromptEnhanceInput = z.infer<typeof promptEnhanceInputSchema>;
 
-export const promptEnhanceOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const promptEnhanceOutputSchema = z.object({
   enhancedPrompts: z.array(z.string()),
 
   cost: z.number().optional(),

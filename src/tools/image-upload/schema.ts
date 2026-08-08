@@ -27,9 +27,8 @@ export const imageUploadInputSchema = z.object({
   { message: 'At least one image source (filePath, base64, url, dataUri, or image) must be provided' },
 );
 
-export type ImageUploadInput = z.infer<typeof imageUploadInputSchema>;
-
-export const imageUploadOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const imageUploadOutputSchema = z.object({
   imageUUID: z.string(),
 });
 

@@ -7,7 +7,7 @@ import {
   outputTypeSchema,
 } from '../../shared/validation.js';
 
-export const alphaMattingSettingsSchema = z.object({
+const alphaMattingSettingsSchema = z.object({
   alphaMatting: z.boolean().optional(),
 
   /** Higher values retain more foreground. */
@@ -20,7 +20,7 @@ export const alphaMattingSettingsSchema = z.object({
   alphaMattingErodeSize: z.number().int().min(1).max(255).optional(),
 });
 
-export const backgroundRemovalSettingsSchema = alphaMattingSettingsSchema.extend({
+const backgroundRemovalSettingsSchema = alphaMattingSettingsSchema.extend({
   /** Background colour channels, e.g. [255, 255, 255, 255] for opaque white. */
   rgba: z.array(z.number().int().min(0).max(255)).length(4).optional(),
 
@@ -50,9 +50,8 @@ export const imageBackgroundRemovalInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type ImageBackgroundRemovalInput = z.infer<typeof imageBackgroundRemovalInputSchema>;
-
-export const imageBackgroundRemovalOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const imageBackgroundRemovalOutputSchema = z.object({
   imageUUID: z.string(),
 
   imageURL: z.string().optional(),

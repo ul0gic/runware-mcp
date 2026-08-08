@@ -2,16 +2,16 @@ import { z } from 'zod';
 
 import { audioDurationSchema, outputTypeSchema } from '../../shared/validation.js';
 
-export const AUDIO_OUTPUT_FORMATS = ['MP3', 'WAV', 'OGG'] as const;
+const AUDIO_OUTPUT_FORMATS = ['MP3', 'WAV', 'OGG'] as const;
 
-export const audioOutputFormatSchema = z.enum(AUDIO_OUTPUT_FORMATS);
+const audioOutputFormatSchema = z.enum(AUDIO_OUTPUT_FORMATS);
 
-export const AUDIO_TYPES = ['music', 'sfx', 'speech', 'ambient'] as const;
+const AUDIO_TYPES = ['music', 'sfx', 'speech', 'ambient'] as const;
 
-export const audioTypeSchema = z.enum(AUDIO_TYPES);
+const audioTypeSchema = z.enum(AUDIO_TYPES);
 
 /** Composition section for the ElevenLabs structured-music feature. */
-export const compositionSectionSchema = z.object({
+const compositionSectionSchema = z.object({
   name: z.string().min(1).max(100),
 
   /** Start time in seconds. */
@@ -27,13 +27,13 @@ export const compositionSectionSchema = z.object({
 });
 
 /** ElevenLabs structured composition: ordered sections with timing and lyrics. */
-export const compositionPlanSchema = z.object({
+const compositionPlanSchema = z.object({
   globalStyle: z.string().max(200).optional(),
 
   sections: z.array(compositionSectionSchema).min(1).max(10),
 });
 
-export const audioSettingsSchema = z.object({
+const audioSettingsSchema = z.object({
   /** Sample rate in Hz. */
   sampleRate: z.number().int().min(8000).max(48_000).optional(),
 
@@ -41,11 +41,11 @@ export const audioSettingsSchema = z.object({
   bitrate: z.number().int().min(32).max(320).optional(),
 });
 
-export const elevenLabsSettingsSchema = z.object({
+const elevenLabsSettingsSchema = z.object({
   compositionPlan: compositionPlanSchema.optional(),
 });
 
-export const mireloSettingsSchema = z.object({
+const mireloSettingsSchema = z.object({
   /** Start offset in seconds for video-synchronized audio. */
   startOffset: z.number().min(0).optional(),
 });
@@ -82,7 +82,7 @@ export const audioInferenceInputSchema = z.object({
 
 export type AudioInferenceInput = z.infer<typeof audioInferenceInputSchema>;
 
-export const audioResultSchema = z.object({
+const audioResultSchema = z.object({
   audioUUID: z.string(),
 
   audioURL: z.string().optional(),
@@ -92,7 +92,8 @@ export const audioResultSchema = z.object({
   audioDataURI: z.string().optional(),
 });
 
-export const audioInferenceOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const audioInferenceOutputSchema = z.object({
   results: z.array(audioResultSchema),
 
   /** Cost in USD. */

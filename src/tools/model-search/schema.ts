@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const MODEL_CATEGORIES = [
+const MODEL_CATEGORIES = [
   'checkpoint',
   'lora',
   'lycoris',
@@ -13,19 +13,7 @@ export const MODEL_CATEGORIES = [
   'VAE',
 ] as const;
 
-export const MODEL_TYPES = ['base', 'inpainting', 'refiner'] as const;
-
-export const MODEL_ARCHITECTURES = [
-  'FLUX.1-dev',
-  'FLUX.1-schnell',
-  'FLUX.1-pro',
-  'Imagen',
-  'SD1.5',
-  'SDXL',
-  'SD3',
-  'Playground',
-  'Pony',
-] as const;
+const MODEL_TYPES = ['base', 'inpainting', 'refiner'] as const;
 
 export const modelSearchInputSchema = z.object({
   search: z.string().optional(),
@@ -62,9 +50,7 @@ export const modelSearchInputSchema = z.object({
   offset: z.number().int().min(0).optional().default(0),
 });
 
-export type ModelSearchInput = z.infer<typeof modelSearchInputSchema>;
-
-export const modelSearchResultSchema = z.object({
+const modelSearchResultSchema = z.object({
   air: z.string(),
 
   name: z.string(),
@@ -103,7 +89,8 @@ export const modelSearchResultSchema = z.object({
   shortDescription: z.string().optional(),
 });
 
-export const modelSearchOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const modelSearchOutputSchema = z.object({
   models: z.array(modelSearchResultSchema),
 
   totalResults: z.number(),

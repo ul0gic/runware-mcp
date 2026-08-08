@@ -9,7 +9,7 @@ import {
   strengthSchema,
 } from '../../shared/validation.js';
 
-export const ART_STYLES = [
+const ART_STYLES = [
   'oil-painting',
   'watercolor',
   'pencil-sketch',
@@ -22,19 +22,19 @@ export const ART_STYLES = [
   'surrealist',
 ] as const;
 
-export const INTENSITY_LEVELS = ['subtle', 'moderate', 'strong'] as const;
+const INTENSITY_LEVELS = ['subtle', 'moderate', 'strong'] as const;
 
-export const COLOR_PALETTES = ['warm', 'cool', 'monochrome', 'vibrant', 'pastel'] as const;
+const COLOR_PALETTES = ['warm', 'cool', 'monochrome', 'vibrant', 'pastel'] as const;
 
-export const artStyleSchema = z.enum(ART_STYLES);
+const artStyleSchema = z.enum(ART_STYLES);
 
 export type ArtStyle = z.infer<typeof artStyleSchema>;
 
-export const intensitySchema = z.enum(INTENSITY_LEVELS);
+const intensitySchema = z.enum(INTENSITY_LEVELS);
 
 export type Intensity = z.infer<typeof intensitySchema>;
 
-export const colorPaletteSchema = z.enum(COLOR_PALETTES);
+const colorPaletteSchema = z.enum(COLOR_PALETTES);
 
 export type ColorPalette = z.infer<typeof colorPaletteSchema>;
 
@@ -69,9 +69,8 @@ export const styleTransferInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type StyleTransferInput = z.infer<typeof styleTransferInputSchema>;
-
-export const styleTransferOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const styleTransferOutputSchema = z.object({
   imageUUID: z.string(),
 
   imageURL: z.string().optional(),

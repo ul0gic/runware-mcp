@@ -5,9 +5,8 @@ export const getVideoModelInfoInputSchema = z.object({
   modelId: z.string(),
 });
 
-export type GetVideoModelInfoInput = z.infer<typeof getVideoModelInfoInputSchema>;
-
-export const getVideoModelInfoOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const getVideoModelInfoOutputSchema = z.object({
   id: z.string(),
 
   name: z.string(),

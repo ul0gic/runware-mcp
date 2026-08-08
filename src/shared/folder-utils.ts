@@ -1,5 +1,5 @@
 import { type Dirent } from 'node:fs';
-import { readdir, stat, mkdir, access, constants } from 'node:fs/promises';
+import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
 import { FolderNotFoundError, FileError } from './errors.js';
@@ -27,7 +27,7 @@ export const AUDIO_EXTENSIONS = new Set([
   '.ogg',
 ]);
 
-export interface WalkFolderOptions {
+interface WalkFolderOptions {
   /** Lowercase extensions with leading dot; unset includes every file. */
   readonly extensions?: ReadonlySet<string>;
 
@@ -42,7 +42,7 @@ export interface WalkFolderOptions {
 }
 
 /** Yields absolute paths of files under an allowed root. */
-export async function* walkFolder(
+async function* walkFolder(
   folderPath: string,
   options: WalkFolderOptions = {},
 ): AsyncGenerator<string, void, undefined> {
@@ -144,51 +144,6 @@ export async function getImagesInFolder(
   return images;
 }
 
-export async function getVideosInFolder(
-  folderPath: string,
-  recursive = false,
-): Promise<string[]> {
-  const videos: string[] = [];
-
-  for await (const file of walkFolder(folderPath, {
-    extensions: VIDEO_EXTENSIONS,
-    recursive,
-  })) {
-    videos.push(file);
-  }
-
-  return videos;
-}
-
-export async function getAudioInFolder(
-  folderPath: string,
-  recursive = false,
-): Promise<string[]> {
-  const audio: string[] = [];
-
-  for await (const file of walkFolder(folderPath, {
-    extensions: AUDIO_EXTENSIONS,
-    recursive,
-  })) {
-    audio.push(file);
-  }
-
-  return audio;
-}
-
-/** Caller must validate path safety — this creates directories unconditionally. */
-export async function ensureFolder(folderPath: string): Promise<void> {
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- caller validates the path
-    await mkdir(folderPath, { recursive: true });
-  } catch (error) {
-    throw new FileError(`Failed to create folder: ${folderPath}`, {
-      filePath: folderPath,
-      reason: error instanceof Error ? error.message : 'Unknown error',
-    });
-  }
-}
-
 export async function validateFolder(folderPath: string): Promise<string> {
   if (!isPathSafe(folderPath)) {
     throw new FolderNotFoundError(
@@ -219,91 +174,4 @@ export async function validateFolder(folderPath: string): Promise<string> {
       folderPath,
     );
   }
-}
-
-export async function folderExists(folderPath: string): Promise<boolean> {
-  try {
-    await access(folderPath, constants.R_OK);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- caller validates the path
-    const stats = await stat(folderPath);
-    return stats.isDirectory();
-  } catch {
-    return false;
-  }
-}
-
-export interface FolderStats {
-  readonly fileCount: number;
-
-  readonly totalSizeBytes: number;
-
-  readonly byType: Readonly<{
-    images: number;
-    videos: number;
-    audio: number;
-    other: number;
-  }>;
-}
-
-export async function getFolderStats(
-  folderPath: string,
-  recursive = false,
-): Promise<FolderStats> {
-  const resolvedPath = await validateFolder(folderPath);
-
-  let fileCount = 0;
-  let totalSizeBytes = 0;
-  let images = 0;
-  let videos = 0;
-  let audio = 0;
-  let other = 0;
-
-  for await (const file of walkFolder(resolvedPath, { recursive })) {
-    try {
-      // eslint-disable-next-line security/detect-non-literal-fs-filename -- path comes from walkFolder over a validated root
-      const stats = await stat(file);
-      fileCount += 1;
-      totalSizeBytes += stats.size;
-
-      const ext = path.extname(file).toLowerCase();
-      if (IMAGE_EXTENSIONS.has(ext)) {
-        images += 1;
-      } else if (VIDEO_EXTENSIONS.has(ext)) {
-        videos += 1;
-      } else if (AUDIO_EXTENSIONS.has(ext)) {
-        audio += 1;
-      } else {
-        other += 1;
-      }
-    } catch {
-      // A file that cannot be stat'd (raced deletion, permission) is skipped rather than failing the whole scan
-    }
-  }
-
-  return {
-    fileCount,
-    totalSizeBytes,
-    byType: {
-      images,
-      videos,
-      audio,
-      other,
-    },
-  };
-}
-
-export async function countFilesInFolder(
-  folderPath: string,
-  extensions?: ReadonlySet<string>,
-  recursive = false,
-): Promise<number> {
-  let count = 0;
-
-  for await (const file of walkFolder(folderPath, { extensions, recursive })) {
-    if (file) {
-      count += 1;
-    }
-  }
-
-  return count;
 }

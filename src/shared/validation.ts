@@ -1,25 +1,14 @@
 import { z } from 'zod';
 
-import {
-  type ImageUUID,
-  type TaskUUID,
-  createImageUUID,
-  createTaskUUID,
-} from './types.js';
-
 const UUID_V4_REGEX = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 
 export const uuidSchema = z
   .string()
   .regex(UUID_V4_REGEX, 'Must be a valid UUID v4');
 
-export const taskUUIDSchema = uuidSchema.transform((uuid): TaskUUID => createTaskUUID(uuid));
-
-export const imageUUIDSchema = uuidSchema.transform((uuid): ImageUUID => createImageUUID(uuid));
-
 const ALLOWED_PROTOCOLS = ['http:', 'https:'] as const;
 
-export const urlSchema = z.url('Must be a valid URL').refine(
+const urlSchema = z.url('Must be a valid URL').refine(
   (urlString) => {
     try {
       const parsedUrl = new URL(urlString);
@@ -52,8 +41,6 @@ export const imageInputSchema = z.union([
     .describe('Data URI with base64 image'),
 ]);
 
-export type ImageInput = z.infer<typeof imageInputSchema>;
-
 export const MIN_DIMENSION = 256;
 
 export const MAX_DIMENSION = 16_384;
@@ -69,10 +56,6 @@ export const dimensionSchema = z
     (value) => value % DIMENSION_STEP === 0,
     { message: `Dimension must be a multiple of ${String(DIMENSION_STEP)}` },
   );
-
-export const widthSchema = dimensionSchema.default(1024);
-
-export const heightSchema = dimensionSchema.default(1024);
 
 export const MIN_STEPS = 1;
 
@@ -110,36 +93,23 @@ export const strengthSchema = z
   .min(0, 'Strength must be at least 0')
   .max(1, 'Strength cannot exceed 1');
 
-export const OUTPUT_TYPES = ['URL', 'base64Data', 'dataURI'] as const;
+const OUTPUT_TYPES = ['URL', 'base64Data', 'dataURI'] as const;
 
 export const outputTypeSchema = z.enum(OUTPUT_TYPES);
 
-export type OutputType = z.infer<typeof outputTypeSchema>;
-
-export const IMAGE_OUTPUT_FORMATS = ['JPG', 'PNG', 'WEBP'] as const;
+const IMAGE_OUTPUT_FORMATS = ['JPG', 'PNG', 'WEBP'] as const;
 
 export const outputFormatSchema = z.enum(IMAGE_OUTPUT_FORMATS);
 
-export type ImageOutputFormat = z.infer<typeof outputFormatSchema>;
-
-export const VIDEO_OUTPUT_FORMATS = ['MP4', 'WEBM', 'MOV'] as const;
+const VIDEO_OUTPUT_FORMATS = ['MP4', 'WEBM', 'MOV'] as const;
 
 export const videoOutputFormatSchema = z.enum(VIDEO_OUTPUT_FORMATS);
-
-export type VideoOutputFormat = z.infer<typeof videoOutputFormatSchema>;
 
 export const outputQualitySchema = z
   .number()
   .int('Output quality must be an integer')
   .min(20, 'Output quality must be at least 20')
   .max(99, 'Output quality cannot exceed 99');
-
-export const DELIVERY_METHODS = ['sync', 'async'] as const;
-
-/** sync waits for the result in the same request; async returns immediately and requires polling. */
-export const deliveryMethodSchema = z.enum(DELIVERY_METHODS);
-
-export type DeliveryMethod = z.infer<typeof deliveryMethodSchema>;
 
 /** AIR format: provider:modelId@version or civitai:modelId@versionId. */
 const AIR_MODEL_REGEX = /^[\w-]+:\d+@\d+$/;
@@ -189,8 +159,6 @@ export const filePathSchema = z
 
 export const folderPathSchema = filePathSchema.describe('Absolute folder path');
 
-export const includeCostSchema = z.boolean().optional().default(true);
-
 export const concurrencySchema = z
   .number()
   .int('Concurrency must be an integer')
@@ -198,7 +166,7 @@ export const concurrencySchema = z
   .max(5, 'Concurrency cannot exceed 5')
   .default(2);
 
-export const CONTROLNET_PREPROCESSORS = [
+const CONTROLNET_PREPROCESSORS = [
   'canny',
   'depth',
   'mlsd',
@@ -214,8 +182,6 @@ export const CONTROLNET_PREPROCESSORS = [
 ] as const;
 
 export const controlNetPreprocessorSchema = z.enum(CONTROLNET_PREPROCESSORS);
-
-export type ControlNetPreprocessor = z.infer<typeof controlNetPreprocessorSchema>;
 
 export const controlNetConfigSchema = z.object({
   guideImage: imageInputSchema,
@@ -239,11 +205,7 @@ export const loraArraySchema = z
   .array(loraConfigSchema)
   .max(5, 'Cannot use more than 5 LoRAs');
 
-export const UPSCALE_FACTORS = [2, 4] as const;
-
 export const upscaleFactorSchema = z.union([
   z.literal(2),
   z.literal(4),
 ]);
-
-export type UpscaleFactor = z.infer<typeof upscaleFactorSchema>;

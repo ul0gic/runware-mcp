@@ -3,9 +3,4 @@ export {
   listVideoModelsToolDefinition,
 } from './handler.js';
 
-export {
-  listVideoModelsInputSchema,
-  listVideoModelsOutputSchema,
-  type ListVideoModelsInput,
-  type ListVideoModelsOutput,
-} from './schema.js';
+export { listVideoModelsInputSchema } from './schema.js';

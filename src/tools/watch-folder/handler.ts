@@ -490,10 +490,6 @@ export function stopAllWatchers(): void {
   activeWatchers.clear();
 }
 
-export function getActiveWatcherCount(): number {
-  return activeWatchers.size;
-}
-
 export const watchFolderToolDefinition = {
   name: 'watchFolder',
   description: 'Manage folder watchers that auto-process new image files. Actions: start (begin watching), stop (end watching), list (show all watchers), status (check a watcher).',

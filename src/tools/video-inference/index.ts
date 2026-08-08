@@ -3,9 +3,4 @@ export {
   videoInferenceToolDefinition,
 } from './handler.js';
 
-export {
-  videoInferenceInputSchema,
-  videoInferenceOutputSchema,
-  type VideoInferenceInput,
-  type VideoInferenceOutput,
-} from './schema.js';
+export { videoInferenceInputSchema } from './schema.js';

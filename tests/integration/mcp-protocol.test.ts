@@ -29,7 +29,7 @@ vi.mock('../../src/shared/config.js', () => ({
   shouldLog: (): boolean => false,
 }));
 
-import { toolDefinitions, toolHandlers, toolNames } from '../../src/tools/index.js';
+import { toolDefinitions, toolHandlers } from '../../src/tools/index.js';
 import { RESOURCE_PROVIDERS } from '../../src/resources/index.js';
 import { PROMPT_TEMPLATES } from '../../src/prompts/index.js';
 
@@ -85,11 +85,8 @@ describe('Tool Registry', () => {
     expect(Object.keys(toolHandlers).length).toBe(EXPECTED_TOOL_NAMES.length);
   });
 
-  it('has all entries in toolNames', () => {
-    expect(toolNames.length).toBe(EXPECTED_TOOL_NAMES.length);
-  });
-
-  it('every expected tool name exists in toolNames', () => {
+  it('contains every expected tool handler', () => {
+    const toolNames = Object.keys(toolHandlers);
     for (const name of EXPECTED_TOOL_NAMES) {
       expect(toolNames).toContain(name);
     }

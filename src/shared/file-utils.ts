@@ -205,16 +205,6 @@ export async function readFileAsBase64(
   }
 }
 
-export async function readFileAsDataUri(
-  filePath: string,
-  allowedRoots?: readonly string[],
-): Promise<string> {
-  const base64 = await readFileAsBase64(filePath, allowedRoots);
-  const mimeType = getFileMimeType(filePath);
-
-  return `data:${mimeType};base64,${base64}`;
-}
-
 /** Extension-based only — never inspects file contents. */
 export function getFileMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
@@ -269,49 +259,6 @@ export async function validateFileSize(
       filePath,
       reason: error instanceof Error ? error.message : DEFAULT_ERROR_MESSAGE,
     });
-  }
-}
-
-/** Caller must pass a path already through resolveAndValidatePath. */
-export async function getFileSize(filePath: string): Promise<number> {
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- caller validates the path
-    const stats = await stat(filePath);
-    return stats.size;
-  } catch (error) {
-    throw new FileError(`Failed to get file size: ${filePath}`, {
-      filePath,
-      reason: error instanceof Error ? error.message : DEFAULT_ERROR_MESSAGE,
-    });
-  }
-}
-
-export async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await access(filePath, constants.R_OK);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-export async function isFile(filePath: string): Promise<boolean> {
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- caller validates the path
-    const stats = await stat(filePath);
-    return stats.isFile();
-  } catch {
-    return false;
-  }
-}
-
-export async function isDirectory(filePath: string): Promise<boolean> {
-  try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- caller validates the path
-    const stats = await stat(filePath);
-    return stats.isDirectory();
-  } catch {
-    return false;
   }
 }
 

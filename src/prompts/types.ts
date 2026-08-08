@@ -1,5 +1,5 @@
 /** Defaults for optional arguments belong in the description text. */
-export interface PromptArgument {
+interface PromptArgument {
   /** Key in the args record. */
   readonly name: string;
   readonly description: string;

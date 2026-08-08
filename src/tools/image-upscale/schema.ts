@@ -27,9 +27,8 @@ export const imageUpscaleInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-export type ImageUpscaleInput = z.infer<typeof imageUpscaleInputSchema>;
-
-export const imageUpscaleOutputSchema = z.object({
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
+const imageUpscaleOutputSchema = z.object({
   imageUUID: z.string(),
 
   imageURL: z.string().optional(),

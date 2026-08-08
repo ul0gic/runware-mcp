@@ -1,6 +1,6 @@
 {
   "name": "runware-mcp",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "MCP server for Runware AI media generation and model discovery",
   "repository": {
     "type": "git",
@@ -25,7 +25,6 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
     "knip": "knip",
-    "knip:production": "knip --production",
     "audit:security": "npm audit --audit-level=moderate",
     "audit:signatures": "npm audit signatures",
     "audit:outdated": "npm outdated --omit=dev --long",
