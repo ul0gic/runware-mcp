@@ -1,10 +1,3 @@
-/**
- * Polling module for async Runware API operations.
- *
- * Implements exponential backoff polling for long-running tasks
- * like video and audio generation.
- */
-
 import {
   config,
   DEFAULT_POLL_INTERVAL_MS,
@@ -16,90 +9,34 @@ import { type RequestOptions, type RunwareClient, getDefaultClient } from './cli
 
 import type { AsyncTaskResponse, ProgressReporter, TaskStatus, TaskUUID } from '../../shared/types.js';
 
-// ============================================================================
-// Polling Types
-// ============================================================================
-
-/**
- * Options for polling operations.
- */
 export interface PollOptions extends RequestOptions {
-  /**
-   * Maximum number of polling attempts.
-   * Defaults to config.POLL_MAX_ATTEMPTS.
-   */
+  /** Defaults to config.POLL_MAX_ATTEMPTS. */
   readonly maxAttempts?: number;
 
-  /**
-   * Initial polling interval in milliseconds.
-   * Defaults to DEFAULT_POLL_INTERVAL_MS (2000ms).
-   */
+  /** Defaults to DEFAULT_POLL_INTERVAL_MS. */
   readonly initialIntervalMs?: number;
 
-  /**
-   * Maximum polling interval in milliseconds.
-   * Caps exponential backoff to prevent excessive wait times.
-   * Defaults to MAX_POLL_INTERVAL_MS (10000ms).
-   */
+  /** Caps the exponential backoff; defaults to MAX_POLL_INTERVAL_MS. */
   readonly maxIntervalMs?: number;
 
-  /**
-   * Progress reporter for long-running operations.
-   * Called after each poll attempt with progress information.
-   */
+  /** Invoked after each poll attempt. */
   readonly progress?: ProgressReporter;
 
-  /**
-   * Runware client instance to use.
-   * Defaults to the shared client instance.
-   */
+  /** Defaults to the shared client instance. */
   readonly client?: RunwareClient;
 }
 
-/**
- * Result of a polling operation.
- */
 export interface PollResult<T extends AsyncTaskResponse> {
-  /**
-   * The final result from the API.
-   */
   readonly result: T;
-
-  /**
-   * Number of polling attempts made.
-   */
   readonly attempts: number;
-
-  /**
-   * Total elapsed time in milliseconds.
-   */
   readonly elapsedMs: number;
 }
 
-/**
- * Response from getResponse API call.
- */
 interface GetResponseResult extends AsyncTaskResponse {
   readonly status: TaskStatus;
 }
 
-// ============================================================================
-// Polling Implementation
-// ============================================================================
-
-/**
- * Polls for the result of an async task with exponential backoff.
- *
- * This function implements the recommended polling pattern for Runware's
- * async operations. It starts with a 2-second interval and uses exponential
- * backoff up to 10 seconds between polls.
- *
- * @param taskUUID - UUID of the task to poll for
- * @param options - Polling configuration options
- * @returns The completed task result
- * @throws PollTimeoutError if max attempts is reached
- * @throws GenerationFailedError if the task fails
- */
+/** Throws PollTimeoutError on max attempts or cancellation, GenerationFailedError when the task itself fails. */
 export async function pollForResult<T extends AsyncTaskResponse>(
   taskUUID: TaskUUID,
   options?: PollOptions,
@@ -116,7 +53,6 @@ export async function pollForResult<T extends AsyncTaskResponse>(
   let attempts = 0;
 
   while (attempts < maxAttempts) {
-    // Check for cancellation before each poll
     if (signal?.aborted === true) {
       throw new PollTimeoutError('Polling was cancelled', {
         taskUUID,
@@ -127,7 +63,6 @@ export async function pollForResult<T extends AsyncTaskResponse>(
 
     attempts += 1;
 
-    // Report progress if reporter is available
     if (progress !== undefined) {
       progress.report({
         progress: attempts,
@@ -136,7 +71,6 @@ export async function pollForResult<T extends AsyncTaskResponse>(
       });
     }
 
-    // Make the getResponse request
     const response = await client.requestSingle<GetResponseResult>(
       {
         taskType: 'getResponse',
@@ -145,7 +79,6 @@ export async function pollForResult<T extends AsyncTaskResponse>(
       { signal },
     );
 
-    // Check status
     if (response.status === 'success') {
       return {
         result: response as T,
@@ -162,14 +95,11 @@ export async function pollForResult<T extends AsyncTaskResponse>(
       });
     }
 
-    // Still processing - wait before next poll
     await sleep(currentInterval, signal);
 
-    // Exponential backoff: increase interval by 50% each time, up to max
     currentInterval = Math.min(currentInterval * 1.5, maxInterval);
   }
 
-  // Max attempts reached
   throw new PollTimeoutError(
     `Polling timed out after ${String(maxAttempts)} attempts`,
     {
@@ -180,12 +110,6 @@ export async function pollForResult<T extends AsyncTaskResponse>(
   );
 }
 
-/**
- * Sleeps for the specified duration, respecting abort signals.
- *
- * @param ms - Duration to sleep in milliseconds
- * @param signal - Optional abort signal for cancellation
- */
 async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
     const timeoutId = setTimeout(() => {
@@ -211,49 +135,23 @@ async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   });
 }
 
-// ============================================================================
-// Convenience Functions
-// ============================================================================
-
-/**
- * Submits a task and polls for its result.
- *
- * This is a convenience function that combines task submission with polling.
- * Use for operations that always require async processing (video, audio).
- *
- * @param client - Runware client instance
- * @param task - Task to submit (must include taskUUID)
- * @param options - Polling options
- * @returns The completed task result
- */
+/** For operations that always require async processing (video, audio). */
 export async function submitAndPoll<TResult extends AsyncTaskResponse>(
   client: RunwareClient,
   task: { taskType: string; taskUUID: string },
   options?: PollOptions,
 ): Promise<PollResult<TResult>> {
-  // Submit the task — use request() instead of requestSingle() because
-  // async tasks may return { data: [] } on submission, which requestSingle() rejects.
+  // request() not requestSingle(): async tasks may return { data: [] } on submission, which requestSingle() rejects.
   await client.request([task], {
     signal: options?.signal,
   });
 
-  // Poll for result
   return pollForResult<TResult>(task.taskUUID as TaskUUID, {
     ...options,
     client,
   });
 }
 
-/**
- * Calculates the estimated maximum wait time for polling.
- *
- * This is useful for informing users about expected wait times.
- *
- * @param maxAttempts - Maximum polling attempts
- * @param initialIntervalMs - Initial polling interval
- * @param maxIntervalMs - Maximum polling interval
- * @returns Estimated maximum wait time in milliseconds
- */
 export function estimateMaxPollTime(
   maxAttempts: number = config.POLL_MAX_ATTEMPTS,
   initialIntervalMs: number = DEFAULT_POLL_INTERVAL_MS,
@@ -270,12 +168,6 @@ export function estimateMaxPollTime(
   return totalTime;
 }
 
-/**
- * Formats a duration in milliseconds as a human-readable string.
- *
- * @param ms - Duration in milliseconds
- * @returns Human-readable duration string
- */
 export function formatDuration(ms: number): string {
   if (ms < 1000) {
     return `${String(ms)}ms`;

@@ -1,18 +1,5 @@
-/**
- * ControlNet Preprocessors Constants
- *
- * Complete catalog of all 12 ControlNet preprocessors supported by Runware API.
- * These preprocessors transform input images into guide images for controlled generation.
- */
-
-/**
- * Output type categories for preprocessors
- */
 export type ControlNetOutputType = 'edge' | 'depth' | 'pose' | 'segmentation' | 'other';
 
-/**
- * Valid preprocessor ID literals
- */
 export type ControlNetPreprocessorId =
   | 'canny'
   | 'depth'
@@ -27,39 +14,24 @@ export type ControlNetPreprocessorId =
   | 'scribble'
   | 'softedge';
 
-/**
- * ControlNet preprocessor definition
- */
 export interface ControlNetPreprocessor {
-  /** Preprocessor identifier */
   readonly id: ControlNetPreprocessorId;
-  /** API identifier (may differ from object key) */
+  /** May differ from the object key. */
   readonly apiId: string;
-  /** Human-readable display name */
   readonly name: string;
-  /** Description of what this preprocessor does */
   readonly description: string;
-  /** Best use cases for this preprocessor */
   readonly bestFor: readonly string[];
-  /** Type of output this preprocessor generates */
   readonly outputType: ControlNetOutputType;
-  /** Whether this preprocessor has configurable thresholds */
   readonly hasThresholds: boolean;
-  /** Whether this preprocessor supports pose-specific options */
   readonly supportsPoseOptions: boolean;
-  /** Recommended strength range when using with ControlNet */
   readonly recommendedStrength: {
     readonly min: number;
     readonly max: number;
     readonly default: number;
   };
-  /** Additional notes about usage */
   readonly notes?: string;
 }
 
-/**
- * All 12 ControlNet preprocessors
- */
 export const CONTROLNET_PREPROCESSORS: Record<ControlNetPreprocessorId, ControlNetPreprocessor> = {
   canny: {
     id: 'canny',
@@ -266,9 +238,6 @@ export const CONTROLNET_PREPROCESSORS: Record<ControlNetPreprocessorId, ControlN
   },
 };
 
-/**
- * Array of all preprocessor IDs for validation
- */
 export const CONTROLNET_PREPROCESSOR_IDS: readonly ControlNetPreprocessorId[] = [
   'canny',
   'depth',
@@ -284,9 +253,6 @@ export const CONTROLNET_PREPROCESSOR_IDS: readonly ControlNetPreprocessorId[] = 
   'softedge',
 ] as const;
 
-/**
- * Mapping from API identifiers to internal IDs
- */
 const API_ID_TO_INTERNAL_ID: Record<string, ControlNetPreprocessorId> = {
   canny: 'canny',
   depth: 'depth',
@@ -306,15 +272,11 @@ const API_ID_TO_INTERNAL_ID: Record<string, ControlNetPreprocessorId> = {
 const LINEART_ANIME_API_KEY = 'lineart_anime';
 API_ID_TO_INTERNAL_ID[LINEART_ANIME_API_KEY] = 'lineartAnime';
 
-/**
- * Get a preprocessor by its ID (internal or API format)
- */
+/** Accepts either the internal ID or the API identifier. */
 export function getPreprocessor(id: string): ControlNetPreprocessor | undefined {
-  // Check if it's a valid internal ID
   if (isValidPreprocessor(id)) {
     return CONTROLNET_PREPROCESSORS[id];
   }
-  // Check if it's an API ID that needs mapping
   const internalId = API_ID_TO_INTERNAL_ID[id];
   if (internalId !== undefined) {
     return CONTROLNET_PREPROCESSORS[internalId];
@@ -322,9 +284,6 @@ export function getPreprocessor(id: string): ControlNetPreprocessor | undefined 
   return undefined;
 }
 
-/**
- * Get all preprocessors that produce a specific output type
- */
 export function getPreprocessorsByOutputType(
   outputType: ControlNetOutputType,
 ): ControlNetPreprocessor[] {
@@ -333,41 +292,26 @@ export function getPreprocessorsByOutputType(
   );
 }
 
-/**
- * Check if a string is a valid preprocessor ID (internal format)
- */
 export function isValidPreprocessor(id: string): id is ControlNetPreprocessorId {
   return CONTROLNET_PREPROCESSOR_IDS.includes(id as ControlNetPreprocessorId);
 }
 
-/**
- * Check if a string is a valid API preprocessor ID
- */
 export function isValidApiPreprocessor(id: string): boolean {
   return id in API_ID_TO_INTERNAL_ID;
 }
 
-/**
- * Get preprocessors that support threshold configuration
- */
 export function getPreprocessorsWithThresholds(): ControlNetPreprocessor[] {
   return Object.values(CONTROLNET_PREPROCESSORS).filter(
     (p: ControlNetPreprocessor) => p.hasThresholds,
   );
 }
 
-/**
- * Get preprocessors that support pose-specific options
- */
 export function getPreprocessorsWithPoseOptions(): ControlNetPreprocessor[] {
   return Object.values(CONTROLNET_PREPROCESSORS).filter(
     (p: ControlNetPreprocessor) => p.supportsPoseOptions,
   );
 }
 
-/**
- * Get the recommended preprocessor for a specific use case
- */
 export function getRecommendedPreprocessor(
   useCase:
     | 'architecture'
@@ -391,23 +335,14 @@ export function getRecommendedPreprocessor(
   return result ?? 'canny';
 }
 
-/**
- * Get all preprocessors as an array
- */
 export function getAllPreprocessors(): ControlNetPreprocessor[] {
   return Object.values(CONTROLNET_PREPROCESSORS);
 }
 
-/**
- * Get all edge-type preprocessors
- */
 export function getEdgePreprocessors(): ControlNetPreprocessor[] {
   return getPreprocessorsByOutputType('edge');
 }
 
-/**
- * Get the default preprocessor (Canny - most versatile)
- */
 export function getDefaultPreprocessor(): ControlNetPreprocessor {
   return CONTROLNET_PREPROCESSORS.canny;
 }

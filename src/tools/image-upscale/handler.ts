@@ -1,10 +1,3 @@
-/**
- * Handler for the image upscale tool.
- *
- * Implements image upscaling using the Runware API.
- * Supports 2x and 4x upscale factors.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -13,18 +6,8 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 import type { imageUpscaleInputSchema, ImageUpscaleOutput } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for image upscale.
- */
 type ImageUpscaleInput = z.infer<typeof imageUpscaleInputSchema>;
 
-/**
- * Raw API response for image upscale.
- */
 interface ImageUpscaleApiResponse {
   readonly taskType: 'upscale';
   readonly taskUUID: string;
@@ -35,13 +18,6 @@ interface ImageUpscaleApiResponse {
   readonly cost?: number;
 }
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
-/**
- * Builds the API request from validated input.
- */
 function buildApiRequest(input: ImageUpscaleInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     inputImage: input.inputImage,
@@ -65,13 +41,6 @@ function buildApiRequest(input: ImageUpscaleInput): Record<string, unknown> {
   return request;
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
-/**
- * Processes API response into the output format.
- */
 function processResponse(response: ImageUpscaleApiResponse): ImageUpscaleOutput {
   return {
     imageUUID: response.imageUUID ?? response.taskUUID,
@@ -82,18 +51,6 @@ function processResponse(response: ImageUpscaleApiResponse): ImageUpscaleOutput 
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Upscales an image using the Runware API.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with upscaled image
- */
 export async function imageUpscale(
   input: ImageUpscaleInput,
   client?: RunwareClient,
@@ -102,23 +59,18 @@ export async function imageUpscale(
   const runwareClient = client ?? getDefaultClient();
 
   try {
-    // Rate limit check
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    // Build request
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('upscale', requestParams);
 
-    // Make API call
     const response = await runwareClient.requestSingle<ImageUpscaleApiResponse>(
       task,
       { signal: context?.signal },
     );
 
-    // Process response
     const output = processResponse(response);
 
-    // Return result
     const message = `Image upscaled ${String(input.upscaleFactor)}x successfully`;
     return successResult(message, output, output.cost);
   } catch (error) {
@@ -127,9 +79,6 @@ export async function imageUpscale(
   }
 }
 
-/**
- * MCP tool definition for image upscale.
- */
 export const imageUpscaleToolDefinition = {
   name: 'imageUpscale',
   description: 'Upscale an image to 2x or 4x resolution. Maximum input size is 1MP (1024x1024).',

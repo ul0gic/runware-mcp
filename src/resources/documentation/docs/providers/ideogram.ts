@@ -1,10 +1,3 @@
-/**
- * Ideogram Provider — Provider Documentation
- *
- * Image generation provider focused on creative styling
- * with extensive style presets, magic prompt, and color palettes.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const ideogramDoc: DocResource = {

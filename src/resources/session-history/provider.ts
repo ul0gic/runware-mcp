@@ -1,13 +1,3 @@
-/**
- * Resource provider for session history.
- *
- * Aggregates all generation events from the current session
- * into a single timeline resource. Includes images, videos,
- * and audio generations with cost tracking.
- *
- * URI: runware://session/history
- */
-
 import { getSessionAudio } from '../generated-audio/provider.js';
 import { getSessionImages } from '../generated-images/provider.js';
 import { getSessionVideos } from '../generated-videos/provider.js';
@@ -15,36 +5,13 @@ import { getSessionVideos } from '../generated-videos/provider.js';
 import type { SessionHistory, SessionHistoryEntry } from './types.js';
 import type { ResourceContent, ResourceEntry, ResourceProvider } from '../types.js';
 
-// ============================================================================
-// Session State
-// ============================================================================
-
-/**
- * Timestamp when the current server session started.
- */
 const SESSION_START = new Date();
 
-/**
- * Maximum number of entries in the session events store.
- * When exceeded, the oldest entries are evicted.
- */
 const MAX_SESSION_SIZE = 10_000;
 
-/**
- * Additional session events that do not fit into images/videos/audio
- * (e.g., upscale, background removal, captioning, etc.).
- */
+/** Holds only events with no dedicated store: upscale, caption, vectorize, and similar. */
 const SESSION_EVENTS = new Map<string, SessionHistoryEntry>();
 
-/**
- * Records an additional session event outside of image/video/audio generation.
- *
- * Used by tool handlers for operations like upscale, background removal,
- * caption, vectorize, controlnet preprocessing, etc.
- * Evicts the oldest entry if the store exceeds MAX_SESSION_SIZE.
- *
- * @param event - The session history entry to record
- */
 export function recordSessionEvent(event: SessionHistoryEntry): void {
   SESSION_EVENTS.set(event.id, event);
   if (SESSION_EVENTS.size > MAX_SESSION_SIZE) {
@@ -55,27 +22,14 @@ export function recordSessionEvent(event: SessionHistoryEntry): void {
   }
 }
 
-/**
- * Clears the session events store.
- * Primarily used for testing.
- */
+/** Test-support hook — production code never clears the store. */
 export function clearSessionEvents(): void {
   SESSION_EVENTS.clear();
 }
 
-// ============================================================================
-// Aggregation
-// ============================================================================
-
-/**
- * Collects all events from the current session across all stores.
- *
- * @returns Array of all session events, sorted by creation date (newest first)
- */
 function getAllSessionEvents(): readonly SessionHistoryEntry[] {
   const events: SessionHistoryEntry[] = [];
 
-  // Collect from image session store
   for (const image of getSessionImages()) {
     events.push({
       id: image.id,
@@ -88,7 +42,6 @@ function getAllSessionEvents(): readonly SessionHistoryEntry[] {
     });
   }
 
-  // Collect from video session store
   for (const video of getSessionVideos()) {
     events.push({
       id: video.id,
@@ -101,7 +54,6 @@ function getAllSessionEvents(): readonly SessionHistoryEntry[] {
     });
   }
 
-  // Collect from audio session store
   for (const audio of getSessionAudio()) {
     events.push({
       id: audio.id,
@@ -114,32 +66,17 @@ function getAllSessionEvents(): readonly SessionHistoryEntry[] {
     });
   }
 
-  // Collect additional session events
   for (const event of SESSION_EVENTS.values()) {
     events.push(event);
   }
 
-  // Sort by creation date, newest first
   return events.toSorted(
     (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
   );
 }
 
-// ============================================================================
-// Provider
-// ============================================================================
-
-/**
- * URI for the session history resource.
- */
 const HISTORY_URI = 'runware://session/history';
 
-/**
- * Resource provider for session history.
- *
- * Exposes a single resource containing the complete generation timeline
- * for the current session, including aggregated cost statistics.
- */
 export const sessionHistoryProvider: ResourceProvider = {
   uri: HISTORY_URI,
   name: 'Session History',

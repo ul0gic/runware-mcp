@@ -1,17 +1,4 @@
-/**
- * Product Photo prompt template.
- *
- * Generates professional e-commerce product photography prompts
- * with configurable style, background, lighting, and camera angle.
- * Instructs the LLM to use the imageInference tool with photorealistic
- * model settings optimized for commercial product photography.
- */
-
 import type { PromptMessage, PromptTemplate } from '../types.js';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PROMPT_NAME = 'product-photo';
 const PROMPT_DESCRIPTION = 'Generate professional e-commerce product photography with configurable style, background, lighting, and camera angle.';
@@ -25,10 +12,6 @@ const VALID_STYLES = ['studio', 'lifestyle', 'flat-lay', 'hero'] as const;
 const VALID_BACKGROUNDS = ['white', 'gradient', 'contextual', 'transparent'] as const;
 const VALID_LIGHTINGS = ['soft', 'dramatic', 'natural', 'rim'] as const;
 const VALID_ANGLES = ['front', '45-degree', 'top-down', 'eye-level'] as const;
-
-// ============================================================================
-// Style Descriptors
-// ============================================================================
 
 const STYLE_DESCRIPTIONS: Record<string, string> = {
   studio: 'Clean studio photography style with controlled environment',
@@ -51,13 +34,6 @@ const ANGLE_DESCRIPTIONS: Record<string, string> = {
   'eye-level': 'eye-level perspective',
 };
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Returns the background tip line based on the selected background type.
- */
 function getBackgroundTip(background: string): string {
   if (background === 'transparent') {
     return '- Use PNG output format to preserve transparency. Consider using imageBackgroundRemoval as a post-processing step if the model does not natively support transparent backgrounds.';
@@ -65,13 +41,6 @@ function getBackgroundTip(background: string): string {
   return `- The "${background}" background should be clean and distraction-free.`;
 }
 
-// ============================================================================
-// Template
-// ============================================================================
-
-/**
- * Product photo prompt template.
- */
 export const productPhoto: PromptTemplate = {
   name: PROMPT_NAME,
   description: PROMPT_DESCRIPTION,

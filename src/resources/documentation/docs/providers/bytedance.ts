@@ -1,10 +1,3 @@
-/**
- * ByteDance Provider — Provider Documentation
- *
- * Image generation provider specializing in sequential
- * narrative image generation and prompt optimization.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const bytedanceDoc: DocResource = {

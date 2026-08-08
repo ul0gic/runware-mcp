@@ -1,9 +1,3 @@
-/**
- * Handler for the image masking tool.
- *
- * Implements element detection and mask generation using Runware API.
- */
-
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -12,16 +6,8 @@ import { type ToolContext, type ToolResult, successResult, errorResult } from '.
 import type { imageMaskingInputSchema, ImageMaskingOutput } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
 type ImageMaskingInput = z.infer<typeof imageMaskingInputSchema>;
 
-/**
- * Detection bounding box from API response.
- * Property names match API format.
- */
 interface DetectionBox {
   // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   readonly x_min: number;
@@ -45,17 +31,9 @@ interface ImageMaskingApiResponse {
   readonly cost?: number;
 }
 
-/**
- * Default masking model identifier.
- */
 const DEFAULT_MODEL = 'runware:35@1';
 
-// ============================================================================
-// Request Building
-// ============================================================================
-
 function buildApiRequest(input: ImageMaskingInput): Record<string, unknown> {
-  // All fields with defaults are guaranteed to be defined after schema parsing
   return {
     inputImage: input.inputImage,
     model: input.model,
@@ -70,10 +48,6 @@ function buildApiRequest(input: ImageMaskingInput): Record<string, unknown> {
   };
 }
 
-// ============================================================================
-// Response Processing
-// ============================================================================
-
 function processResponse(response: ImageMaskingApiResponse): ImageMaskingOutput {
   return {
     ...(response.inputImageUUID !== undefined && { inputImageUUID: response.inputImageUUID }),
@@ -86,18 +60,6 @@ function processResponse(response: ImageMaskingApiResponse): ImageMaskingOutput 
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Detects elements and generates a mask for an image.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client
- * @param context - Optional tool context
- * @returns Tool result with mask and detections
- */
 export async function imageMasking(
   input: ImageMaskingInput,
   client?: RunwareClient,

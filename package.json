@@ -1,6 +1,6 @@
 {
   "name": "runware-mcp",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "MCP server for Runware AI media generation and model discovery",
   "repository": {
     "type": "git",
@@ -24,6 +24,7 @@
     "test:coverage": "vitest --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src --max-warnings 0",
+    "knip": "knip",
     "audit:security": "npm audit --audit-level=moderate",
     "audit:signatures": "npm audit signatures",
     "audit:outdated": "npm outdated --omit=dev --long",
@@ -44,8 +45,7 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
     "ajv": "8.20.0",
-    "zod": "^4.4.3",
-    "zod-to-json-schema": "^3.25.2"
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
@@ -58,6 +58,7 @@
     "eslint-plugin-sonarjs": "^4.2.0",
     "eslint-plugin-unicorn": "^64.0.0",
     "jiti": "^2.7.0",
+    "knip": "6.32.0",
     "tsup": "^8.5.1",
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",

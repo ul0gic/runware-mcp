@@ -1,13 +1,10 @@
 /* eslint-disable @typescript-eslint/naming-convention -- CFGScale is the Runware API parameter name */
 import type { DocResource } from '../../types.js';
 
-/** Example SDXL checkpoint model used in documentation examples. */
 const EXAMPLE_CHECKPOINT = 'civitai:101195@128078';
 
-/** Example ControlNet model used in documentation examples. */
 const EXAMPLE_CONTROLNET = 'civitai:272689@307084';
 
-/** Example LoRA model used in documentation examples. */
 const EXAMPLE_LORA = 'civitai:943001@1055701';
 
 export const combiningFeaturesDoc: DocResource = {

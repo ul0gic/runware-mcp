@@ -1,10 +1,3 @@
-/**
- * LoRA Style Adaptation — Feature Guide Documentation
- *
- * Covers Low-Rank Adaptation for style and subject emphasis
- * in image generation.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const loraGuideDoc: DocResource = {

@@ -1,10 +1,3 @@
-/**
- * Provider documentation barrel export.
- *
- * Re-exports all 9 provider documentation resources
- * as an array for bulk registration.
- */
-
 import { alibabaDoc } from './alibaba.js';
 import { bflDoc } from './bfl.js';
 import { briaDoc } from './bria.js';
@@ -17,9 +10,6 @@ import { veoDoc } from './veo.js';
 
 import type { DocResource } from '../../types.js';
 
-/**
- * All provider documentation resources.
- */
 export const providerDocs: readonly DocResource[] = [
   alibabaDoc,
   bflDoc,

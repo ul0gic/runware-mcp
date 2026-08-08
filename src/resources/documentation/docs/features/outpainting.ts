@@ -1,10 +1,3 @@
-/**
- * Outpainting — Feature Guide Documentation
- *
- * Covers extending images beyond their original borders
- * with configurable expansion and blending.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const outpaintingDoc: DocResource = {

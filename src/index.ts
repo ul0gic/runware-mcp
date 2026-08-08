@@ -1,20 +1,5 @@
 #!/usr/bin/env node
 
-/**
- * Runware MCP Server - Main Entry Point
- *
- * Wires together all tools, resources, and prompt templates into
- * a functioning MCP server using stdio transport.
- *
- * Startup sequence:
- * 1. Config validation (fail fast if RUNWARE_API_KEY is missing)
- * 2. Runware client creation
- * 3. MCP server creation with capability registration
- * 4. Handler registration (tools, resources, prompts)
- * 5. Graceful shutdown signal handlers
- * 6. Transport binding and server start
- */
-
 import { randomUUID } from 'node:crypto';
 import process from 'node:process';
 
@@ -45,46 +30,18 @@ import { stopAllWatchers } from './tools/watch-folder/index.js';
 
 import type { ToolResult } from './shared/types.js';
 
-// ============================================================================
-// Constants
-// ============================================================================
-
 const SERVER_NAME = 'runware-mcp';
 const SERVER_VERSION = '1.0.0';
 const LOG_PREFIX = `[${SERVER_NAME}]`;
 
-// ============================================================================
-// Logging (stderr only - stdout is for MCP protocol)
-// ============================================================================
-
-/**
- * Writes a log message to stderr.
- */
+// stderr only — stdout carries the MCP protocol stream.
 function log(message: string): void {
   process.stderr.write(`${LOG_PREFIX} ${message}\n`);
 }
 
-// ============================================================================
-// Tool Handler Dispatch
-// ============================================================================
-
-/**
- * Tool handler function type.
- *
- * All tool handlers share this common signature:
- * (input, client?, context?) => Promise<ToolResult>
- */
 type ToolHandlerFunction = (typeof toolHandlers)[keyof typeof toolHandlers];
 
-/**
- * Finds a tool handler by name.
- *
- * Iterates over toolHandlers entries to avoid object injection
- * from dynamic property access (security/detect-object-injection).
- *
- * @param name - The tool name to look up
- * @returns The handler function, or undefined if not found
- */
+// Linear scan rather than dynamic property access: avoids object injection (security/detect-object-injection).
 function findToolHandler(name: string): ToolHandlerFunction | undefined {
   for (const [key, handler] of Object.entries(toolHandlers)) {
     if (key === name) {
@@ -94,15 +51,7 @@ function findToolHandler(name: string): ToolHandlerFunction | undefined {
   return undefined;
 }
 
-/**
- * Finds a tool input schema by name.
- *
- * Iterates over toolInputSchemas entries to avoid object injection
- * from dynamic property access (security/detect-object-injection).
- *
- * @param name - The tool name to look up
- * @returns The Zod schema, or undefined if not found
- */
+// Linear scan rather than dynamic property access: avoids object injection (security/detect-object-injection).
 function findToolSchema(name: string): (typeof toolInputSchemas)[string] | undefined {
   for (const [key, schema] of Object.entries(toolInputSchemas)) {
     if (key === name) {
@@ -112,24 +61,10 @@ function findToolSchema(name: string): (typeof toolInputSchemas)[string] | undef
   return undefined;
 }
 
-/**
- * Result of tool input validation.
- */
 type ValidationResult =
   | { success: true; data: unknown }
   | { success: false; errors: string[] };
 
-/**
- * Validates and transforms raw MCP arguments through the tool's Zod schema.
- *
- * This ensures that Zod defaults are applied and input is validated before
- * reaching the handler. Without this step, optional fields with Zod defaults
- * would be undefined when the MCP client omits them.
- *
- * @param name - The tool name
- * @param args - Raw arguments from the MCP client
- * @returns Validation result with parsed data or error details
- */
 function validateToolInput(name: string, args: Record<string, unknown>): ValidationResult {
   const schema = findToolSchema(name);
   if (schema === undefined) {
@@ -141,25 +76,13 @@ function validateToolInput(name: string, args: Record<string, unknown>): Validat
     return { success: true, data: result.data };
   }
 
-  // Return structured validation errors instead of falling through with raw args
   const errors = result.error.issues.map(
     (issue) => `${issue.path.join('.')}: ${issue.message}`,
   );
   return { success: false, errors };
 }
 
-// ============================================================================
-// Prompt Template Lookup
-// ============================================================================
-
-/**
- * Finds a prompt template by name.
- *
- * Iterates over PROMPT_TEMPLATES entries to avoid object injection.
- *
- * @param name - The prompt template name to look up
- * @returns The template, or undefined if not found
- */
+// Linear scan rather than dynamic property access: avoids object injection.
 function findPromptByName(name: string): (typeof PROMPT_TEMPLATES)[string] | undefined {
   for (const [key, template] of Object.entries(PROMPT_TEMPLATES)) {
     if (key === name) {
@@ -169,24 +92,12 @@ function findPromptByName(name: string): (typeof PROMPT_TEMPLATES)[string] | und
   return undefined;
 }
 
-// ============================================================================
-// Main
-// ============================================================================
-
-/**
- * Main server entry point.
- *
- * Initializes all subsystems and starts the MCP server.
- */
 async function main(): Promise<void> {
-  // 1. Config is validated at import time by shared/config.ts
-  //    If RUNWARE_API_KEY is missing or invalid, the process has already exited.
+  // Config is validated at import time by shared/config.ts — a missing RUNWARE_API_KEY has already exited the process.
   log(`Starting server v${SERVER_VERSION}`);
 
-  // 2. Create Runware API client
   const client = createRunwareClient();
 
-  // 3. Create MCP server
   // eslint-disable-next-line sonarjs/deprecation, @typescript-eslint/no-deprecated -- Low-level API required for custom tool registry dispatch
   const server = new Server(
     { name: SERVER_NAME, version: SERVER_VERSION },
@@ -199,7 +110,6 @@ async function main(): Promise<void> {
     },
   );
 
-  // 4. Register tool handlers
   server.setRequestHandler(ListToolsRequestSchema, () =>
     Promise.resolve({ tools: toolDefinitions }),
   );
@@ -222,7 +132,6 @@ async function main(): Promise<void> {
       ? randomUUID()
       : String(progressToken);
 
-    // Register this operation for cancellation tracking
     createCancellableOperation(requestId);
     const progress = createProgressReporter(requestId, (params) => {
       void server.notification({
@@ -236,8 +145,7 @@ async function main(): Promise<void> {
     const effectiveSignal = extra.signal;
 
     try {
-      // Validate input through Zod schema to apply defaults and constraints.
-      // Raw MCP arguments bypass Zod defaults, so we parse here at the boundary.
+      // Raw MCP arguments bypass Zod defaults, so parsing at the boundary is what applies them.
       const validation = validateToolInput(name, args ?? {});
 
       if (!validation.success) {
@@ -275,7 +183,6 @@ async function main(): Promise<void> {
     }
   });
 
-  // 5. Register resource handlers
   server.setRequestHandler(ListResourcesRequestSchema, async () => {
     const resources = [];
     for (const provider of RESOURCE_PROVIDERS) {
@@ -300,7 +207,6 @@ async function main(): Promise<void> {
     };
   });
 
-  // 6. Register prompt handlers
   server.setRequestHandler(ListPromptsRequestSchema, () =>
     Promise.resolve({
       prompts: Object.entries(PROMPT_TEMPLATES).map(([name, template]) => ({
@@ -326,7 +232,6 @@ async function main(): Promise<void> {
     });
   });
 
-  // 7. Graceful shutdown handlers
   const shutdown = async (): Promise<void> => {
     log('Shutting down...');
     stopAllWatchers();
@@ -342,7 +247,6 @@ async function main(): Promise<void> {
     void shutdown();
   });
 
-  // 8. Start server
   const transport = new StdioServerTransport();
   await server.connect(transport);
 
@@ -351,10 +255,6 @@ async function main(): Promise<void> {
   log(`Resources: ${String(RESOURCE_PROVIDERS.length)} providers`);
   log(`Prompts: ${String(Object.keys(PROMPT_TEMPLATES).length)} templates`);
 }
-
-// ============================================================================
-// Bootstrap
-// ============================================================================
 
 await main().catch((error: unknown) => {
   const message = error instanceof Error ? error.message : String(error);

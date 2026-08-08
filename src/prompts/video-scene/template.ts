@@ -1,17 +1,4 @@
-/**
- * Video Scene prompt template.
- *
- * Composes detailed video scene descriptions for video generation.
- * Instructs the LLM to use the videoInference tool with appropriate
- * model selection, camera work, and atmospheric settings for
- * cinematic video production.
- */
-
 import type { PromptMessage, PromptTemplate } from '../types.js';
-
-// ============================================================================
-// Constants
-// ============================================================================
 
 const PROMPT_NAME = 'video-scene';
 const PROMPT_DESCRIPTION = 'Compose video scene descriptions for cinematic video generation with configurable mood, camera work, and time of day.';
@@ -23,10 +10,6 @@ const DEFAULT_TIME_OF_DAY = 'day';
 const VALID_MOODS = ['epic', 'calm', 'tense', 'joyful', 'mysterious'] as const;
 const VALID_CAMERA_WORK = ['static', 'pan', 'zoom-in', 'tracking', 'aerial'] as const;
 const VALID_TIMES = ['dawn', 'day', 'golden-hour', 'dusk', 'night'] as const;
-
-// ============================================================================
-// Descriptors
-// ============================================================================
 
 const MOOD_DESCRIPTORS: Record<string, string> = {
   epic: 'epic, grand scale, awe-inspiring, powerful atmosphere',
@@ -52,13 +35,6 @@ const TIME_DESCRIPTORS: Record<string, string> = {
   night: 'nighttime, moonlight and artificial light sources, deep shadows and highlights',
 };
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-/**
- * Returns camera work considerations based on the selected camera type.
- */
 function getCameraConsideration(cameraWork: string): string {
   if (cameraWork === 'static') {
     return '- Static shot: The model will keep the camera position fixed. Focus on subject motion only.';
@@ -69,13 +45,6 @@ function getCameraConsideration(cameraWork: string): string {
   return `- ${cameraWork} shot: Describe the camera movement explicitly in the prompt. Models with camera control (KlingAI, PixVerse) produce better results for complex movements.`;
 }
 
-// ============================================================================
-// Template
-// ============================================================================
-
-/**
- * Video scene prompt template.
- */
 export const videoScene: PromptTemplate = {
   name: PROMPT_NAME,
   description: PROMPT_DESCRIPTION,

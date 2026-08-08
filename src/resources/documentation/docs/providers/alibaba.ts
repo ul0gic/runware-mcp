@@ -1,10 +1,3 @@
-/**
- * Alibaba / Wan Provider — Provider Documentation
- *
- * Video generation provider specializing in prompt extension,
- * shot composition, and native audio.
- */
-
 import type { DocResource } from '../../types.js';
 
 export const alibabaDoc: DocResource = {

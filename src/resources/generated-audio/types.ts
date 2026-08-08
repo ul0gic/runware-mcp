@@ -1,17 +1,5 @@
-/**
- * Types for the generated audio resource.
- *
- * Defines the shape of audio entries stored in the in-memory session store.
- */
+type AudioType = 'music' | 'sfx' | 'speech' | 'ambient';
 
-/**
- * Valid audio generation types.
- */
-export type AudioType = 'music' | 'sfx' | 'speech' | 'ambient';
-
-/**
- * Represents a single generated audio clip in the session store.
- */
 export interface GeneratedAudioEntry {
   readonly id: string;
   readonly audioUUID: string;

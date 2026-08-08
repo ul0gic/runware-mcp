@@ -1,11 +1,4 @@
-/**
- * Handler for the watch folder tool.
- *
- * Manages folder watchers that auto-process new image files.
- * Watchers use fs.watch with debouncing to handle rapid file changes.
- *
- * NOTE: Watchers are in-memory and do not persist across server restarts.
- */
+// Watchers are in-memory and do not persist across server restarts.
 
 import { watch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
@@ -42,18 +35,8 @@ import type {
 } from './schema.js';
 import type { z } from 'zod';
 
-// ============================================================================
-// Types
-// ============================================================================
-
-/**
- * Input type for watch folder.
- */
 type WatchFolderInputType = z.infer<typeof watchFolderInputSchema>;
 
-/**
- * Internal watcher state.
- */
 interface WatcherState {
   readonly id: string;
   readonly folderPath: string;
@@ -67,31 +50,17 @@ interface WatcherState {
   readonly createdAt: Date;
 }
 
-// ============================================================================
-// In-Memory Watcher Registry
-// ============================================================================
-
 /**
  * Map of active watchers by ID.
  * Watchers are in-memory only and do not persist across restarts.
  */
 const activeWatchers = new Map<string, WatcherState>();
 
-// ============================================================================
-// File Processing
-// ============================================================================
-
-/**
- * Checks if a filename is an image file.
- */
 function isImageFile(filename: string): boolean {
   const ext = path.extname(filename).toLowerCase();
   return IMAGE_EXTENSIONS.has(ext);
 }
 
-/**
- * Gets the file extension for MIME type detection.
- */
 function getExtension(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase().slice(1);
   switch (ext) {
@@ -117,22 +86,13 @@ function getExtension(filePath: string): string {
   }
 }
 
-// ============================================================================
-// Operation Parameters
-// ============================================================================
-
-/**
- * Operation parameters interface for type-safe access.
- */
 interface WatchOperationParams {
   readonly model?: string;
   readonly upscaleFactor?: 2 | 4;
   readonly preprocessor?: string;
 }
 
-/**
- * Safely extracts a value from params by iterating over entries.
- */
+/** Iterates entries rather than indexing to avoid dynamic object access. */
 function getParamValue(params: Record<string, unknown>, targetKey: string): unknown {
   for (const [key, value] of Object.entries(params)) {
     if (key === targetKey) {
@@ -142,17 +102,11 @@ function getParamValue(params: Record<string, unknown>, targetKey: string): unkn
   return undefined;
 }
 
-/**
- * Gets a string value from params safely.
- */
 function getStringParam(params: Record<string, unknown>, key: string): string | undefined {
   const value = getParamValue(params, key);
   return typeof value === 'string' ? value : undefined;
 }
 
-/**
- * Gets the upscale factor from params safely.
- */
 function getUpscaleFactorParam(params: Record<string, unknown>): 2 | 4 | undefined {
   const value = getParamValue(params, 'upscaleFactor');
   if (value === 2 || value === 4) {
@@ -161,9 +115,6 @@ function getUpscaleFactorParam(params: Record<string, unknown>): 2 | 4 | undefin
   return undefined;
 }
 
-/**
- * Safely extracts operation params from unknown record.
- */
 function extractWatchOperationParams(params: Record<string, unknown>): WatchOperationParams {
   return {
     model: getStringParam(params, 'model'),
@@ -172,9 +123,6 @@ function extractWatchOperationParams(params: Record<string, unknown>): WatchOper
   };
 }
 
-/**
- * Processes a single file using the configured operation.
- */
 async function processFile(
   filePath: string,
   operation: WatchOperation,
@@ -182,14 +130,11 @@ async function processFile(
   client: RunwareClient,
 ): Promise<boolean> {
   try {
-    // Read and encode the image
     const imageBase64 = await readFileAsBase64(filePath);
     const imageData = `data:image/${getExtension(filePath)};base64,${imageBase64}`;
 
-    // Extract params safely
     const params = extractWatchOperationParams(operationParams);
 
-    // Execute the operation
     let result: ToolResult;
 
     switch (operation) {
@@ -279,9 +224,6 @@ async function processFile(
   }
 }
 
-/**
- * Processes a file asynchronously and updates state.
- */
 async function processFileAndUpdateState(
   filePath: string,
   state: WatcherState,
@@ -315,9 +257,6 @@ async function processFileAndUpdateState(
   }
 }
 
-/**
- * Creates a file change handler for a watcher.
- */
 function createFileHandler(
   state: WatcherState,
   client: RunwareClient,
@@ -325,7 +264,6 @@ function createFileHandler(
   // Track files being processed to avoid duplicates
   const processingFiles = new Set<string>();
 
-  // Create debounced handler that wraps the async processing
   const debouncedHandler = debounce(
     (filePath: string): void => {
       // Fire and forget the async processing
@@ -337,7 +275,7 @@ function createFileHandler(
   );
 
   return (eventType: string, filename: string | null): void => {
-    // Only process 'rename' events (new files) with valid image filenames
+    // fs.watch surfaces newly created files as 'rename' events.
     if (eventType === 'rename' && filename !== null && isImageFile(filename)) {
       const filePath = path.join(state.folderPath, filename);
       debouncedHandler(filePath);
@@ -345,13 +283,6 @@ function createFileHandler(
   };
 }
 
-// ============================================================================
-// Action Handlers
-// ============================================================================
-
-/**
- * Starts watching a folder.
- */
 async function handleStart(
   input: WatchFolderInputType,
   client: RunwareClient,
@@ -367,10 +298,8 @@ async function handleStart(
     };
   }
 
-  // Validate folder path
   const folderPath = await validateFolder(inputFolderPath);
 
-  // Check if already watching this folder
   for (const [id, watcher] of activeWatchers.entries()) {
     if (watcher.folderPath === folderPath) {
       return {
@@ -381,15 +310,12 @@ async function handleStart(
     }
   }
 
-  // Validate output folder if specified
   if (input.outputFolder !== undefined) {
     await validateFolder(input.outputFolder);
   }
 
-  // Generate watcher ID
   const watcherId = generateTaskUUID();
 
-  // Create watcher state
   const state: WatcherState = {
     id: watcherId,
     folderPath,
@@ -403,7 +329,6 @@ async function handleStart(
     createdAt: new Date(),
   };
 
-  // Create the file system watcher
   // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path validated above
   const fsWatcher = watch(
     folderPath,
@@ -411,10 +336,8 @@ async function handleStart(
     createFileHandler(state, client),
   );
 
-  // Update state with actual watcher
   (state as { watcher: FSWatcher }).watcher = fsWatcher;
 
-  // Register watcher
   activeWatchers.set(watcherId, state);
 
   return {
@@ -424,9 +347,6 @@ async function handleStart(
   };
 }
 
-/**
- * Stops watching a folder.
- */
 function handleStop(input: WatchFolderInputType): WatchFolderOutput {
   const inputWatcherId = input.watcherId;
 
@@ -448,10 +368,7 @@ function handleStop(input: WatchFolderInputType): WatchFolderOutput {
     };
   }
 
-  // Close the file system watcher
   state.watcher.close();
-
-  // Remove from registry
   activeWatchers.delete(watcherId);
 
   return {
@@ -461,9 +378,6 @@ function handleStop(input: WatchFolderInputType): WatchFolderOutput {
   };
 }
 
-/**
- * Lists all active watchers.
- */
 function handleList(): WatchFolderOutput {
   const watchers: WatcherInfo[] = [];
 
@@ -488,13 +402,9 @@ function handleList(): WatchFolderOutput {
   };
 }
 
-/**
- * Gets status of a specific watcher.
- */
 function handleStatus(input: WatchFolderInputType): WatchFolderOutput {
   const watcherId = input.watcherId;
 
-  // Check in-memory first
   if (watcherId !== undefined) {
     const state = activeWatchers.get(watcherId);
     if (state !== undefined) {
@@ -523,7 +433,6 @@ function handleStatus(input: WatchFolderInputType): WatchFolderOutput {
     };
   }
 
-  // Return overall status if no ID specified
   const activeCount = activeWatchers.size;
   return {
     action: 'status',
@@ -531,18 +440,6 @@ function handleStatus(input: WatchFolderInputType): WatchFolderOutput {
   };
 }
 
-// ============================================================================
-// Main Handler
-// ============================================================================
-
-/**
- * Manages folder watchers for auto-processing new files.
- *
- * @param input - Validated input parameters
- * @param client - Optional Runware client (uses default if not provided)
- * @param context - Optional tool context for progress and cancellation
- * @returns Tool result with watcher status
- */
 export async function watchFolder(
   input: WatchFolderInputType,
   client?: RunwareClient,
@@ -593,16 +490,6 @@ export function stopAllWatchers(): void {
   activeWatchers.clear();
 }
 
-/**
- * Gets the count of active watchers.
- */
-export function getActiveWatcherCount(): number {
-  return activeWatchers.size;
-}
-
-/**
- * MCP tool definition for watch folder.
- */
 export const watchFolderToolDefinition = {
   name: 'watchFolder',
   description: 'Manage folder watchers that auto-process new image files. Actions: start (begin watching), stop (end watching), list (show all watchers), status (check a watcher).',
