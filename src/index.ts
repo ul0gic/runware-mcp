@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import { randomUUID } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import process from 'node:process';
 
 // Using the low-level Server API intentionally for custom tool dispatch.
@@ -16,6 +17,7 @@ import {
   ListToolsRequestSchema,
   ReadResourceRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
+import { z } from 'zod';
 
 import { createRunwareClient } from './integrations/runware/client.js';
 import { PROMPT_TEMPLATES } from './prompts/index.js';
@@ -31,7 +33,18 @@ import { stopAllWatchers } from './tools/watch-folder/index.js';
 import type { ToolResult } from './shared/types.js';
 
 const SERVER_NAME = 'runware-mcp';
-const SERVER_VERSION = '1.0.0';
+
+/** Resolves from src/ in development and dist/ once built; both sit one level under the package root. */
+const SERVER_VERSION = z
+  .object({ version: z.string() })
+  .parse(
+    JSON.parse(
+      // eslint-disable-next-line security/detect-non-literal-fs-filename -- path is derived from import.meta.url, not input
+      readFileSync(new URL('../package.json', import.meta.url), 'utf8'),
+    ),
+  )
+  .version;
+
 const LOG_PREFIX = `[${SERVER_NAME}]`;
 
 // stderr only — stdout carries the MCP protocol stream.
