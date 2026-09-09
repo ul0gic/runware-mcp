@@ -1,6 +1,6 @@
 {
   "name": "runware-mcp",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "MCP server for Runware AI media generation and model discovery",
   "repository": {
     "type": "git",
@@ -51,7 +51,7 @@
     "@eslint/js": "^10.0.1",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@types/node": "^26.1.1",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "5.0.0",
     "eslint": "^10.7.0",
     "eslint-plugin-import-x": "^4.17.1",
     "eslint-plugin-security": "^4.0.1",
@@ -63,7 +63,7 @@
     "tsx": "^4.23.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.65.0",
-    "vitest": "^4.1.10"
+    "vitest": "5.0.0"
   },
   "overrides": {
     "@hono/node-server": "2.0.11"
