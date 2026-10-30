@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.4] - 2026-10-30
+
+### Security
+
+- Patched the open advisories: `proxy-addr` (IPv4-mapped IPv6 trust-subnet
+  spoofing, critical), `@modelcontextprotocol/sdk` (memory exhaustion from a
+  single request, bearer tokens accepted for another audience, cross-origin
+  redirects re-sending credentials, experimental tasks not bound to their
+  session, OAuth credential leak), `vite`/`launch-editor`, `@vitest/mocker`,
+  `source-map-js`, `zod`, `hono`, `@hono/node-server`, `ip-address`,
+  `fast-uri`, `qs`, and `smol-toml`. `npm audit` reports zero findings.
+
+### Changed
+
+- Every dependency moved to its latest release. TypeScript is held at 6.x
+  because `typescript-eslint` does not yet support TypeScript 7.
+- Compile target raised from ES2024 to ESNext; `types: ["node"]` is now set
+  explicitly because TypeScript 6 no longer includes `@types/*` implicitly.
+- `eslint-plugin-unicorn` 79 introduced new recommended rules. The code-quality
+  rules (early returns, `Object.hasOwn`, `Iterator#toArray`, `.includes` over
+  repeated comparisons, await over `.catch` chains) are applied across `src`.
+  Naming and comment-layout rules are disabled because they conflict with the
+  project's one-line doc-comment convention.
+
 ## [2.0.3] - 2026-09-09
 
 ### Security
@@ -276,6 +300,7 @@ Complete TypeScript rewrite of the Runware MCP server with 100% API coverage.
 
 - Python implementation replaced entirely by this TypeScript rewrite
 
+[2.0.4]: https://github.com/ul0gic/runware-mcp/releases/tag/v2.0.4
 [1.2.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.2.0
 [1.1.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.1.0
 [1.0.0]: https://github.com/ul0gic/runware-mcp/releases/tag/v1.0.0
