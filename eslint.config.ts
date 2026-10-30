@@ -22,12 +22,12 @@ export default tseslint.config(
   // Plugin configurations
   security.configs.recommended,
   sonarjs.configs.recommended,
-  unicorn.configs['flat/recommended'],
+  unicorn.configs.recommended,
   // Main configuration for TypeScript files
   {
     files: ['src/**/*.ts'],
     languageOptions: {
-      ecmaVersion: 2024,
+      ecmaVersion: 'latest',
       sourceType: 'module',
       parserOptions: {
         projectService: true,
@@ -210,6 +210,18 @@ export default tseslint.config(
 
       // Allow process.exit for CLI tools
       'unicorn/no-process-exit': 'off',
+
+      // Naming and comment-layout rules; the project comments rule keeps doc comments to one line
+      'unicorn/name-replacements': 'off',
+      'unicorn/single-line-block-comment-style': 'off',
+      'unicorn/no-asterisk-prefix-in-documentation-comments': 'off',
+      'unicorn/consistent-boolean-name': 'off',
+      'unicorn/no-non-function-verb-prefix': 'off',
+      'unicorn/max-nested-calls': 'off',
+      'unicorn/consistent-class-member-order': 'off',
+
+      // Lazily-initialised module singletons assign to a top-level binding by design
+      'unicorn/no-top-level-assignment-in-function': 'off',
 
       // ============================================
       // Import Rules (eslint-plugin-import-x)

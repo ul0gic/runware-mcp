@@ -84,11 +84,11 @@ function getDefaultAllowedRoots(): readonly string[] {
 /** Purely lexical check — does not resolve symlinks; use resolveAndValidatePath before touching the filesystem. */
 export function isPathSafe(filePath: string, allowedRoots?: readonly string[]): boolean {
   try {
-    const roots = allowedRoots ?? getDefaultAllowedRoots();
-
     if (!path.isAbsolute(filePath)) {
       return false;
     }
+
+    const roots = allowedRoots ?? getDefaultAllowedRoots();
 
     const normalizedPath = path.normalize(filePath);
 

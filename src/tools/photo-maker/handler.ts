@@ -24,11 +24,7 @@ const TRIGGER_WORD = 'img';
 function ensureTriggerWord(prompt: string): string {
   const lowerPrompt = prompt.toLowerCase();
 
-  if (lowerPrompt.includes(TRIGGER_WORD)) {
-    return prompt;
-  }
-
-  return `${TRIGGER_WORD} ${prompt}`;
+  return lowerPrompt.includes(TRIGGER_WORD) ? prompt : `${TRIGGER_WORD} ${prompt}`;
 }
 
 function buildApiRequest(input: PhotoMakerInput): Record<string, unknown> {

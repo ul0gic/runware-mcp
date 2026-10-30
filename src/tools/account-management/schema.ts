@@ -38,17 +38,18 @@ export const accountManagementInputSchema = z.object({
       message: 'endDate must be on or after startDate',
     });
   }
-  if (input.startDate !== undefined && input.endDate !== undefined) {
-    const start = Date.parse(`${input.startDate}T00:00:00Z`);
-    const end = Date.parse(`${input.endDate}T00:00:00Z`);
-    const maximumRangeMs = 30 * 24 * 60 * 60 * 1000;
-    if (end - start > maximumRangeMs) {
-      context.addIssue({
-        code: 'custom',
-        path: ['endDate'],
-        message: 'usage date ranges cannot exceed 30 days',
-      });
-    }
+  if (input.startDate === undefined || input.endDate === undefined) {
+    return;
+  }
+  const start = Date.parse(`${input.startDate}T00:00:00Z`);
+  const end = Date.parse(`${input.endDate}T00:00:00Z`);
+  const maximumRangeMs = 30 * 24 * 60 * 60 * 1000;
+  if (end - start > maximumRangeMs) {
+    context.addIssue({
+      code: 'custom',
+      path: ['endDate'],
+      message: 'usage date ranges cannot exceed 30 days',
+    });
   }
 });
 

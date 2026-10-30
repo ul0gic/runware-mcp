@@ -44,11 +44,11 @@ export async function promptEnhance(
     const versionsToGenerate = input.promptVersions;
 
     for (let i = 0; i < versionsToGenerate; i++) {
-      const task = createTaskRequest('promptEnhance', requestParams);
-
       if (context?.signal?.aborted === true) {
         throw new Error('Operation cancelled');
       }
+
+      const task = createTaskRequest('promptEnhance', requestParams);
 
       const response = await runwareClient.requestSingle<PromptEnhanceApiResponse>(task, {
         signal: context?.signal,

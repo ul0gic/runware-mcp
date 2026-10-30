@@ -47,12 +47,16 @@ interface OperationParams {
   readonly includeHandsAndFaceOpenPose?: boolean;
 }
 
+function isOneOf<const T extends readonly unknown[]>(value: unknown, options: T): value is T[number] {
+  return options.includes(value);
+}
+
 function extractOperationParams(params: Record<string, unknown>): OperationParams {
   return {
     model: typeof params.model === 'string' ? params.model : undefined,
-    upscaleFactor: params.upscaleFactor === 2 || params.upscaleFactor === 4 ? params.upscaleFactor : undefined,
-    outputType: params.outputType === 'URL' || params.outputType === 'base64Data' || params.outputType === 'dataURI' ? params.outputType : undefined,
-    outputFormat: params.outputFormat === 'JPG' || params.outputFormat === 'PNG' || params.outputFormat === 'WEBP' ? params.outputFormat : undefined,
+    upscaleFactor: isOneOf(params.upscaleFactor, [2, 4] as const) ? params.upscaleFactor : undefined,
+    outputType: isOneOf(params.outputType, ['URL', 'base64Data', 'dataURI'] as const) ? params.outputType : undefined,
+    outputFormat: isOneOf(params.outputFormat, ['JPG', 'PNG', 'WEBP'] as const) ? params.outputFormat : undefined,
     prompt: typeof params.prompt === 'string' ? params.prompt : undefined,
     preprocessor: typeof params.preprocessor === 'string' ? params.preprocessor : undefined,
     width: typeof params.width === 'number' ? params.width : undefined,

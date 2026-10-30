@@ -132,14 +132,10 @@ export async function getImagesInFolder(
   folderPath: string,
   recursive = false,
 ): Promise<string[]> {
-  const images: string[] = [];
-
-  for await (const file of walkFolder(folderPath, {
+  const images: string[] = await Array.fromAsync(walkFolder(folderPath, {
     extensions: IMAGE_EXTENSIONS,
     recursive,
-  })) {
-    images.push(file);
-  }
+  }));
 
   return images;
 }

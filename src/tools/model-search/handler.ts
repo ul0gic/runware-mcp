@@ -161,7 +161,7 @@ function processResponse(
   const limit = input.limit;
   const offset = input.offset;
 
-  const firstResult = results.length > 0 ? results[0] : undefined;
+  const firstResult = results[0];
 
   const nestedModels = firstResult?.results;
   if (nestedModels !== undefined) {

@@ -112,26 +112,23 @@ export async function pollForResult<T extends AsyncTaskResponse>(
 
 async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise((resolve, reject) => {
+    if (signal?.aborted === true) {
+      reject(new Error('Sleep was aborted'));
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       resolve();
     }, ms);
 
-    if (signal !== undefined) {
-      if (signal.aborted) {
+    signal?.addEventListener(
+      'abort',
+      () => {
         clearTimeout(timeoutId);
         reject(new Error('Sleep was aborted'));
-        return;
-      }
-
-      signal.addEventListener(
-        'abort',
-        () => {
-          clearTimeout(timeoutId);
-          reject(new Error('Sleep was aborted'));
-        },
-        { once: true },
-      );
-    }
+      },
+      { once: true },
+    );
   });
 }
 
@@ -182,9 +179,5 @@ export function formatDuration(ms: number): string {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
 
-  if (remainingSeconds === 0) {
-    return `${String(minutes)}m`;
-  }
-
-  return `${String(minutes)}m ${String(remainingSeconds)}s`;
+  return remainingSeconds === 0 ? `${String(minutes)}m` : `${String(minutes)}m ${String(remainingSeconds)}s`;
 }

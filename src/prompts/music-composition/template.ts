@@ -67,18 +67,14 @@ function getPurposeTip(purpose: string): string {
 }
 
 function getInstrumentTip(instruments: string | undefined): string {
-  if (instruments !== undefined && instruments.length > 0) {
-    return `- The specified instruments (${instruments}) should be prominently featured in the composition.`;
-  }
-  return '- Consider specifying instruments for more targeted results (e.g., "piano, strings, synth").';
+  return instruments !== undefined && instruments.length > 0
+    ? `- The specified instruments (${instruments}) should be prominently featured in the composition.`
+    : '- Consider specifying instruments for more targeted results (e.g., "piano, strings, synth").';
 }
 
 function parseSafeDuration(duration: string): number {
-  const parsed = Number.parseInt(duration, 10);
-  if (Number.isNaN(parsed) || parsed < 10) {
-    return 30;
-  }
-  return Math.min(parsed, 300);
+  const parsed = Math.trunc(Number(duration));
+  return Number.isNaN(parsed) || parsed < 10 ? 30 : Math.min(parsed, 300);
 }
 
 export const musicComposition: PromptTemplate = {

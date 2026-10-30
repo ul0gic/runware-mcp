@@ -14,11 +14,12 @@ const SESSION_EVENTS = new Map<string, SessionHistoryEntry>();
 
 export function recordSessionEvent(event: SessionHistoryEntry): void {
   SESSION_EVENTS.set(event.id, event);
-  if (SESSION_EVENTS.size > MAX_SESSION_SIZE) {
-    const oldestKey = SESSION_EVENTS.keys().next().value;
-    if (oldestKey !== undefined) {
-      SESSION_EVENTS.delete(oldestKey);
-    }
+  if (SESSION_EVENTS.size <= MAX_SESSION_SIZE) {
+    return;
+  }
+  const oldestKey = SESSION_EVENTS.keys().next().value;
+  if (oldestKey !== undefined) {
+    SESSION_EVENTS.delete(oldestKey);
   }
 }
 
@@ -28,19 +29,15 @@ export function clearSessionEvents(): void {
 }
 
 function getAllSessionEvents(): readonly SessionHistoryEntry[] {
-  const events: SessionHistoryEntry[] = [];
-
-  for (const image of getSessionImages()) {
-    events.push({
-      id: image.id,
-      taskType: 'imageInference',
-      prompt: image.prompt,
-      model: image.model,
-      outputURL: image.imageURL,
-      cost: image.cost,
-      createdAt: image.createdAt,
-    });
-  }
+  const events: SessionHistoryEntry[] = Array.from(getSessionImages(), image => ({
+    id: image.id,
+    taskType: 'imageInference',
+    prompt: image.prompt,
+    model: image.model,
+    outputURL: image.imageURL,
+    cost: image.cost,
+    createdAt: image.createdAt,
+  }));
 
   for (const video of getSessionVideos()) {
     events.push({

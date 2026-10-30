@@ -43,10 +43,9 @@ function getModelRecommendation(style: string): string {
 }
 
 function getStepTip(style: string): string {
-  if (style === 'photorealistic') {
-    return '- For photorealistic avatars, higher step counts (30-40) produce more detailed results.';
-  }
-  return `- For "${style}" style, lower step counts (20-25) may be sufficient.`;
+  return style === 'photorealistic'
+    ? '- For photorealistic avatars, higher step counts (30-40) produce more detailed results.'
+    : `- For "${style}" style, lower step counts (20-25) may be sufficient.`;
 }
 
 export const avatarGenerator: PromptTemplate = {

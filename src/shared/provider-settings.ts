@@ -192,9 +192,5 @@ export function validateProviderSettingsMatch(
     return value !== undefined;
   });
 
-  if (specifiedProviders.length === 0) {
-    return true;
-  }
-
-  return specifiedProviders.includes(detectedProvider);
+  return specifiedProviders.length === 0 || specifiedProviders.includes(detectedProvider);
 }

@@ -9,16 +9,17 @@ const SESSION_AUDIO = new Map<string, GeneratedAudioEntry>();
 
 export function registerAudio(audio: GeneratedAudioEntry): void {
   SESSION_AUDIO.set(audio.id, audio);
-  if (SESSION_AUDIO.size > MAX_SESSION_SIZE) {
-    const oldestKey = SESSION_AUDIO.keys().next().value;
-    if (oldestKey !== undefined) {
-      SESSION_AUDIO.delete(oldestKey);
-    }
+  if (SESSION_AUDIO.size <= MAX_SESSION_SIZE) {
+    return;
+  }
+  const oldestKey = SESSION_AUDIO.keys().next().value;
+  if (oldestKey !== undefined) {
+    SESSION_AUDIO.delete(oldestKey);
   }
 }
 
 export function getSessionAudio(): readonly GeneratedAudioEntry[] {
-  return [...SESSION_AUDIO.values()];
+  return SESSION_AUDIO.values().toArray();
 }
 
 /** Test-support hook — production code never clears the store. */
@@ -37,18 +38,14 @@ export const generatedAudioProvider: ResourceProvider = {
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {
-    const entries: ResourceEntry[] = [];
-
-    for (const audio of SESSION_AUDIO.values()) {
-      entries.push({
-        uri: `${URI_PREFIX}${audio.id}`,
-        name: audio.prompt.length > 0
-          ? truncate(audio.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-          : `Audio ${audio.id}`,
-        description: `${String(audio.duration)}s ${audio.audioType} via ${audio.model}`,
-        mimeType: 'application/json',
-      });
-    }
+    const entries: ResourceEntry[] = Array.from(SESSION_AUDIO.values(), audio => ({
+      uri: `${URI_PREFIX}${audio.id}`,
+      name: audio.prompt.length > 0
+        ? truncate(audio.prompt, MAX_PROMPT_DISPLAY_LENGTH)
+        : `Audio ${audio.id}`,
+      description: `${String(audio.duration)}s ${audio.audioType} via ${audio.model}`,
+      mimeType: 'application/json',
+    }));
 
     return Promise.resolve(entries);
   },

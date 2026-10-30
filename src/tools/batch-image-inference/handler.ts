@@ -179,11 +179,7 @@ export async function batchImageInference(
       ? `Generated ${String(successful)}/${String(prompts.length)} images with ${String(failed)} failures`
       : `Successfully generated ${String(successful)} images`;
 
-    if (allFailed) {
-      return errorResult(statusMessage, output);
-    }
-
-    return successResult(statusMessage, output, totalCost);
+    return allFailed ? errorResult(statusMessage, output) : successResult(statusMessage, output, totalCost);
   } catch (error) {
     const mcpError = wrapError(error);
     return errorResult(mcpError.message, mcpError.data);

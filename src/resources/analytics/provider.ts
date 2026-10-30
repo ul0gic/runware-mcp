@@ -91,16 +91,13 @@ function incrementModelCount(map: Map<string, number>, model: string): void {
 /** Model IDs follow the AIR format `provider:model@version`. */
 function extractProvider(modelId: string): string {
   const colonIndex = modelId.indexOf(':');
-  if (colonIndex === -1) {
-    return 'unknown';
-  }
-  return modelId.slice(0, colonIndex);
+  return colonIndex === -1 ? 'unknown' : modelId.slice(0, colonIndex);
 }
 
 function mapToTaskTypeUsage(
   map: Map<string, { count: number; cost: number }>,
 ): TaskTypeUsage[] {
-  return [...map.entries()]
+  return [...map]
     .map(([taskType, data]) => ({
       taskType,
       count: data.count,
@@ -112,7 +109,7 @@ function mapToTaskTypeUsage(
 function mapToProviderUsage(
   map: Map<string, { count: number; cost: number }>,
 ): ProviderUsage[] {
-  return [...map.entries()]
+  return [...map]
     .map(([provider, data]) => ({
       provider,
       count: data.count,
@@ -122,7 +119,7 @@ function mapToProviderUsage(
 }
 
 function mapToTopModels(map: Map<string, number>): TopModelEntry[] {
-  return [...map.entries()]
+  return [...map]
     .map(([model, count]) => ({ model, count }))
     .toSorted((a, b) => b.count - a.count)
     .slice(0, 10);

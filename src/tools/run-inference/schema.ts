@@ -31,7 +31,7 @@ export const inferenceParametersSchema = z
   .record(z.string(), z.unknown())
   .superRefine((parameters, context) => {
     for (const field of RESERVED_FIELDS) {
-      if (field in parameters) {
+      if (Object.hasOwn(parameters, field)) {
         context.addIssue({
           code: 'custom',
           message: `${field} must be supplied through a dedicated safe field or tool`,

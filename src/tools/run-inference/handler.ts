@@ -66,7 +66,7 @@ export async function runInference(
     }
 
     const requestParameters = { model: input.model, ...input.parameters };
-    if (input.validate && resolution !== undefined) {
+    if (resolution !== undefined && input.validate) {
       validateAgainstModelSchema(resolution.schema, requestParameters);
     } else if (input.validate) {
       return errorResult(`No live schema is available for ${input.model}; set validate=false to proceed`);
