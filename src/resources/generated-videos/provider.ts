@@ -9,16 +9,17 @@ const SESSION_VIDEOS = new Map<string, GeneratedVideoEntry>();
 
 export function registerVideo(video: GeneratedVideoEntry): void {
   SESSION_VIDEOS.set(video.id, video);
-  if (SESSION_VIDEOS.size > MAX_SESSION_SIZE) {
-    const oldestKey = SESSION_VIDEOS.keys().next().value;
-    if (oldestKey !== undefined) {
-      SESSION_VIDEOS.delete(oldestKey);
-    }
+  if (SESSION_VIDEOS.size <= MAX_SESSION_SIZE) {
+    return;
+  }
+  const oldestKey = SESSION_VIDEOS.keys().next().value;
+  if (oldestKey !== undefined) {
+    SESSION_VIDEOS.delete(oldestKey);
   }
 }
 
 export function getSessionVideos(): readonly GeneratedVideoEntry[] {
-  return [...SESSION_VIDEOS.values()];
+  return SESSION_VIDEOS.values().toArray();
 }
 
 /** Test-support hook — production code never clears the store. */
@@ -37,18 +38,14 @@ export const generatedVideosProvider: ResourceProvider = {
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {
-    const entries: ResourceEntry[] = [];
-
-    for (const video of SESSION_VIDEOS.values()) {
-      entries.push({
-        uri: `${URI_PREFIX}${video.id}`,
-        name: video.prompt.length > 0
-          ? truncate(video.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-          : `Video ${video.id}`,
-        description: `${String(video.duration)}s ${String(video.width)}x${String(video.height)} via ${video.model}`,
-        mimeType: 'application/json',
-      });
-    }
+    const entries: ResourceEntry[] = Array.from(SESSION_VIDEOS.values(), video => ({
+      uri: `${URI_PREFIX}${video.id}`,
+      name: video.prompt.length > 0
+        ? truncate(video.prompt, MAX_PROMPT_DISPLAY_LENGTH)
+        : `Video ${video.id}`,
+      description: `${String(video.duration)}s ${String(video.width)}x${String(video.height)} via ${video.model}`,
+      mimeType: 'application/json',
+    }));
 
     return Promise.resolve(entries);
   },

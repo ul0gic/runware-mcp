@@ -51,10 +51,9 @@ function getPlatformNote(platform: string, dimensionLabel: string): string {
 }
 
 function getTextOverlayTip(textOverlay: string | undefined): string {
-  if (textOverlay !== undefined && textOverlay.length > 0) {
-    return '- Note: AI image generation may struggle with exact text rendering. Consider adding text overlay in post-processing or use a model known for text accuracy (e.g., Ideogram via provider settings).';
-  }
-  return '- Consider adding a textOverlay argument if you want bold text on the thumbnail.';
+  return textOverlay !== undefined && textOverlay.length > 0
+    ? '- Note: AI image generation may struggle with exact text rendering. Consider adding text overlay in post-processing or use a model known for text accuracy (e.g., Ideogram via provider settings).'
+    : '- Consider adding a textOverlay argument if you want bold text on the thumbnail.';
 }
 
 export const thumbnail: PromptTemplate = {

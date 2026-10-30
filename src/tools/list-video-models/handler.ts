@@ -114,11 +114,7 @@ function buildFilterDescription(input: ListVideoModelsInput): string {
     filters.push(`feature: ${input.feature}`);
   }
 
-  if (filters.length === 0) {
-    return '';
-  }
-
-  return ` (${filters.join(', ')})`;
+  return filters.length === 0 ? '' : ` (${filters.join(', ')})`;
 }
 
 export const listVideoModelsToolDefinition = {

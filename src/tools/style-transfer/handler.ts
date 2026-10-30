@@ -129,7 +129,7 @@ async function captionImage(
   inputImage: string,
   client: RunwareClient,
   context?: ToolContext,
-): Promise<{ readonly caption: string; readonly cost: number } | ToolResult> {
+): Promise<ToolResult | { readonly caption: string; readonly cost: number }> {
   const captionResult = await imageCaption(
     {
       inputImage,
@@ -245,11 +245,9 @@ export async function styleTransfer(
 
     const inferenceResult = await imageInference(inferenceInput, runwareClient, context);
 
-    if (inferenceResult.status === 'error') {
-      return errorResult(`Style transfer generation failed: ${inferenceResult.message}`);
-    }
-
-    return extractOutput(inferenceResult, input, styledPrompt, captionUsed, captionCost);
+    return inferenceResult.status === 'error'
+      ? errorResult(`Style transfer generation failed: ${inferenceResult.message}`)
+      : extractOutput(inferenceResult, input, styledPrompt, captionUsed, captionCost);
   } catch (error) {
     const mcpError = wrapError(error);
     return errorResult(mcpError.message, mcpError.data);

@@ -278,10 +278,7 @@ export function getPreprocessor(id: string): ControlNetPreprocessor | undefined 
     return CONTROLNET_PREPROCESSORS[id];
   }
   const internalId = API_ID_TO_INTERNAL_ID[id];
-  if (internalId !== undefined) {
-    return CONTROLNET_PREPROCESSORS[internalId];
-  }
-  return undefined;
+  return internalId === undefined ? undefined : CONTROLNET_PREPROCESSORS[internalId];
 }
 
 export function getPreprocessorsByOutputType(
@@ -297,7 +294,7 @@ export function isValidPreprocessor(id: string): id is ControlNetPreprocessorId 
 }
 
 export function isValidApiPreprocessor(id: string): boolean {
-  return id in API_ID_TO_INTERNAL_ID;
+  return Object.hasOwn(API_ID_TO_INTERNAL_ID, id);
 }
 
 export function getPreprocessorsWithThresholds(): ControlNetPreprocessor[] {

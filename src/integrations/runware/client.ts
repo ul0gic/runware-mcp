@@ -37,10 +37,9 @@ function wrapRequestError(
   }
 
   if (error instanceof Error && error.name === 'AbortError') {
-    if (wasUserCancelled) {
-      return new RunwareApiError('Request was cancelled');
-    }
-    return new RunwareApiError(`Request timed out after ${String(timeout)}ms`);
+    return new RunwareApiError(wasUserCancelled
+      ? 'Request was cancelled'
+      : `Request timed out after ${String(timeout)}ms`);
   }
 
   if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -51,8 +50,16 @@ function wrapRequestError(
   return new RunwareApiError(message);
 }
 
+async function readErrorBody(response: Response): Promise<string> {
+  try {
+    return await response.text();
+  } catch {
+    return 'Unknown error';
+  }
+}
+
 async function createHttpError(response: Response): Promise<RunwareApiError> {
-  const errorText = await response.text().catch(() => 'Unknown error');
+  const errorText = await readErrorBody(response);
   return new RunwareApiError(
     `API request failed: ${String(response.status)} ${response.statusText}`,
     {
@@ -124,7 +131,7 @@ export class RunwareClient {
         // eslint-disable-next-line @typescript-eslint/naming-convention -- HTTP header names are not camelCase by spec
         'Content-Type': 'application/json',
         // eslint-disable-next-line @typescript-eslint/naming-convention -- HTTP header names are not camelCase by spec
-        Authorization: `Bearer ${String(this.apiKey)}`,
+        Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(tasks),
       signal,

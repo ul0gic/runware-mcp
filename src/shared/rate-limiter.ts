@@ -44,13 +44,15 @@ export class RateLimiter {
 
   /** Throws RateLimitError carrying a retry-after hint when the bucket is empty. */
   acquireOrThrow(): void {
-    if (!this.acquire()) {
-      const retryAfterMs = this.getTimeUntilNextToken();
-      throw new RateLimitError(
-        'Rate limit exceeded. Please wait before making more requests.',
-        retryAfterMs,
-      );
+    if (this.acquire()) {
+      return;
     }
+
+    const retryAfterMs = this.getTimeUntilNextToken();
+    throw new RateLimitError(
+      'Rate limit exceeded. Please wait before making more requests.',
+      retryAfterMs,
+    );
   }
 
   /** Rejects with a cancellation error if the signal aborts before a token arrives. */
@@ -114,11 +116,13 @@ export class RateLimiter {
     const now = Date.now();
     const elapsedSeconds = (now - this.lastRefillTime) / 1000;
 
-    if (elapsedSeconds > 0) {
-      const tokensToAdd = elapsedSeconds * this.refillRate;
-      this.tokens = Math.min(this.maxTokens, this.tokens + tokensToAdd);
-      this.lastRefillTime = now;
+    if (elapsedSeconds <= 0) {
+      return;
     }
+
+    const tokensToAdd = elapsedSeconds * this.refillRate;
+    this.tokens = Math.min(this.maxTokens, this.tokens + tokensToAdd);
+    this.lastRefillTime = now;
   }
 }
 

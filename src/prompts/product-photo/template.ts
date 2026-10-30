@@ -35,10 +35,9 @@ const ANGLE_DESCRIPTIONS: Record<string, string> = {
 };
 
 function getBackgroundTip(background: string): string {
-  if (background === 'transparent') {
-    return '- Use PNG output format to preserve transparency. Consider using imageBackgroundRemoval as a post-processing step if the model does not natively support transparent backgrounds.';
-  }
-  return `- The "${background}" background should be clean and distraction-free.`;
+  return background === 'transparent'
+    ? '- Use PNG output format to preserve transparency. Consider using imageBackgroundRemoval as a post-processing step if the model does not natively support transparent backgrounds.'
+    : `- The "${background}" background should be clean and distraction-free.`;
 }
 
 export const productPhoto: PromptTemplate = {

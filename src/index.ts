@@ -269,8 +269,10 @@ async function main(): Promise<void> {
   log(`Prompts: ${String(Object.keys(PROMPT_TEMPLATES).length)} templates`);
 }
 
-await main().catch((error: unknown) => {
+try {
+  await main();
+} catch (error: unknown) {
   const message = error instanceof Error ? error.message : String(error);
   process.stderr.write(`${LOG_PREFIX} Fatal error: ${message}\n`);
   process.exit(1);
-});
+}

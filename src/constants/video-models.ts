@@ -708,10 +708,7 @@ export const VIDEO_MODELS = {
 export type VideoModelId = keyof typeof VIDEO_MODELS;
 
 export function getVideoModel(modelId: string): VideoModel | undefined {
-  if (isValidVideoModel(modelId)) {
-    return VIDEO_MODELS[modelId];
-  }
-  return undefined;
+  return isValidVideoModel(modelId) ? VIDEO_MODELS[modelId] : undefined;
 }
 
 export function getVideoModelsByProvider(provider: VideoProvider): VideoModel[] {
@@ -748,7 +745,7 @@ export function getVideoModelsByResolution(width: number, height: number): Video
 }
 
 export function isValidVideoModel(modelId: string): modelId is VideoModelId {
-  return modelId in VIDEO_MODELS;
+  return Object.hasOwn(VIDEO_MODELS, modelId);
 }
 
 export function getAllVideoModelIds(): VideoModelId[] {

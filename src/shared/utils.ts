@@ -155,10 +155,12 @@ export function pick<T extends object, K extends keyof T>(
   const result: Partial<Pick<T, K>> = {};
 
   for (const key of keys) {
-    if (Object.prototype.hasOwnProperty.call(obj, key)) {
-      const value = Reflect.get(obj, key) as T[K];
-      Reflect.set(result, key, value);
+    if (!Object.prototype.hasOwnProperty.call(obj, key)) {
+      continue;
     }
+
+    const value = Reflect.get(obj, key) as T[K];
+    Reflect.set(result, key, value);
   }
 
   return result as Pick<T, K>;
@@ -172,10 +174,12 @@ export function omit<T extends object, K extends keyof T>(
   const result: Partial<T> = {};
 
   for (const key of Object.keys(obj) as (keyof T)[]) {
-    if (!keySet.has(key)) {
-      const value = Reflect.get(obj, key) as T[keyof T];
-      Reflect.set(result, key, value);
+    if (keySet.has(key)) {
+      continue;
     }
+
+    const value = Reflect.get(obj, key) as T[keyof T];
+    Reflect.set(result, key, value);
   }
 
   return result as Omit<T, K>;
@@ -264,10 +268,12 @@ export function throttle<TArgs extends unknown[]>(
   return (...args: TArgs): void => {
     const now = Date.now();
 
-    if (now - lastCallTime >= intervalMs) {
-      lastCallTime = now;
-      fn(...args);
+    if (now - lastCallTime < intervalMs) {
+      return;
     }
+
+    lastCallTime = now;
+    fn(...args);
   };
 }
 
@@ -290,10 +296,11 @@ export async function mapWithConcurrency<T, R>(
       currentIndex += 1;
 
       const task = tasks.at(index);
-      if (task !== undefined) {
-        const result = await mapper(task, index);
-        resultsMap.set(index, result);
+      if (task === undefined) {
+        continue;
       }
+      const result = await mapper(task, index);
+      resultsMap.set(index, result);
     }
   }
 

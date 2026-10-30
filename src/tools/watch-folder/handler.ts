@@ -109,10 +109,7 @@ function getStringParam(params: Record<string, unknown>, key: string): string | 
 
 function getUpscaleFactorParam(params: Record<string, unknown>): 2 | 4 | undefined {
   const value = getParamValue(params, 'upscaleFactor');
-  if (value === 2 || value === 4) {
-    return value;
-  }
-  return undefined;
+  return value === 2 || value === 4 ? value : undefined;
 }
 
 function extractWatchOperationParams(params: Record<string, unknown>): WatchOperationParams {
@@ -266,20 +263,19 @@ function createFileHandler(
 
   const debouncedHandler = debounce(
     (filePath: string): void => {
-      // Fire and forget the async processing
-      processFileAndUpdateState(filePath, state, client, processingFiles).catch(() => {
-        // Errors are handled inside processFileAndUpdateState
-      });
+      void processFileAndUpdateState(filePath, state, client, processingFiles);
     },
     config.WATCH_DEBOUNCE_MS,
   );
 
   return (eventType: string, filename: string | null): void => {
     // fs.watch surfaces newly created files as 'rename' events.
-    if (eventType === 'rename' && filename !== null && isImageFile(filename)) {
-      const filePath = path.join(state.folderPath, filename);
-      debouncedHandler(filePath);
+    if (!(eventType === 'rename' && filename !== null && isImageFile(filename))) {
+      return;
     }
+
+    const filePath = path.join(state.folderPath, filename);
+    debouncedHandler(filePath);
   };
 }
 
@@ -300,7 +296,7 @@ async function handleStart(
 
   const folderPath = await validateFolder(inputFolderPath);
 
-  for (const [id, watcher] of activeWatchers.entries()) {
+  for (const [id, watcher] of activeWatchers) {
     if (watcher.folderPath === folderPath) {
       return {
         action: 'start',
@@ -379,21 +375,17 @@ function handleStop(input: WatchFolderInputType): WatchFolderOutput {
 }
 
 function handleList(): WatchFolderOutput {
-  const watchers: WatcherInfo[] = [];
-
-  for (const [id, state] of activeWatchers.entries()) {
-    watchers.push({
-      id,
-      folderPath: state.folderPath,
-      operation: state.operation,
-      isActive: true,
-      processedCount: state.processedCount,
-      failedCount: state.failedCount,
-      lastActivity: state.lastActivity?.toISOString(),
-      outputFolder: state.outputFolder,
-      createdAt: state.createdAt.toISOString(),
-    });
-  }
+  const watchers: WatcherInfo[] = Array.from(activeWatchers, ([id, state]) => ({
+    id,
+    folderPath: state.folderPath,
+    operation: state.operation,
+    isActive: true,
+    processedCount: state.processedCount,
+    failedCount: state.failedCount,
+    lastActivity: state.lastActivity?.toISOString(),
+    outputFolder: state.outputFolder,
+    createdAt: state.createdAt.toISOString(),
+  }));
 
   return {
     action: 'list',
@@ -484,7 +476,7 @@ export async function watchFolder(
  * Should be called during server shutdown.
  */
 export function stopAllWatchers(): void {
-  for (const [, state] of activeWatchers.entries()) {
+  for (const [, state] of activeWatchers) {
     state.watcher.close();
   }
   activeWatchers.clear();

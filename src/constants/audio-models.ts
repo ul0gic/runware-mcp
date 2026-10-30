@@ -216,10 +216,7 @@ export const TTS_VOICE_INFO: Record<TTSVoice, TTSVoiceInfo> = {
 } as const;
 
 export function getAudioModel(modelId: string): AudioModel | undefined {
-  if (isValidAudioModel(modelId)) {
-    return AUDIO_MODELS[modelId];
-  }
-  return undefined;
+  return isValidAudioModel(modelId) ? AUDIO_MODELS[modelId] : undefined;
 }
 
 export function getAudioModelsByCapability(capability: AudioCapability): AudioModel[] {
@@ -250,7 +247,7 @@ export function getAudioModelsByMinDuration(minDurationSeconds: number): AudioMo
 }
 
 export function isValidAudioModel(modelId: string): modelId is AudioModelId {
-  return modelId in AUDIO_MODELS;
+  return Object.hasOwn(AUDIO_MODELS, modelId);
 }
 
 export function isValidTTSVoice(voice: string): voice is TTSVoice {

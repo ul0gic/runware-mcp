@@ -9,16 +9,17 @@ const SESSION_IMAGES = new Map<string, GeneratedImageEntry>();
 
 export function registerImage(image: GeneratedImageEntry): void {
   SESSION_IMAGES.set(image.id, image);
-  if (SESSION_IMAGES.size > MAX_SESSION_SIZE) {
-    const oldestKey = SESSION_IMAGES.keys().next().value;
-    if (oldestKey !== undefined) {
-      SESSION_IMAGES.delete(oldestKey);
-    }
+  if (SESSION_IMAGES.size <= MAX_SESSION_SIZE) {
+    return;
+  }
+  const oldestKey = SESSION_IMAGES.keys().next().value;
+  if (oldestKey !== undefined) {
+    SESSION_IMAGES.delete(oldestKey);
   }
 }
 
 export function getSessionImages(): readonly GeneratedImageEntry[] {
-  return [...SESSION_IMAGES.values()];
+  return SESSION_IMAGES.values().toArray();
 }
 
 /** Test-support hook — production code never clears the store. */
@@ -37,18 +38,14 @@ export const generatedImagesProvider: ResourceProvider = {
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {
-    const entries: ResourceEntry[] = [];
-
-    for (const image of SESSION_IMAGES.values()) {
-      entries.push({
-        uri: `${URI_PREFIX}${image.id}`,
-        name: image.prompt.length > 0
-          ? truncate(image.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-          : `Image ${image.id}`,
-        description: `${String(image.width)}x${String(image.height)} via ${image.model}`,
-        mimeType: 'application/json',
-      });
-    }
+    const entries: ResourceEntry[] = Array.from(SESSION_IMAGES.values(), image => ({
+      uri: `${URI_PREFIX}${image.id}`,
+      name: image.prompt.length > 0
+        ? truncate(image.prompt, MAX_PROMPT_DISPLAY_LENGTH)
+        : `Image ${image.id}`,
+      description: `${String(image.width)}x${String(image.height)} via ${image.model}`,
+      mimeType: 'application/json',
+    }));
 
     return Promise.resolve(entries);
   },

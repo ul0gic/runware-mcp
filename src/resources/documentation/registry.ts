@@ -38,7 +38,7 @@ export function getDocResource(category: string, id: string): DocResource | unde
 }
 
 export function listDocResources(): readonly DocResource[] {
-  return [...registry.values()];
+  return registry.values().toArray();
 }
 
 export function getDocCount(): number {
