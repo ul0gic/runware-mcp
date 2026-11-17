@@ -1,3 +1,5 @@
+// Does:  Documents textual-inversion embeddings and how they attach to an image request.
+// Holds: States embeddings[].weight 1 as the default; registered via featureDocs by register-features-providers.ts.
 import type { DocResource } from '../../types.js';
 
 export const embeddingsDoc: DocResource = {
@@ -23,8 +25,7 @@ export const embeddingsDoc: DocResource = {
         name: 'embeddings[].model',
         type: 'string',
         required: true,
-        description:
-          'Embedding model identifier. Use the modelSearch tool to find embeddings by concept.',
+        description: 'Embedding model identifier. Use the modelSearch tool to find embeddings by concept.',
       },
       {
         name: 'embeddings[].weight',

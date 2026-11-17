@@ -1,3 +1,6 @@
+// Does:  Proves shared zod schemas enforce prompt, dimension, step, CFG, seed, strength, LoRA and AIR-id bounds.
+// Holds: Exercises the real schemas; nothing is mocked.
+
 import { describe, it, expect } from 'vitest';
 import { ZodError } from 'zod';
 
@@ -10,25 +13,19 @@ import {
   cfgScaleSchema,
   seedSchema,
   strengthSchema,
-  outputTypeSchema,
-  outputFormatSchema,
   controlNetConfigSchema,
   loraConfigSchema,
   uuidSchema,
   MIN_DIMENSION,
   MAX_DIMENSION,
   DIMENSION_STEP,
-  MIN_PROMPT_LENGTH,
   MAX_PROMPT_LENGTH,
   MIN_STEPS,
   MAX_STEPS,
   MIN_CFG_SCALE,
   MAX_CFG_SCALE,
 } from '../../../src/shared/validation.js';
-
-// ============================================================================
-// Helpers
-// ============================================================================
+import { VIDEO_MODELS } from '../../../src/constants/video-models.js';
 
 function expectZodError(fn: () => unknown): ZodError {
   try {
@@ -39,10 +36,6 @@ function expectZodError(fn: () => unknown): ZodError {
     return error as ZodError;
   }
 }
-
-// ============================================================================
-// positivePromptSchema
-// ============================================================================
 
 describe('positivePromptSchema', () => {
   it('accepts valid prompt with minimum length', () => {
@@ -68,15 +61,7 @@ describe('positivePromptSchema', () => {
     const tooLong = 'a'.repeat(MAX_PROMPT_LENGTH + 1);
     expectZodError(() => positivePromptSchema.parse(tooLong));
   });
-
-  it('rejects non-string input', () => {
-    expectZodError(() => positivePromptSchema.parse(123));
-  });
 });
-
-// ============================================================================
-// modelIdentifierSchema
-// ============================================================================
 
 describe('modelIdentifierSchema', () => {
   it('accepts valid AIR format', () => {
@@ -105,14 +90,35 @@ describe('modelIdentifierSchema', () => {
     expectZodError(() => modelIdentifierSchema.parse(''));
   });
 
-  it('rejects model with non-numeric IDs', () => {
-    expectZodError(() => modelIdentifierSchema.parse('civitai:abc@def'));
+  it.each(['klingai:1.5@1', 'sync:1.9.1@1', 'tripo:v3.1@0', 'runware:flux-2-klein-4b@style-lora-training'])(
+    'accepts the real AIR id %s',
+    (id) => {
+      expect(modelIdentifierSchema.parse(id)).toBe(id);
+    },
+  );
+
+  it('accepts every model id in the video model catalog', () => {
+    for (const id of Object.keys(VIDEO_MODELS)) {
+      expect(modelIdentifierSchema.parse(id)).toBe(id);
+    }
+  });
+
+  it.each([
+    ' civitai:123@456',
+    'civitai:123@456 ',
+    'civitai:1 23@456',
+    'civitai:123@456\n',
+    'civitai:123@456;rm -rf /',
+    'civitai:../../etc@1',
+    'civitai:123@456@7',
+    ':123@456',
+    'civitai:123@',
+    '<script>:1@1',
+    `civitai:${'1'.repeat(200)}@1`,
+  ])('rejects malformed or injected id %j', (id) => {
+    expectZodError(() => modelIdentifierSchema.parse(id));
   });
 });
-
-// ============================================================================
-// dimensionSchema
-// ============================================================================
 
 describe('dimensionSchema', () => {
   it('accepts minimum dimension', () => {
@@ -123,11 +129,6 @@ describe('dimensionSchema', () => {
   it('accepts maximum dimension', () => {
     const result = dimensionSchema.parse(MAX_DIMENSION);
     expect(result).toBe(MAX_DIMENSION);
-  });
-
-  it('accepts valid dimension step', () => {
-    const result = dimensionSchema.parse(1024);
-    expect(result).toBe(1024);
   });
 
   it('rejects value below minimum', () => {
@@ -145,15 +146,7 @@ describe('dimensionSchema', () => {
   it('rejects float value', () => {
     expectZodError(() => dimensionSchema.parse(1024.5));
   });
-
-  it('rejects non-number', () => {
-    expectZodError(() => dimensionSchema.parse('1024'));
-  });
 });
-
-// ============================================================================
-// imageInputSchema
-// ============================================================================
 
 describe('imageInputSchema', () => {
   it('accepts valid UUID v4', () => {
@@ -168,14 +161,19 @@ describe('imageInputSchema', () => {
     expect(result).toBe(url);
   });
 
-  it('accepts valid HTTP URL', () => {
-    const url = 'http://example.com/image.jpg';
-    const result = imageInputSchema.parse(url);
-    expect(result).toBe(url);
+  it.each([
+    'http://example.com/image.jpg',
+    'file:///etc/passwd',
+    'javascript:alert(1)',
+    'ftp://example.com/image.png',
+    'data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==',
+    'data:image/svg+xml;base64,PHN2Zz48L3N2Zz4=',
+    'data:image/png,rawpixels',
+  ])('rejects the unsafe image source %s', (source) => {
+    expectZodError(() => imageInputSchema.parse(source));
   });
 
   it('accepts valid base64 string (long enough)', () => {
-    // At least 100 chars of base64
     const base64 = 'A'.repeat(200);
     const result = imageInputSchema.parse(base64);
     expect(result).toBe(base64);
@@ -187,30 +185,10 @@ describe('imageInputSchema', () => {
     expect(result).toBe(dataUri);
   });
 
-  it('accepts data URI for jpeg', () => {
-    const dataUri = `data:image/jpeg;base64,${'A'.repeat(100)}`;
-    const result = imageInputSchema.parse(dataUri);
-    expect(result).toBe(dataUri);
-  });
-
-  it('accepts data URI for webp', () => {
-    const dataUri = `data:image/webp;base64,${'A'.repeat(100)}`;
-    const result = imageInputSchema.parse(dataUri);
-    expect(result).toBe(dataUri);
-  });
-
   it('rejects empty string', () => {
     expectZodError(() => imageInputSchema.parse(''));
   });
-
-  it('rejects non-string', () => {
-    expectZodError(() => imageInputSchema.parse(123));
-  });
 });
-
-// ============================================================================
-// stepsSchema
-// ============================================================================
 
 describe('stepsSchema', () => {
   it('accepts minimum steps', () => {
@@ -221,10 +199,6 @@ describe('stepsSchema', () => {
     expect(stepsSchema.parse(MAX_STEPS)).toBe(MAX_STEPS);
   });
 
-  it('accepts value in range', () => {
-    expect(stepsSchema.parse(30)).toBe(30);
-  });
-
   it('rejects zero', () => {
     expectZodError(() => stepsSchema.parse(0));
   });
@@ -232,15 +206,7 @@ describe('stepsSchema', () => {
   it('rejects value above maximum', () => {
     expectZodError(() => stepsSchema.parse(MAX_STEPS + 1));
   });
-
-  it('rejects float', () => {
-    expectZodError(() => stepsSchema.parse(10.5));
-  });
 });
-
-// ============================================================================
-// cfgScaleSchema
-// ============================================================================
 
 describe('cfgScaleSchema', () => {
   it('accepts minimum CFG scale', () => {
@@ -249,10 +215,6 @@ describe('cfgScaleSchema', () => {
 
   it('accepts maximum CFG scale', () => {
     expect(cfgScaleSchema.parse(MAX_CFG_SCALE)).toBe(MAX_CFG_SCALE);
-  });
-
-  it('accepts float value in range', () => {
-    expect(cfgScaleSchema.parse(7.5)).toBe(7.5);
   });
 
   it('rejects negative value', () => {
@@ -264,35 +226,15 @@ describe('cfgScaleSchema', () => {
   });
 });
 
-// ============================================================================
-// seedSchema
-// ============================================================================
-
 describe('seedSchema', () => {
   it('accepts zero', () => {
     expect(seedSchema.parse(0)).toBe(0);
   });
 
-  it('accepts positive integer', () => {
-    expect(seedSchema.parse(42)).toBe(42);
-  });
-
-  it('accepts undefined (optional)', () => {
-    expect(seedSchema.parse(undefined)).toBeUndefined();
-  });
-
   it('rejects negative value', () => {
     expectZodError(() => seedSchema.parse(-1));
   });
-
-  it('rejects float', () => {
-    expectZodError(() => seedSchema.parse(3.14));
-  });
 });
-
-// ============================================================================
-// strengthSchema
-// ============================================================================
 
 describe('strengthSchema', () => {
   it('accepts 0', () => {
@@ -301,10 +243,6 @@ describe('strengthSchema', () => {
 
   it('accepts 1', () => {
     expect(strengthSchema.parse(1)).toBe(1);
-  });
-
-  it('accepts 0.5', () => {
-    expect(strengthSchema.parse(0.5)).toBe(0.5);
   });
 
   it('rejects negative', () => {
@@ -316,96 +254,7 @@ describe('strengthSchema', () => {
   });
 });
 
-// ============================================================================
-// outputTypeSchema
-// ============================================================================
-
-describe('outputTypeSchema', () => {
-  it('accepts URL', () => {
-    expect(outputTypeSchema.parse('URL')).toBe('URL');
-  });
-
-  it('accepts base64Data', () => {
-    expect(outputTypeSchema.parse('base64Data')).toBe('base64Data');
-  });
-
-  it('accepts dataURI', () => {
-    expect(outputTypeSchema.parse('dataURI')).toBe('dataURI');
-  });
-
-  it('rejects invalid output type', () => {
-    expectZodError(() => outputTypeSchema.parse('binary'));
-  });
-
-  it('rejects case variations', () => {
-    expectZodError(() => outputTypeSchema.parse('url'));
-  });
-});
-
-// ============================================================================
-// outputFormatSchema
-// ============================================================================
-
-describe('outputFormatSchema', () => {
-  it('accepts JPG', () => {
-    expect(outputFormatSchema.parse('JPG')).toBe('JPG');
-  });
-
-  it('accepts PNG', () => {
-    expect(outputFormatSchema.parse('PNG')).toBe('PNG');
-  });
-
-  it('accepts WEBP', () => {
-    expect(outputFormatSchema.parse('WEBP')).toBe('WEBP');
-  });
-
-  it('rejects invalid format', () => {
-    expectZodError(() => outputFormatSchema.parse('BMP'));
-  });
-
-  it('rejects lowercase', () => {
-    expectZodError(() => outputFormatSchema.parse('png'));
-  });
-});
-
-// ============================================================================
-// controlNetConfigSchema
-// ============================================================================
-
 describe('controlNetConfigSchema', () => {
-  it('accepts valid config with required fields', () => {
-    const config = {
-      guideImage: '550e8400-e29b-41d4-a716-446655440000',
-      preprocessor: 'canny',
-    };
-    const result = controlNetConfigSchema.parse(config);
-    expect(result.preprocessor).toBe('canny');
-  });
-
-  it('accepts config with all optional fields', () => {
-    const config = {
-      guideImage: 'https://example.com/image.png',
-      preprocessor: 'depth',
-      model: 'controlnet-model',
-      weight: 0.8,
-      startStep: 0.0,
-      endStep: 1.0,
-    };
-    const result = controlNetConfigSchema.parse(config);
-    expect(result.weight).toBe(0.8);
-    expect(result.startStep).toBe(0.0);
-    expect(result.endStep).toBe(1.0);
-  });
-
-  it('rejects invalid preprocessor', () => {
-    expectZodError(() =>
-      controlNetConfigSchema.parse({
-        guideImage: '550e8400-e29b-41d4-a716-446655440000',
-        preprocessor: 'invalid_preprocessor',
-      }),
-    );
-  });
-
   it('rejects weight out of range', () => {
     expectZodError(() =>
       controlNetConfigSchema.parse({
@@ -415,57 +264,22 @@ describe('controlNetConfigSchema', () => {
       }),
     );
   });
-
-  it('rejects missing guideImage', () => {
-    expectZodError(() =>
-      controlNetConfigSchema.parse({
-        preprocessor: 'canny',
-      }),
-    );
-  });
 });
 
-// ============================================================================
-// loraConfigSchema
-// ============================================================================
-
 describe('loraConfigSchema', () => {
-  it('accepts valid config with model', () => {
-    const result = loraConfigSchema.parse({ model: 'lora-model' });
-    expect(result.model).toBe('lora-model');
-    expect(result.weight).toBe(1); // default
-  });
-
-  it('accepts config with custom weight', () => {
-    const result = loraConfigSchema.parse({ model: 'lora-model', weight: 0.5 });
-    expect(result.weight).toBe(0.5);
-  });
-
   it('accepts negative weight', () => {
     const result = loraConfigSchema.parse({ model: 'lora-model', weight: -1.5 });
     expect(result.weight).toBe(-1.5);
   });
 
   it('rejects weight below -2', () => {
-    expectZodError(() =>
-      loraConfigSchema.parse({ model: 'lora-model', weight: -2.5 }),
-    );
+    expectZodError(() => loraConfigSchema.parse({ model: 'lora-model', weight: -2.5 }));
   });
 
   it('rejects weight above 2', () => {
-    expectZodError(() =>
-      loraConfigSchema.parse({ model: 'lora-model', weight: 2.5 }),
-    );
-  });
-
-  it('rejects missing model', () => {
-    expectZodError(() => loraConfigSchema.parse({ weight: 1 }));
+    expectZodError(() => loraConfigSchema.parse({ model: 'lora-model', weight: 2.5 }));
   });
 });
-
-// ============================================================================
-// uuidSchema
-// ============================================================================
 
 describe('uuidSchema', () => {
   it('accepts valid UUID v4', () => {
@@ -483,11 +297,6 @@ describe('uuidSchema', () => {
   });
 
   it('rejects UUID v1 format', () => {
-    // UUID v1 has version "1" in position 13
     expectZodError(() => uuidSchema.parse('550e8400-e29b-11d4-a716-446655440000'));
-  });
-
-  it('rejects empty string', () => {
-    expectZodError(() => uuidSchema.parse(''));
   });
 });

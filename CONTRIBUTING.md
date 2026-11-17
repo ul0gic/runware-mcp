@@ -2,7 +2,7 @@
 
 ## Prerequisites
 
-- **Node.js 26+** (uses native `fetch`, modern ESM features)
+- **Node.js 26.13.1+** (uses native `fetch`, modern ESM features)
 - **npm** (ships with Node.js)
 - **Runware API key** -- get one at [runware.ai](https://runware.ai)
 
@@ -20,21 +20,23 @@ npm install
 npm run build
 
 # Run all checks
-npm run build && npm run typecheck && npm run lint && npm test
+npm run check
 ```
 
 ### Available Scripts
 
-| Command | Purpose |
-|---------|---------|
-| `npm run build` | Compile TypeScript with tsup (ESM output) |
-| `npm run dev` | Watch mode with tsx |
-| `npm run start` | Run the compiled server |
-| `npm run typecheck` | Type check with `tsc --noEmit` |
-| `npm run lint` | Lint with ESLint (zero warnings allowed) |
-| `npm test` | Run tests with Vitest |
-| `npm run test:watch` | Run tests in watch mode |
-| `npm run test:coverage` | Run tests with coverage report |
+| Command                 | Purpose                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| `npm run build`         | Compile TypeScript with `tsc` (TypeScript 7, ESM output)    |
+| `npm run dev`           | Watch mode with tsx                                         |
+| `npm run start`         | Run the compiled server                                     |
+| `npm run typecheck`     | Type check with `tsc --noEmit`                              |
+| `npm run lint`          | Lint and format-check with Biome (zero diagnostics allowed) |
+| `npm run lint:fix`      | Apply Biome formatting and safe fixes                       |
+| `npm test`              | Run tests with Vitest                                       |
+| `npm run test:watch`    | Run tests in watch mode                                     |
+| `npm run test:coverage` | Run tests with coverage report                              |
+| `npm run sast`          | Run CodeQL `security-extended` locally (CodeQL CLI)         |
 
 ## Project Structure
 
@@ -138,10 +140,7 @@ export async function myNewTool(
       inputParam: input.inputParam,
     });
 
-    const response = await runwareClient.requestSingle<{ result: string }>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.requestSingle<{ result: string }>(task, { signal: context?.signal });
 
     return successResult('Operation completed', response);
   } catch (error) {
@@ -197,7 +196,7 @@ Create `tests/unit/tools/my-new-tool.test.ts` following the patterns described i
 ### 7. Verify
 
 ```bash
-npm run build && npm run typecheck && npm run lint && npm test
+npm run check
 ```
 
 ## Testing
@@ -262,16 +261,13 @@ const mockClient = {
 
 All `vi.mock()` calls must appear at the **top of the file**, before any imports of the modules being tested. Vitest hoists them automatically, but the mock factory functions cannot reference variables that have not been defined yet.
 
-### Coverage Thresholds
+### What a Test Must Earn
 
-| Metric | Threshold |
-|--------|-----------|
-| Lines | 80% |
-| Statements | 80% |
-| Functions | 80% |
-| Branches | 65% |
+A test exists to catch a bug or a security regression. Coverage is not a goal and has no threshold.
 
-Barrel `index.ts` files (re-exports only) and type definition files are excluded from coverage.
+- Test behaviour through the real code path; mock only the network boundary (`fetch`) and use real temp directories for filesystem cases.
+- Prefer failure paths: rejected input, path escapes, HTTP errors, timeouts, cancellation, leaked secrets.
+- Do not write tests that restate a schema, a constant table, a tool description, or a mock's return value.
 
 ## Code Style
 
@@ -296,13 +292,13 @@ import { config } from '../../shared/config.ts';
 
 ### Naming Conventions
 
-| Element | Convention | Example |
-|---------|-----------|---------|
-| Variables, functions, parameters | `camelCase` | `maxTokens`, `buildApiRequest` |
-| Constants | `UPPER_CASE` | `API_BASE_URL`, `LOG_LEVELS` |
-| Types, interfaces | `PascalCase` | `ToolResult`, `ImageInferenceInput` |
-| Tool directories | `kebab-case` | `image-inference/`, `batch-image-inference/` |
-| No `I` prefix on interfaces | -- | `ToolContext` not `IToolContext` |
+| Element                          | Convention   | Example                                      |
+| -------------------------------- | ------------ | -------------------------------------------- |
+| Variables, functions, parameters | `camelCase`  | `maxTokens`, `buildApiRequest`               |
+| Constants                        | `UPPER_CASE` | `API_BASE_URL`, `LOG_LEVELS`                 |
+| Types, interfaces                | `PascalCase` | `ToolResult`, `ImageInferenceInput`          |
+| Tool directories                 | `kebab-case` | `image-inference/`, `batch-image-inference/` |
+| No `I` prefix on interfaces      | --           | `ToolContext` not `IToolContext`             |
 
 ### Immutability
 
@@ -322,15 +318,31 @@ import { config } from '../../shared/config.ts';
 
 ## Pull Request Process
 
+`main` is protected. Every change lands through a pull request, squash-merged, and the merge is the release.
+
 ### Before Submitting
 
-All four checks must pass with zero errors and zero warnings:
+Run the same gate CI runs, plus the local SAST scan (requires the [CodeQL CLI](https://github.com/github/codeql-cli-binaries)):
 
 ```bash
-npm run build && npm run typecheck && npm run lint && npm test
+npm run check
+npm run sast
 ```
 
-Coverage thresholds are enforced. If your changes decrease coverage below the thresholds, add tests.
+`check` runs typecheck, Biome, tests and build with zero errors and zero warnings. `sast` runs CodeQL `security-extended` against the working tree and fails on any finding.
+
+### Required Checks
+
+| Check             | What it runs                                                                      |
+| ----------------- | --------------------------------------------------------------------------------- |
+| `CI`              | `npm run check`, production dependency audit, registry signature audit            |
+| `SAST` / `CodeQL` | CodeQL `security-extended` for TypeScript and GitHub Actions; fails on new alerts |
+
+Your branch must be up to date with `main` before it can merge (use **Update branch** on the PR).
+
+### Releases
+
+Bump `version` in `package.json` and add a `CHANGELOG.md` entry in the PR. On merge, the release workflow publishes that version to npm with provenance and creates the `v<version>` tag and GitHub release. No checks run after merge; a merge without a version bump publishes nothing.
 
 ### Commit Messages
 
@@ -343,16 +355,6 @@ docs: update README with Z
 test: add coverage for W
 refactor: simplify V
 ```
-
-### PR Checklist
-
-- [ ] Code compiles (`npm run build`)
-- [ ] Types check (`npm run typecheck`)
-- [ ] Linting passes (`npm run lint`)
-- [ ] All tests pass (`npm test`)
-- [ ] Coverage thresholds met (`npm run test:coverage`)
-- [ ] New tools include tests
-- [ ] Breaking changes documented
 
 ## License
 

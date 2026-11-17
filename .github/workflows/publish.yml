@@ -1,107 +1,67 @@
-name: Publish Package
+name: Release
 
 on:
-  release:
-    types:
-      - published
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
 
 concurrency:
-  group: npm-publish
+  group: release
   cancel-in-progress: false
 
 jobs:
-  publish:
-    name: Publish
-    if: github.event.release.prerelease == false
+  release:
+    name: Release
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 10
     environment:
       name: npm
       url: https://www.npmjs.com/package/runware-mcp
     permissions:
-      contents: read
+      contents: write
       id-token: write
     steps:
-      - name: Check out release
+      - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
           persist-credentials: false
-          ref: ${{ github.event.release.tag_name }}
 
       - name: Set up Node.js
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version: '26.5.0'
+          node-version: "26.13.1"
           package-manager-cache: false
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Verify release tag and source commit
-        env:
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
+      - name: Skip when this version is already published
+        id: version
         run: |
-          node --input-type=module <<'NODE'
-          import { readFile } from 'node:fs/promises';
-
-          const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-          if (!/^\d+\.\d+\.\d+$/.test(packageJson.version)) {
-            throw new Error(`Only stable semantic versions may be published: ${packageJson.version}`);
-          }
-          const expectedTag = `v${packageJson.version}`;
-          if (process.env.RELEASE_TAG !== expectedTag) {
-            throw new Error(`Release tag ${process.env.RELEASE_TAG} does not match ${expectedTag}`);
-          }
-          NODE
-          git fetch origin main --no-tags
-          git merge-base --is-ancestor HEAD origin/main
-
-      - name: Verify version has not already been published
-        run: |
-          npm view runware-mcp versions --json > "$RUNNER_TEMP/published-versions.json"
-          node --input-type=module <<'NODE'
-          import { readFile } from 'node:fs/promises';
-          import { join } from 'node:path';
-
-          const packageJson = JSON.parse(await readFile('package.json', 'utf8'));
-          const publishedVersions = JSON.parse(
-            await readFile(join(process.env.RUNNER_TEMP, 'published-versions.json'), 'utf8'),
-          );
-          if (publishedVersions.includes(packageJson.version)) {
-            throw new Error(`runware-mcp@${packageJson.version} is already published`);
-          }
-          NODE
+          version="$(node -p "require('./package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if npm view "runware-mcp@$version" version >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Install dependencies without lifecycle scripts
+        if: steps.version.outputs.publish == 'true'
         run: npm ci --ignore-scripts
 
-      - name: Run project checks
-        run: npm run check
-
-      - name: Audit package
-        run: |
-          npm run audit:security
-          npm run audit:signatures
-
-      - name: Build package tarball
-        id: pack
-        run: |
-          npm pack --json > pack-result.json
-          node --input-type=module <<'NODE'
-          import { appendFile, readFile } from 'node:fs/promises';
-
-          const [result] = JSON.parse(await readFile('pack-result.json', 'utf8'));
-          await appendFile(process.env.GITHUB_OUTPUT, `tarball=${result.filename}\n`);
-          NODE
-
-      - name: Inspect package tarball
-        env:
-          TARBALL: ${{ steps.pack.outputs.tarball }}
-        run: tar -tzf "$TARBALL"
+      - name: Build
+        if: steps.version.outputs.publish == 'true'
+        run: npm run build
 
       - name: Publish to npm with trusted publishing
+        if: steps.version.outputs.publish == 'true'
+        run: npm publish --access public
+
+      - name: Tag and create GitHub release
+        if: steps.version.outputs.publish == 'true'
         env:
-          TARBALL: ${{ steps.pack.outputs.tarball }}
-        run: npm publish "$TARBALL" --access public
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: gh release create "v$VERSION" --target "$GITHUB_SHA" --title "v$VERSION" --generate-notes

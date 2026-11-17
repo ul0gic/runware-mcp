@@ -1,4 +1,6 @@
-export interface DocParameter {
+// Does:  Defines the shape of a documentation resource and its content.
+// Holds: category is a closed union of the five docs/ subdirectories.
+interface DocParameter {
   readonly name: string;
   readonly type: string;
   readonly required?: boolean;
@@ -7,13 +9,13 @@ export interface DocParameter {
   readonly description: string;
 }
 
-export interface DocExample {
+interface DocExample {
   readonly title: string;
   readonly input: Readonly<Record<string, unknown>>;
   readonly explanation: string;
 }
 
-export interface DocContent {
+interface DocContent {
   readonly description: string;
   readonly parameters?: readonly DocParameter[];
   readonly examples?: readonly DocExample[];
@@ -21,9 +23,8 @@ export interface DocContent {
   readonly relatedDocs?: readonly string[];
 }
 
-export type DocCategory = 'concepts' | 'tools' | 'features' | 'providers' | 'guides';
+type DocCategory = 'concepts' | 'tools' | 'features' | 'providers' | 'guides';
 
-/** Keyed in the documentation registry by `{category}/{id}`. */
 export interface DocResource {
   readonly id: string;
   readonly category: DocCategory;

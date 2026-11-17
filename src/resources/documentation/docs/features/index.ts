@@ -1,3 +1,5 @@
+// Does:  Collects the ten feature docs into featureDocs.
+// Holds: Every file in docs/features is listed here, or register-features-providers.ts never registers it.
 import { accelerationDoc } from './acceleration.js';
 import { controlnetGuideDoc } from './controlnet-guide.js';
 import { embeddingsDoc } from './embeddings.js';

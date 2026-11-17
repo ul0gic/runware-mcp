@@ -1,7 +1,10 @@
+// Does:  Builds the video-scene prompt that guides a videoInference call.
+// Holds: Unknown mood, camera or time-of-day values fall back to the defaults rather than failing.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'video-scene';
-const PROMPT_DESCRIPTION = 'Compose video scene descriptions for cinematic video generation with configurable mood, camera work, and time of day.';
+const PROMPT_DESCRIPTION =
+  'Compose video scene descriptions for cinematic video generation with configurable mood, camera work, and time of day.';
 
 const DEFAULT_MOOD = 'cinematic';
 const DEFAULT_CAMERA_WORK = 'static';

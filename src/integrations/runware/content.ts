@@ -1,6 +1,5 @@
-/**
- * Read-only client for Runware's public curated-model content service.
- */
+// Does:  Reads curated models, examples, pricing, and capabilities from Runware's public content service.
+// Holds: Every fetch aborts after 10 s or on the caller's signal; only single-model lookups map a 404 to undefined.
 
 const CONTENT_BASE_URL = 'https://content.runware.ai';
 const DEFAULT_TIMEOUT_MS = 10_000;
@@ -8,12 +7,12 @@ const DEFAULT_TIMEOUT_MS = 10_000;
 type ModelCategory = 'image' | 'video' | 'audio' | 'text' | '3d';
 
 export interface ModelListOptions {
-  readonly capability?: string;
-  readonly category?: ModelCategory;
-  readonly creator?: string;
-  readonly search?: string;
-  readonly limit?: number;
-  readonly offset?: number;
+  readonly capability?: string | undefined;
+  readonly category?: ModelCategory | undefined;
+  readonly creator?: string | undefined;
+  readonly search?: string | undefined;
+  readonly limit?: number | undefined;
+  readonly offset?: number | undefined;
 }
 
 export interface CuratedModel {
@@ -68,12 +67,10 @@ function buildQuery(options: ModelListOptions): string {
 
 async function fetchJson<T>(
   path: string,
-  options?: { readonly signal?: AbortSignal; readonly allowNotFound?: boolean },
+  options?: { readonly signal?: AbortSignal | undefined; readonly allowNotFound?: boolean },
 ): Promise<T | undefined> {
   const timeoutSignal = AbortSignal.timeout(DEFAULT_TIMEOUT_MS);
-  const signal = options?.signal === undefined
-    ? timeoutSignal
-    : AbortSignal.any([options.signal, timeoutSignal]);
+  const signal = options?.signal === undefined ? timeoutSignal : AbortSignal.any([options.signal, timeoutSignal]);
   const response = await fetch(`${CONTENT_BASE_URL}${path}`, {
     headers: { accept: 'application/json' },
     signal,
@@ -86,16 +83,20 @@ async function fetchJson<T>(
     throw new Error(`Runware content service returned HTTP ${String(response.status)}`);
   }
 
-  return await response.json() as T;
+  // biome-ignore lint/nursery/noUnsafeTypeAssertion: T is the caller-declared payload; the content service publishes no response schema to validate against.
+  return (await response.json()) as T;
 }
 
 export async function listCuratedModels(
   options: ModelListOptions = {},
   signal?: AbortSignal,
 ): Promise<readonly CuratedModel[]> {
-  const result = await fetchJson<readonly CuratedModel[] | {
-    readonly items: readonly CuratedModel[];
-  }>(`/models${buildQuery(options)}`, { signal });
+  const result = await fetchJson<
+    | readonly CuratedModel[]
+    | {
+        readonly items: readonly CuratedModel[];
+      }
+  >(`/models${buildQuery(options)}`, { signal });
 
   if (result === undefined) {
     return [];
@@ -103,14 +104,8 @@ export async function listCuratedModels(
   return 'items' in result ? result.items : result;
 }
 
-export async function getCuratedModel(
-  identifier: string,
-  signal?: AbortSignal,
-): Promise<CuratedModel | undefined> {
-  return fetchJson<CuratedModel>(
-    `/models/${encodeURIComponent(identifier)}`,
-    { signal, allowNotFound: true },
-  );
+export function getCuratedModel(identifier: string, signal?: AbortSignal): Promise<CuratedModel | undefined> {
+  return fetchJson<CuratedModel>(`/models/${encodeURIComponent(identifier)}`, { signal, allowNotFound: true });
 }
 
 export async function getModelExamples(
@@ -118,25 +113,25 @@ export async function getModelExamples(
   capability?: string,
   signal?: AbortSignal,
 ): Promise<readonly Record<string, unknown>[]> {
-  const query = capability === undefined
-    ? ''
-    : `?capability=${encodeURIComponent(capability)}`;
-  return await fetchJson<readonly Record<string, unknown>[]>(
-    `/models/${encodeURIComponent(identifier)}/examples${query}`,
-    { signal, allowNotFound: true },
-  ) ?? [];
-}
-
-export async function getModelPricing(
-  identifier: string,
-  signal?: AbortSignal,
-): Promise<Record<string, unknown> | undefined> {
-  return fetchJson<Record<string, unknown>>(
-    `/models/${encodeURIComponent(identifier)}/pricing`,
-    { signal, allowNotFound: true },
+  const query = capability === undefined ? '' : `?capability=${encodeURIComponent(capability)}`;
+  return (
+    (await fetchJson<readonly Record<string, unknown>[]>(`/models/${encodeURIComponent(identifier)}/examples${query}`, {
+      signal,
+      allowNotFound: true,
+    })) ?? []
   );
 }
 
+export function getModelPricing(
+  identifier: string,
+  signal?: AbortSignal,
+): Promise<Record<string, unknown> | undefined> {
+  return fetchJson<Record<string, unknown>>(`/models/${encodeURIComponent(identifier)}/pricing`, {
+    signal,
+    allowNotFound: true,
+  });
+}
+
 export async function listCapabilities(signal?: AbortSignal): Promise<readonly Capability[]> {
-  return await fetchJson<readonly Capability[]>('/capabilities', { signal }) ?? [];
+  return (await fetchJson<readonly Capability[]>('/capabilities', { signal })) ?? [];
 }

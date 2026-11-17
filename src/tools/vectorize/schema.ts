@@ -1,3 +1,6 @@
+// Does:  Validates vectorize input and describes its output.
+// Holds: model is limited to the known vectorizers and outputFormat can only be SVG.
+
 import { z } from 'zod';
 
 import { imageInputSchema, outputTypeSchema } from '../../shared/validation.js';
@@ -7,7 +10,6 @@ export const VECTORIZE_MODELS = ['recraft:1@1', 'picsart:1@1'] as const;
 const vectorizeModelSchema = z.enum(VECTORIZE_MODELS);
 
 export const vectorizeInputSchema = z.object({
-  /** Raster source only — PNG, JPG, or WEBP. */
   inputImage: imageInputSchema,
 
   model: vectorizeModelSchema.optional().default('recraft:1@1'),
@@ -21,7 +23,6 @@ export const vectorizeInputSchema = z.object({
 
 export type VectorizeInput = z.infer<typeof vectorizeInputSchema>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const vectorizeOutputSchema = z.object({
   imageUUID: z.string(),
 

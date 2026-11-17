@@ -1,3 +1,6 @@
+// Does:  Validates runInference input and the free-form parameter bag shared with other tools.
+// Holds: parameters can never set taskType, taskUUID, model, inputs, webhooks or operation, and never exceed 256 KiB.
+
 import { z } from 'zod';
 
 export const INFERENCE_TASK_TYPES = [
@@ -27,26 +30,24 @@ const RESERVED_FIELDS = new Set([
   'operation',
 ]);
 
-export const inferenceParametersSchema = z
-  .record(z.string(), z.unknown())
-  .superRefine((parameters, context) => {
-    for (const field of RESERVED_FIELDS) {
-      if (Object.hasOwn(parameters, field)) {
-        context.addIssue({
-          code: 'custom',
-          message: `${field} must be supplied through a dedicated safe field or tool`,
-          path: [field],
-        });
-      }
-    }
-
-    if (Buffer.byteLength(JSON.stringify(parameters), 'utf8') > MAX_PARAMETERS_BYTES) {
+export const inferenceParametersSchema = z.record(z.string(), z.unknown()).superRefine((parameters, context) => {
+  for (const field of RESERVED_FIELDS) {
+    if (Object.hasOwn(parameters, field)) {
       context.addIssue({
         code: 'custom',
-        message: `parameters must not exceed ${String(MAX_PARAMETERS_BYTES)} bytes`,
+        message: `${field} must be supplied through a dedicated safe field or tool`,
+        path: [field],
       });
     }
-  });
+  }
+
+  if (Buffer.byteLength(JSON.stringify(parameters), 'utf8') > MAX_PARAMETERS_BYTES) {
+    context.addIssue({
+      code: 'custom',
+      message: `parameters must not exceed ${String(MAX_PARAMETERS_BYTES)} bytes`,
+    });
+  }
+});
 
 export const runInferenceInputSchema = z.object({
   model: z.string().min(1).max(256),

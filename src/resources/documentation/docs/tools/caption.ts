@@ -1,10 +1,13 @@
+// Does:  Documents the imageCaption tool and the caption and age-detection models it accepts.
+// Holds: Lists runware:150@2 (LLaVA) as the default model; served at runware://docs/tools/caption via registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const captionDoc: DocResource = {
   id: 'caption',
   category: 'tools',
   title: 'Image Captioning',
-  summary: 'Generate descriptive text from images using LLaVA, CLIP, and Qwen vision-language models, including age detection',
+  summary:
+    'Generate descriptive text from images using LLaVA, CLIP, and Qwen vision-language models, including age detection',
   tags: ['caption', 'description', 'vision', 'LLaVA', 'CLIP', 'Qwen', 'age detection'],
   content: {
     description:
@@ -25,12 +28,14 @@ export const captionDoc: DocResource = {
         name: 'model',
         type: 'string',
         default: 'runware:150@2',
-        description: 'Caption model. Options: runware:150@2 (LLaVA), runware:151@1 (CLIP), runware:152@1 (Qwen 3B), runware:152@2 (Qwen 7B), runware:153@1 (ViT Age), runware:154@1 (Open Age), runware:152@50 (Qwen Age).',
+        description:
+          'Caption model. Options: runware:150@2 (LLaVA), runware:151@1 (CLIP), runware:152@1 (Qwen 3B), runware:152@2 (Qwen 7B), runware:153@1 (ViT Age), runware:154@1 (Open Age), runware:152@50 (Qwen Age).',
       },
       {
         name: 'prompt',
         type: 'string',
-        description: 'Optional instructions guiding the analysis. When omitted, the model provides a comprehensive image description.',
+        description:
+          'Optional instructions guiding the analysis. When omitted, the model provides a comprehensive image description.',
       },
       {
         name: 'includeCost',
@@ -46,7 +51,8 @@ export const captionDoc: DocResource = {
           inputImage: 'abc12345-uuid-of-uploaded-image',
           model: 'runware:150@2',
         },
-        explanation: 'Uses LLaVA to generate a comprehensive description of the image, including subjects, setting, mood, and visual style.',
+        explanation:
+          'Uses LLaVA to generate a comprehensive description of the image, including subjects, setting, mood, and visual style.',
       },
       {
         title: 'Guided analysis with custom prompt',

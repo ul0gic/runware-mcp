@@ -1,3 +1,5 @@
+// Does:  Documents the transcription tool for turning audio or video into text.
+// Holds: Lists memories:1@1 as the default model; served at runware://docs/tools/transcription via registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const transcriptionDoc: DocResource = {
@@ -30,7 +32,8 @@ export const transcriptionDoc: DocResource = {
       {
         name: 'language',
         type: 'string',
-        description: 'ISO 639-1 language code (e.g., "en", "es", "fr", "de", "ja"). If omitted, auto-detection is used.',
+        description:
+          'ISO 639-1 language code (e.g., "en", "es", "fr", "de", "ja"). If omitted, auto-detection is used.',
       },
       {
         name: 'includeCost',
@@ -45,7 +48,8 @@ export const transcriptionDoc: DocResource = {
         input: {
           inputMedia: 'abc12345-uuid-of-video',
         },
-        explanation: 'Transcribes the audio track of a video. Returns full text and timestamped segments for subtitle generation.',
+        explanation:
+          'Transcribes the audio track of a video. Returns full text and timestamped segments for subtitle generation.',
       },
       {
         title: 'Transcribe with explicit language',
@@ -53,7 +57,8 @@ export const transcriptionDoc: DocResource = {
           inputMedia: 'https://example.com/podcast-episode.mp3',
           language: 'en',
         },
-        explanation: 'Transcribes an English audio file. Specifying the language improves accuracy when you know it in advance.',
+        explanation:
+          'Transcribes an English audio file. Specifying the language improves accuracy when you know it in advance.',
       },
     ],
     tips: [

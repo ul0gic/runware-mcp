@@ -1,7 +1,10 @@
+// Does:  Builds the avatar-generator prompt that guides an imageInference call for a profile avatar.
+// Holds: Unknown style, mood or framing values fall back to the defaults rather than failing.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'avatar-generator';
-const PROMPT_DESCRIPTION = 'Generate profile pictures and character avatars with configurable art style, mood, and framing.';
+const PROMPT_DESCRIPTION =
+  'Generate profile pictures and character avatars with configurable art style, mood, and framing.';
 
 const DEFAULT_STYLE = 'photorealistic';
 const DEFAULT_MOOD = 'friendly';

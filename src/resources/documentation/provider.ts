@@ -1,4 +1,7 @@
-// Side-effect imports populate the registry, without which list()/get() return nothing.
+// Does:  Serves runware://docs/{category}/{id} as pretty-printed JSON from the doc registry.
+// Holds: get() resolves null, never throws, for a malformed URI or an unregistered category/id.
+
+// Why: These side-effect imports populate the registry; without them list() and get() miss features and guides.
 import './register-features-providers.js';
 import './register-guides.js';
 
@@ -13,8 +16,7 @@ const URI_PATTERN = /^runware:\/\/docs\/([^/]+)\/(.+)$/;
 export const documentationProvider: ResourceProvider = {
   uri: 'runware://docs/{category}/{id}',
   name: 'Runware Documentation',
-  description:
-    'Comprehensive API reference, feature guides, and provider documentation for all Runware capabilities',
+  description: 'Comprehensive API reference, feature guides, and provider documentation for all Runware capabilities',
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {

@@ -1,3 +1,6 @@
+// Does:  Validates batchImageInference input and describes its per-prompt results.
+// Holds: A batch holds 1-20 prompts, and every prompt shares one model, size and negative prompt.
+
 import { z } from 'zod';
 
 import {
@@ -14,7 +17,6 @@ import {
 } from '../../shared/validation.js';
 
 export const batchImageInferenceInputSchema = z.object({
-  /** Each prompt produces exactly one image. */
   prompts: z
     .array(positivePromptSchema)
     .min(1, 'Must provide at least 1 prompt')
@@ -22,19 +24,14 @@ export const batchImageInferenceInputSchema = z.object({
 
   model: modelIdentifierSchema,
 
-  /** Width in pixels. */
   width: dimensionSchema.optional().default(1024),
 
-  /** Height in pixels. */
   height: dimensionSchema.optional().default(1024),
 
   steps: stepsSchema.optional(),
 
-  /** Classifier-Free Guidance scale. */
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter name
   CFGScale: cfgScaleSchema.optional(),
 
-  /** Applied to every prompt in the batch. */
   negativePrompt: negativePromptSchema,
 
   scheduler: z.string().optional(),
@@ -47,7 +44,6 @@ export const batchImageInferenceInputSchema = z.object({
 
   concurrency: concurrencySchema,
 
-  /** When false, remaining prompts still run after a failure. */
   stopOnError: z.boolean().optional().default(false),
 
   includeCost: z.boolean().optional().default(true),
@@ -76,13 +72,11 @@ const batchPromptResultSchema = z.object({
 
   error: z.string().optional(),
 
-  /** Cost in USD. */
   cost: z.number().optional(),
 });
 
 export type BatchPromptResult = z.infer<typeof batchPromptResultSchema>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const batchImageInferenceOutputSchema = z.object({
   total: z.number(),
 
@@ -92,7 +86,6 @@ const batchImageInferenceOutputSchema = z.object({
 
   results: z.array(batchPromptResultSchema),
 
-  /** Total cost in USD. */
   totalCost: z.number().optional(),
 });
 

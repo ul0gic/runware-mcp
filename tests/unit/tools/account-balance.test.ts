@@ -1,12 +1,7 @@
-/**
- * Unit tests for the account balance tool.
- */
+// Does:  Proves accountBalance reads both balance shapes and turns a missing amount or a client failure into errors.
+// Holds: config, rate limiter and RunwareClient are mocked; the handler and its response parsing run for real.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -31,29 +26,17 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { accountBalance, accountBalanceToolDefinition } from '../../../src/tools/account-balance/handler.js';
+import { accountBalance } from '../../../src/tools/account-balance/handler.js';
 import { accountBalanceInputSchema } from '../../../src/tools/account-balance/schema.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function createMockClient() {
+function createMockClient(): RunwareClient {
   return {
     request: vi.fn(),
     requestSingle: vi.fn(),
     generateTaskUUID: vi.fn().mockReturnValue('mock-uuid'),
   } as unknown as RunwareClient;
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 describe('accountBalance', () => {
   let mockClient: RunwareClient;
@@ -63,103 +46,52 @@ describe('accountBalance', () => {
     mockClient = createMockClient();
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(accountBalanceToolDefinition.name).toBe('accountBalance');
-    });
-
-    it('should have empty required array', () => {
-      expect(accountBalanceToolDefinition.inputSchema.required).toEqual([]);
-    });
-
-    it('should have a description', () => {
-      expect(accountBalanceToolDefinition.description).toBeTruthy();
-    });
-  });
-
-  describe('schema validation', () => {
-    it('should accept empty object', () => {
-      const result = accountBalanceInputSchema.safeParse({});
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept object with no properties', () => {
-      const result = accountBalanceInputSchema.safeParse({});
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('handler success case', () => {
-    it('should parse the current nested accountManagement balance response', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'accountManagement',
-        taskUUID: 'task-uuid',
-        balance: {
-          amount: 2450.75,
-          freeBalance: 120,
-          currency: 'USD',
-        },
-      });
-
-      const input = accountBalanceInputSchema.parse({});
-      const result = await accountBalance(input, mockClient);
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('2450.75');
-      expect(result.data).toMatchObject({
-        balance: 2450.75,
+  it('should parse the current nested accountManagement balance response', async () => {
+    (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+      taskType: 'accountManagement',
+      taskUUID: 'task-uuid',
+      balance: {
+        amount: 2450.75,
+        freeBalance: 120,
         currency: 'USD',
-      });
+      },
     });
 
-    it('should return success with balance', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'accountBalance',
-        taskUUID: 'task-uuid',
-        balance: 42.50,
-        currency: 'USD',
-      });
+    const input = accountBalanceInputSchema.parse({});
+    const result = await accountBalance(input, mockClient);
 
-      const input = accountBalanceInputSchema.parse({});
-      const result = await accountBalance(input, mockClient);
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('42.50');
-      expect(result.message).toContain('USD');
-
-      const data = result.data as { balance: number; currency: string; retrievedAt: string };
-      expect(data.balance).toBe(42.50);
-      expect(data.currency).toBe('USD');
-      expect(data.retrievedAt).toBeDefined();
-    });
-
-    it('should default to 0 balance when not provided', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'accountBalance',
-        taskUUID: 'task-uuid',
-      });
-
-      const input = accountBalanceInputSchema.parse({});
-      const result = await accountBalance(input, mockClient);
-
-      expect(result.status).toBe('success');
-      const data = result.data as { balance: number; currency: string };
-      expect(data.balance).toBe(0);
-      expect(data.currency).toBe('USD');
+    expect(result.status).toBe('success');
+    expect(result.message).toContain('2450.75');
+    expect(result.data).toMatchObject({
+      balance: 2450.75,
+      currency: 'USD',
     });
   });
 
-  describe('handler error case', () => {
-    it('should return error when client throws', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Authentication failed'),
-      );
-
-      const input = accountBalanceInputSchema.parse({});
-      const result = await accountBalance(input, mockClient);
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Authentication failed');
+  it('should return an error, not USD 0.00, when the response has no balance', async () => {
+    (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+      taskType: 'accountBalance',
+      taskUUID: 'task-uuid',
     });
+
+    const input = accountBalanceInputSchema.parse({});
+    const result = await accountBalance(input, mockClient);
+
+    expect(result).toMatchObject({
+      status: 'error',
+      message: 'Balance response did not include a balance amount',
+      data: { taskUUID: 'task-uuid' },
+    });
+    expect(result.message).not.toContain('0.00');
+  });
+
+  it('should return error when client throws', async () => {
+    (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Authentication failed'));
+
+    const input = accountBalanceInputSchema.parse({});
+    const result = await accountBalance(input, mockClient);
+
+    expect(result.status).toBe('error');
+    expect(result.message).toContain('Authentication failed');
   });
 });

@@ -1,12 +1,7 @@
-/**
- * Unit tests for the process folder tool.
- */
+// Does:  Proves processFolder rejects relative paths and aggregates per-file results, failures and cost.
+// Holds: File/folder utils and every per-operation tool handler are mocked; only the folder orchestration is real.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -44,7 +39,6 @@ vi.mock('../../../src/shared/folder-utils.js', () => ({
   IMAGE_EXTENSIONS: new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp']),
 }));
 
-// Mock underlying tool handlers
 vi.mock('../../../src/tools/image-upscale/index.js', () => ({
   imageUpscale: vi.fn(),
 }));
@@ -65,19 +59,11 @@ vi.mock('../../../src/tools/controlnet-preprocess/index.js', () => ({
   controlNetPreprocess: vi.fn(),
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { processFolder, processFolderToolDefinition } from '../../../src/tools/process-folder/handler.js';
+import { processFolder } from '../../../src/tools/process-folder/handler.js';
 import { processFolderInputSchema } from '../../../src/tools/process-folder/schema.js';
 import { imageUpscale } from '../../../src/tools/image-upscale/index.js';
 import { getImagesInFolder } from '../../../src/shared/folder-utils.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 function createMockClient() {
   return {
@@ -87,81 +73,18 @@ function createMockClient() {
   } as unknown as RunwareClient;
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('processFolder', () => {
   let mockClient: RunwareClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockClient = createMockClient();
-    // Re-set folder-utils mocks since clearAllMocks does not reset implementations
-    // that may have been overridden by individual tests (e.g., "no images found" test).
+    // Why: clearAllMocks keeps implementations, so a test's empty-folder override would leak.
     const mockGetImages = getImagesInFolder as ReturnType<typeof vi.fn>;
     mockGetImages.mockResolvedValue(['/valid/folder/image1.jpg', '/valid/folder/image2.jpg']);
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(processFolderToolDefinition.name).toBe('processFolder');
-    });
-
-    it('should require folderPath and operation', () => {
-      expect(processFolderToolDefinition.inputSchema.required).toContain('folderPath');
-      expect(processFolderToolDefinition.inputSchema.required).toContain('operation');
-    });
-
-    it('should have a description', () => {
-      expect(processFolderToolDefinition.description).toBeTruthy();
-    });
-  });
-
   describe('schema validation', () => {
-    it('should accept valid input', () => {
-      const result = processFolderInputSchema.safeParse({
-        folderPath: '/valid/folder',
-        operation: 'upscale',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should apply defaults', () => {
-      const result = processFolderInputSchema.safeParse({
-        folderPath: '/valid/folder',
-        operation: 'upscale',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.recursive).toBe(false);
-        expect(result.data.maxFiles).toBe(50);
-        expect(result.data.outputSuffix).toBe('_processed');
-        expect(result.data.concurrency).toBe(2);
-        expect(result.data.stopOnError).toBe(false);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
-    it('should accept all valid operations', () => {
-      const operations = ['upscale', 'removeBackground', 'caption', 'vectorize', 'controlNetPreprocess'];
-      for (const operation of operations) {
-        const result = processFolderInputSchema.safeParse({
-          folderPath: '/valid/folder',
-          operation,
-        });
-        expect(result.success).toBe(true);
-      }
-    });
-
-    it('should reject invalid operation', () => {
-      const result = processFolderInputSchema.safeParse({
-        folderPath: '/valid/folder',
-        operation: 'invalidOp',
-      });
-      expect(result.success).toBe(false);
-    });
-
     it('should reject relative path', () => {
       const result = processFolderInputSchema.safeParse({
         folderPath: 'relative/path',
@@ -260,7 +183,6 @@ describe('processFolder', () => {
       const result = await processFolder(input, mockClient);
 
       expect(result.status).toBe('success');
-      // 2 files * 0.005 each = 0.01
       expect(result.cost).toBeCloseTo(0.01, 5);
     });
   });

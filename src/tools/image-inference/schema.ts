@@ -1,3 +1,6 @@
+// Does:  Validates imageInference input across generation, editing, adapters and acceleration.
+// Holds: Every image field passes the shared image-input check; IP-adapters cap at 4 and embeddings at 5.
+
 import { z } from 'zod';
 
 import { providerSettingsSchema } from '../../shared/provider-settings.js';
@@ -32,10 +35,8 @@ const ipAdapterConfigSchema = z.object({
 
   weight: z.number().min(0).max(1).optional(),
 
-  /** Fraction of the diffusion run at which the adapter starts applying. */
   startStep: z.number().min(0).max(1).optional(),
 
-  /** Fraction of the diffusion run at which the adapter stops applying. */
   endStep: z.number().min(0).max(1).optional(),
 
   mode: z.enum(['style_transfer', 'composition', 'face_id', 'plus', 'plus_face']).optional(),
@@ -44,13 +45,10 @@ const ipAdapterConfigSchema = z.object({
 const refinerConfigSchema = z.object({
   model: z.string(),
 
-  /** Fraction of the diffusion run at which the refiner takes over. */
   startStep: z.number().min(0).max(1).optional(),
 });
 
-/** PuLID identity preservation. */
 const pulidConfigSchema = z.object({
-  /** Identity reference images. */
   inputImages: z.array(imageInputSchema).min(1).max(4),
 
   idWeight: z.number().min(0).max(3).optional(),
@@ -62,7 +60,6 @@ const pulidConfigSchema = z.object({
   maxTimestep: z.number().int().optional(),
 });
 
-/** ACE++ character-consistent generation. */
 const acePlusPlusConfigSchema = z.object({
   referenceImage: imageInputSchema,
 
@@ -71,7 +68,6 @@ const acePlusPlusConfigSchema = z.object({
   weight: z.number().min(0).max(1).optional(),
 });
 
-/** Pixels to extend the image by on each side. */
 const outpaintConfigSchema = z.object({
   left: z.number().int().min(0).max(512).optional(),
 
@@ -81,7 +77,6 @@ const outpaintConfigSchema = z.object({
 
   bottom: z.number().int().min(0).max(512).optional(),
 
-  /** Blur applied at the seam for blending. */
   blur: z.number().int().min(0).max(64).optional(),
 });
 
@@ -89,11 +84,9 @@ const safetyConfigSchema = z.object({
   checkContent: z.boolean().optional(),
 });
 
-/** Ultralytics face detection and enhancement. */
 const ultralyticsConfigSchema = z.object({
   confidence: z.number().min(0).max(1).optional(),
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter name
   CFGScale: z.number().min(0).max(50).optional(),
 
   steps: z.number().int().min(1).max(100).optional(),
@@ -102,19 +95,14 @@ const ultralyticsConfigSchema = z.object({
 export const imageInferenceInputSchema = z.object({
   positivePrompt: positivePromptSchema,
 
-  /** AIR-format identifier, e.g. "civitai:123@456". */
   model: modelIdentifierSchema,
 
-  /** Pixels; must be a multiple of 64. */
   width: dimensionSchema.optional().default(1024),
 
-  /** Pixels; must be a multiple of 64. */
   height: dimensionSchema.optional().default(1024),
 
   steps: stepsSchema.optional(),
 
-  /** Higher values follow the prompt more closely. */
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter name
   CFGScale: cfgScaleSchema.optional(),
 
   seed: seedSchema,
@@ -125,19 +113,15 @@ export const imageInferenceInputSchema = z.object({
 
   negativePrompt: negativePromptSchema,
 
-  /** Accepts an image UUID, URL, base64 payload, or data URI. */
   seedImage: imageInputSchema.optional(),
 
-  /** White marks the area to edit. Accepts a UUID, URL, base64 payload, or data URI. */
   maskImage: imageInputSchema.optional(),
 
-  /** FLUX.1 Kontext accepts at most 2. */
+  // Holds: FLUX.1 Kontext accepts at most 2; that lower limit is left to the API.
   referenceImages: z.array(imageInputSchema).max(4).optional(),
 
-  /** Denoising strength; higher values deviate further from the seed image. */
   strength: strengthSchema.optional(),
 
-  /** Extra context pixels around the mask, for better blending. */
   maskMargin: z.number().int().min(32).max(128).optional(),
 
   outpaint: outpaintConfigSchema.optional(),
@@ -150,26 +134,22 @@ export const imageInferenceInputSchema = z.object({
 
   ipAdapters: z.array(ipAdapterConfigSchema).max(4).optional(),
 
-  /** Two-stage generation, SDXL only. */
+  // Holds: Only SDXL models support a refiner; the schema does not check the architecture.
   refiner: refinerConfigSchema.optional(),
 
-  /** Overrides the model's visual decoder. */
   vae: z.string().optional(),
 
   pulid: pulidConfigSchema.optional(),
 
   acePlusPlus: acePlusPlusConfigSchema.optional(),
 
-  /** Higher levels trade image quality for speed. */
   acceleration: z.enum(['none', 'low', 'medium', 'high']).optional(),
 
-  /** Transformer models only (Flux, SD3). */
+  // Holds: Only transformer models (Flux, SD3) support teaCache; UNet models need deepCache instead.
   teaCache: z.boolean().optional(),
 
-  /** UNet models only (SDXL, SD1.5). */
   deepCache: z.boolean().optional(),
 
-  /** Use the nested object matching the model's provider. */
   providerSettings: providerSettingsSchema.optional(),
 
   ultralytics: ultralyticsConfigSchema.optional(),
@@ -178,40 +158,32 @@ export const imageInferenceInputSchema = z.object({
 
   outputFormat: outputFormatSchema.optional(),
 
-  /** Applies to JPG and WebP only. */
   outputQuality: outputQualitySchema.optional(),
 
   safety: safetyConfigSchema.optional(),
 
   includeCost: z.boolean().optional().default(true),
 
-  /** Lifetime of generated URLs, in seconds. */
   ttl: z.number().int().min(60).optional(),
 });
 
 const imageResultSchema = z.object({
   imageUUID: z.string(),
 
-  /** Present when outputType is URL. */
   imageURL: z.string().optional(),
 
-  /** Present when outputType is base64Data. */
   imageBase64Data: z.string().optional(),
 
-  /** Present when outputType is dataURI. */
   imageDataURI: z.string().optional(),
 
-  /** Seed used for this image. */
   seed: z.number().optional(),
 
   nsfwContent: z.boolean().optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const imageInferenceOutputSchema = z.object({
   images: z.array(imageResultSchema),
 
-  /** Total cost in USD. */
   cost: z.number().optional(),
 });
 

@@ -1,17 +1,12 @@
+// Does:  Validates listVideoModels filters and describes the summary list it returns.
+// Holds: provider is limited to the providers present in the bundled catalog.
+
 import { z } from 'zod';
 
 export const listVideoModelsInputSchema = z.object({
-  provider: z.enum([
-    'klingai',
-    'google',
-    'minimax',
-    'pixverse',
-    'vidu',
-    'alibaba',
-    'runway',
-    'seedance',
-    'sync',
-  ]).optional(),
+  provider: z
+    .enum(['klingai', 'google', 'minimax', 'pixverse', 'vidu', 'alibaba', 'runway', 'seedance', 'sync'])
+    .optional(),
 
   minDuration: z.number().min(1).max(60).optional(),
 
@@ -43,7 +38,6 @@ const videoModelSummarySchema = z.object({
   costPerSecond: z.number().optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const listVideoModelsOutputSchema = z.object({
   models: z.array(videoModelSummarySchema),
 

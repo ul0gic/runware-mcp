@@ -1,3 +1,6 @@
+// Does:  Upscales an image 2x or 4x in one synchronous upscale task.
+// Holds: model and output options are sent only when set, so the API's own defaults apply otherwise.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -64,10 +67,7 @@ export async function imageUpscale(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('upscale', requestParams);
 
-    const response = await runwareClient.requestSingle<ImageUpscaleApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.requestSingle<ImageUpscaleApiResponse>(task, { signal: context?.signal });
 
     const output = processResponse(response);
 

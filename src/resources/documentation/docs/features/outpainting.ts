@@ -1,3 +1,5 @@
+// Does:  Documents outpainting: extending an image past its borders on chosen sides.
+// Holds: Served at runware://docs/features/outpainting; links back only to image-inference and controlnet-guide.
 import type { DocResource } from '../../types.js';
 
 export const outpaintingDoc: DocResource = {
@@ -16,8 +18,7 @@ export const outpaintingDoc: DocResource = {
         name: 'outpaint',
         type: 'object',
         required: false,
-        description:
-          'Outpainting configuration. Specifies pixel extensions for each side and blur blending.',
+        description: 'Outpainting configuration. Specifies pixel extensions for each side and blur blending.',
       },
       {
         name: 'outpaint.left',
@@ -108,10 +109,7 @@ export const outpaintingDoc: DocResource = {
       'Combine outpainting with a strength parameter (0.7-0.9) to control how much the original image influences the generated content near boundaries.',
     ],
 
-    relatedDocs: [
-      'runware://docs/tools/image-inference',
-      'runware://docs/features/controlnet-guide',
-    ],
+    relatedDocs: ['runware://docs/tools/image-inference', 'runware://docs/features/controlnet-guide'],
   },
   lastUpdated: '2026-02-05',
 };

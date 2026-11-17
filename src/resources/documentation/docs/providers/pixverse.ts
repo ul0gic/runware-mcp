@@ -1,3 +1,5 @@
+// Does:  Documents PixVerse video models, effects and camera-movement settings.
+// Holds: Served at runware://docs/providers/pixverse; registered via providerDocs, not registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const pixverseDoc: DocResource = {

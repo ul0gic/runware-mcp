@@ -1,14 +1,12 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Starts an async model training task on a ZIP dataset and polls until it finishes.
+// Holds: Free-form parameters are spread before includeCost and deliveryMethod, so they cannot force a sync submit.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type AsyncTaskResponse,
-  type TaskUUID,
   type ToolContext,
   type ToolResult,
   errorResult,
@@ -49,15 +47,13 @@ export async function training(
       deliveryMethod: 'async',
     });
     await runwareClient.request([task], { signal: context?.signal });
-    const polled = await pollForResult<TrainingResponse>(task.taskUUID as TaskUUID, {
+    const polled = await pollForResult<TrainingResponse>(task.taskUUID, {
       client: runwareClient,
       progress: context?.progress,
       signal: context?.signal,
     });
     return successResult(
-      polled.result.air === undefined
-        ? 'Training completed'
-        : `Training completed: ${polled.result.air}`,
+      polled.result.air === undefined ? 'Training completed' : `Training completed: ${polled.result.air}`,
       {
         taskUUID: task.taskUUID,
         air: polled.result.air,

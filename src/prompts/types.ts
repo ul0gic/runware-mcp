@@ -1,6 +1,7 @@
-/** Defaults for optional arguments belong in the description text. */
+// Does:  Defines the prompt template contract and the messages it generates.
+// Holds: An optional argument's default lives in its description text; PromptArgument has no default field.
+
 interface PromptArgument {
-  /** Key in the args record. */
   readonly name: string;
   readonly description: string;
   readonly required: boolean;

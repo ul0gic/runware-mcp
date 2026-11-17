@@ -1,25 +1,15 @@
-// Watchers are in-memory and do not persist across server restarts.
+// Does:  Starts, stops and reports fs watchers that run an image operation on each new image file.
+// Holds: Watchers live only in this process's memory; at most one watcher exists per resolved folder path.
 
 import { watch, type FSWatcher } from 'node:fs';
 import path from 'node:path';
 
-import {
-  type RunwareClient,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+import { type RunwareClient, getDefaultClient } from '../../integrations/runware/client.js';
 import { config } from '../../shared/config.js';
 import { wrapError } from '../../shared/errors.js';
 import { readFileAsBase64 } from '../../shared/file-utils.js';
-import {
-  IMAGE_EXTENSIONS,
-  validateFolder,
-} from '../../shared/folder-utils.js';
-import {
-  type ToolContext,
-  type ToolResult,
-  errorResult,
-  successResult,
-} from '../../shared/types.js';
+import { IMAGE_EXTENSIONS, validateFolder } from '../../shared/folder-utils.js';
+import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 import { debounce, generateTaskUUID } from '../../shared/utils.js';
 import { controlNetPreprocess } from '../controlnet-preprocess/index.js';
 import { imageBackgroundRemoval } from '../image-background-removal/index.js';
@@ -27,12 +17,7 @@ import { imageCaption } from '../image-caption/index.js';
 import { imageUpscale } from '../image-upscale/index.js';
 import { vectorize } from '../vectorize/index.js';
 
-import type {
-  WatcherInfo,
-  WatchFolderOutput,
-  WatchOperation,
-  watchFolderInputSchema,
-} from './schema.js';
+import type { WatcherInfo, WatchFolderOutput, WatchOperation, watchFolderInputSchema } from './schema.js';
 import type { z } from 'zod';
 
 type WatchFolderInputType = z.infer<typeof watchFolderInputSchema>;
@@ -50,11 +35,9 @@ interface WatcherState {
   readonly createdAt: Date;
 }
 
-/**
- * Map of active watchers by ID.
- * Watchers are in-memory only and do not persist across restarts.
- */
 const activeWatchers = new Map<string, WatcherState>();
+
+type WatcherRuntime = Omit<WatcherState, 'watcher'>;
 
 function isImageFile(filename: string): boolean {
   const ext = path.extname(filename).toLowerCase();
@@ -87,12 +70,12 @@ function getExtension(filePath: string): string {
 }
 
 interface WatchOperationParams {
-  readonly model?: string;
-  readonly upscaleFactor?: 2 | 4;
-  readonly preprocessor?: string;
+  readonly model?: string | undefined;
+  readonly upscaleFactor?: 2 | 4 | undefined;
+  readonly preprocessor?: string | undefined;
 }
 
-/** Iterates entries rather than indexing to avoid dynamic object access. */
+// Why: Iterating entries avoids indexing an untrusted record by a dynamic key.
 function getParamValue(params: Record<string, unknown>, targetKey: string): unknown {
   for (const [key, value] of Object.entries(params)) {
     if (key === targetKey) {
@@ -120,6 +103,81 @@ function extractWatchOperationParams(params: Record<string, unknown>): WatchOper
   };
 }
 
+const WATCH_PREPROCESSORS = [
+  'canny',
+  'depth',
+  'mlsd',
+  'normalbae',
+  'openpose',
+  'tile',
+  'seg',
+  'lineart',
+  'lineart_anime',
+  'shuffle',
+  'scribble',
+  'softedge',
+] as const;
+
+type WatchPreprocessor = (typeof WATCH_PREPROCESSORS)[number];
+
+function isWatchPreprocessor(value: string): value is WatchPreprocessor {
+  return WATCH_PREPROCESSORS.some((known) => known === value);
+}
+
+function modelOrDefault(model: string | undefined, fallback: string): string {
+  return model !== undefined && model.length > 0 ? model : fallback;
+}
+
+function runWatchOperation(
+  operation: WatchOperation,
+  imageData: string,
+  params: WatchOperationParams,
+  client: RunwareClient,
+): Promise<ToolResult> | undefined {
+  switch (operation) {
+    case 'upscale': {
+      return imageUpscale(
+        {
+          inputImage: imageData,
+          upscaleFactor: params.upscaleFactor ?? 2,
+          model: params.model,
+          outputType: 'URL',
+          includeCost: true,
+        },
+        client,
+      );
+    }
+    case 'removeBackground': {
+      return imageBackgroundRemoval(
+        {
+          inputImage: imageData,
+          model: modelOrDefault(params.model, 'runware:109@1'),
+          outputType: 'URL',
+          includeCost: true,
+        },
+        client,
+      );
+    }
+    case 'caption': {
+      return imageCaption(
+        { inputImage: imageData, model: modelOrDefault(params.model, 'runware:150@2'), includeCost: true },
+        client,
+      );
+    }
+    case 'vectorize': {
+      const model = params.model === 'recraft:1@1' || params.model === 'picsart:1@1' ? params.model : 'recraft:1@1';
+      return vectorize({ inputImage: imageData, model, outputFormat: 'SVG', includeCost: true }, client);
+    }
+    case 'controlNetPreprocess': {
+      const preprocessor = params.preprocessor;
+      if (preprocessor === undefined || !isWatchPreprocessor(preprocessor)) {
+        return undefined;
+      }
+      return controlNetPreprocess({ inputImage: imageData, preprocessor, includeCost: true }, client);
+    }
+  }
+}
+
 async function processFile(
   filePath: string,
   operation: WatchOperation,
@@ -129,92 +187,11 @@ async function processFile(
   try {
     const imageBase64 = await readFileAsBase64(filePath);
     const imageData = `data:image/${getExtension(filePath)};base64,${imageBase64}`;
-
-    const params = extractWatchOperationParams(operationParams);
-
-    let result: ToolResult;
-
-    switch (operation) {
-      case 'upscale': {
-        result = await imageUpscale(
-          {
-            inputImage: imageData,
-            upscaleFactor: params.upscaleFactor ?? 2,
-            model: params.model,
-            outputType: 'URL',
-            includeCost: true,
-          },
-          client,
-        );
-        break;
-      }
-
-      case 'removeBackground': {
-        const bgModel = params.model;
-        result = await imageBackgroundRemoval(
-          {
-            inputImage: imageData,
-            model: bgModel !== undefined && bgModel.length > 0 ? bgModel : 'runware:109@1',
-            outputType: 'URL',
-            includeCost: true,
-          },
-          client,
-        );
-        break;
-      }
-
-      case 'caption': {
-        const captionModel = params.model;
-        result = await imageCaption(
-          {
-            inputImage: imageData,
-            model: captionModel !== undefined && captionModel.length > 0 ? captionModel : 'runware:150@2',
-            includeCost: true,
-          },
-          client,
-        );
-        break;
-      }
-
-      case 'vectorize': {
-        const vecModel = params.model;
-        const validVecModel = vecModel === 'recraft:1@1' || vecModel === 'picsart:1@1' ? vecModel : 'recraft:1@1';
-        result = await vectorize(
-          {
-            inputImage: imageData,
-            model: validVecModel,
-            outputFormat: 'SVG',
-            includeCost: true,
-          },
-          client,
-        );
-        break;
-      }
-
-      case 'controlNetPreprocess': {
-        const preprocessor = params.preprocessor;
-        if (preprocessor === undefined) {
-          return false;
-        }
-        const validPreprocessors = [
-          'canny', 'depth', 'mlsd', 'normalbae', 'openpose', 'tile',
-          'seg', 'lineart', 'lineart_anime', 'shuffle', 'scribble', 'softedge',
-        ] as const;
-        if (!validPreprocessors.includes(preprocessor as typeof validPreprocessors[number])) {
-          return false;
-        }
-        result = await controlNetPreprocess(
-          {
-            inputImage: imageData,
-            preprocessor: preprocessor as typeof validPreprocessors[number],
-            includeCost: true,
-          },
-          client,
-        );
-        break;
-      }
+    const pending = runWatchOperation(operation, imageData, extractWatchOperationParams(operationParams), client);
+    if (pending === undefined) {
+      return false;
     }
-
+    const result = await pending;
     return result.status === 'success';
   } catch {
     return false;
@@ -223,11 +200,10 @@ async function processFile(
 
 async function processFileAndUpdateState(
   filePath: string,
-  state: WatcherState,
+  state: WatcherRuntime,
   client: RunwareClient,
   processingFiles: Set<string>,
 ): Promise<void> {
-  // Skip if already processing
   if (processingFiles.has(filePath)) {
     return;
   }
@@ -235,12 +211,7 @@ async function processFileAndUpdateState(
   processingFiles.add(filePath);
 
   try {
-    const success = await processFile(
-      filePath,
-      state.operation,
-      state.operationParams,
-      client,
-    );
+    const success = await processFile(filePath, state.operation, state.operationParams, client);
 
     if (success) {
       state.processedCount += 1;
@@ -255,21 +226,18 @@ async function processFileAndUpdateState(
 }
 
 function createFileHandler(
-  state: WatcherState,
+  state: WatcherRuntime,
   client: RunwareClient,
 ): (eventType: string, filename: string | null) => void {
-  // Track files being processed to avoid duplicates
+  // Why: Fs.watch can fire repeatedly for one file, so in-flight paths are tracked to process each once.
   const processingFiles = new Set<string>();
 
-  const debouncedHandler = debounce(
-    (filePath: string): void => {
-      void processFileAndUpdateState(filePath, state, client, processingFiles);
-    },
-    config.WATCH_DEBOUNCE_MS,
-  );
+  const debouncedHandler = debounce((filePath: string): void => {
+    void processFileAndUpdateState(filePath, state, client, processingFiles);
+  }, config.WATCH_DEBOUNCE_MS);
 
   return (eventType: string, filename: string | null): void => {
-    // fs.watch surfaces newly created files as 'rename' events.
+    // Why: Fs.watch surfaces newly created files as 'rename' events, not 'change'.
     if (!(eventType === 'rename' && filename !== null && isImageFile(filename))) {
       return;
     }
@@ -279,11 +247,7 @@ function createFileHandler(
   };
 }
 
-async function handleStart(
-  input: WatchFolderInputType,
-  client: RunwareClient,
-): Promise<WatchFolderOutput> {
-  // Validate required fields (Zod refinement ensures these exist for 'start' action)
+async function handleStart(input: WatchFolderInputType, client: RunwareClient): Promise<WatchFolderOutput> {
   const inputFolderPath = input.folderPath;
   const inputOperation = input.operation;
 
@@ -312,29 +276,22 @@ async function handleStart(
 
   const watcherId = generateTaskUUID();
 
-  const state: WatcherState = {
+  const runtime: WatcherRuntime = {
     id: watcherId,
     folderPath,
     operation: inputOperation,
     operationParams: input.operationParams ?? {},
     outputFolder: input.outputFolder,
-    watcher: undefined as unknown as FSWatcher, // Will be set below
     processedCount: 0,
     failedCount: 0,
     lastActivity: undefined,
     createdAt: new Date(),
   };
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- Path validated above
-  const fsWatcher = watch(
-    folderPath,
-    { persistent: false },
-    createFileHandler(state, client),
-  );
+  const fsWatcher = watch(folderPath, { persistent: false }, createFileHandler(runtime, client));
 
-  (state as { watcher: FSWatcher }).watcher = fsWatcher;
-
-  activeWatchers.set(watcherId, state);
+  // Why: The file handler holds runtime by reference, so the watcher joins that object to keep counters live.
+  activeWatchers.set(watcherId, Object.assign(runtime, { watcher: fsWatcher }));
 
   return {
     action: 'start',
@@ -471,10 +428,7 @@ export async function watchFolder(
   }
 }
 
-/**
- * Stops all active watchers.
- * Should be called during server shutdown.
- */
+// Holds: The server's shutdown path calls this; nothing else closes the fs handles.
 export function stopAllWatchers(): void {
   for (const [, state] of activeWatchers) {
     state.watcher.close();
@@ -484,7 +438,8 @@ export function stopAllWatchers(): void {
 
 export const watchFolderToolDefinition = {
   name: 'watchFolder',
-  description: 'Manage folder watchers that auto-process new image files. Actions: start (begin watching), stop (end watching), list (show all watchers), status (check a watcher).',
+  description:
+    'Manage folder watchers that auto-process new image files. Actions: start (begin watching), stop (end watching), list (show all watchers), status (check a watcher).',
   inputSchema: {
     type: 'object',
     properties: {

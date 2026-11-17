@@ -1,5 +1,8 @@
-/** JSON-RPC 2.0 reserves -32700..-32600; MCP-specific errors use -32001..-32099; app errors use -32100..-32199. */
-export const MCP_ERROR_CODES = {
+// Does:  Defines the McpError hierarchy and the JSON-RPC error codes it reports.
+// Holds: Each error class carries one fixed code; wrapError turns anything not an McpError into a RunwareApiError.
+
+// Holds: JSON-RPC reserves -32700..-32600; MCP errors use -32001..-32099 and app errors -32100..-32199.
+const MCP_ERROR_CODES = {
   PARSE_ERROR: -32_700,
   INVALID_REQUEST: -32_600,
   METHOD_NOT_FOUND: -32_601,
@@ -50,17 +53,17 @@ export abstract class McpError extends Error {
 export class RunwareApiError extends McpError {
   readonly code = MCP_ERROR_CODES.RUNWARE_API_ERROR;
   readonly data: Readonly<{
-    apiCode?: string;
-    taskUUID?: string;
-    statusCode?: number;
+    apiCode?: string | undefined;
+    taskUUID?: string | undefined;
+    statusCode?: number | undefined;
   }>;
 
   constructor(
     message: string,
     options?: {
-      apiCode?: string;
-      taskUUID?: string;
-      statusCode?: number;
+      apiCode?: string | undefined;
+      taskUUID?: string | undefined;
+      statusCode?: number | undefined;
     },
   ) {
     super(message);
@@ -181,7 +184,7 @@ export class FileTooLargeError extends McpError {
   }
 }
 
-/** resolvedPath is kept server-side only (not in data) to avoid exposing internal filesystem structure to clients. */
+// Why: resolvedPath stays out of data so clients never see the server filesystem layout.
 export class PathTraversalError extends McpError {
   readonly code = MCP_ERROR_CODES.PATH_TRAVERSAL_DETECTED;
   readonly data: Readonly<{
@@ -217,109 +220,10 @@ export class FolderNotFoundError extends McpError {
   }
 }
 
-export interface BatchItemResult {
-  readonly index: number;
-  readonly success: boolean;
-  readonly error?: string;
-  readonly data?: unknown;
-}
-
-export class BatchPartialFailureError extends McpError {
-  readonly code = MCP_ERROR_CODES.BATCH_PARTIAL_FAILURE;
-  readonly data: Readonly<{
-    totalItems: number;
-    successCount: number;
-    failureCount: number;
-    results: readonly BatchItemResult[];
-  }>;
-
-  constructor(
-    message: string,
-    options: {
-      totalItems: number;
-      successCount: number;
-      failureCount: number;
-      results: readonly BatchItemResult[];
-    },
-  ) {
-    super(message);
-    this.data = {
-      totalItems: options.totalItems,
-      successCount: options.successCount,
-      failureCount: options.failureCount,
-      results: options.results,
-    };
-  }
-}
-
-export class ProviderNotSupportedError extends McpError {
-  readonly code = MCP_ERROR_CODES.PROVIDER_NOT_SUPPORTED;
-  readonly data: Readonly<{
-    provider: string;
-    operation: string;
-    supportedProviders?: readonly string[];
-  }>;
-
-  constructor(
-    message: string,
-    options: {
-      provider: string;
-      operation: string;
-      supportedProviders?: readonly string[];
-    },
-  ) {
-    super(message);
-    this.data = {
-      provider: options.provider,
-      operation: options.operation,
-      ...(options.supportedProviders !== undefined && {
-        supportedProviders: options.supportedProviders,
-      }),
-    };
-  }
-}
-
-export class ToolNotFoundError extends McpError {
-  readonly code = MCP_ERROR_CODES.TOOL_NOT_FOUND;
-  readonly data: Readonly<{
-    toolName: string;
-  }>;
-
-  constructor(toolName: string) {
-    super(`Tool not found: ${toolName}`);
-    this.data = { toolName };
-  }
-}
-
-export class ResourceNotFoundError extends McpError {
-  readonly code = MCP_ERROR_CODES.RESOURCE_NOT_FOUND;
-  readonly data: Readonly<{
-    uri: string;
-  }>;
-
-  constructor(uri: string) {
-    super(`Resource not found: ${uri}`);
-    this.data = { uri };
-  }
-}
-
-export class InvalidParamsError extends McpError {
-  readonly code = MCP_ERROR_CODES.INVALID_PARAMS;
-  readonly data: Readonly<{
-    errors: readonly string[];
-  }>;
-
-  constructor(message: string, errors: readonly string[]) {
-    super(message);
-    this.data = { errors };
-  }
-}
-
-export function isMcpError(error: unknown): error is McpError {
+function isMcpError(error: unknown): error is McpError {
   return error instanceof McpError;
 }
 
-/** If error is already an McpError it's returned unchanged; otherwise it's wrapped in a RunwareApiError. */
 export function wrapError(error: unknown): McpError {
   if (isMcpError(error)) {
     return error;

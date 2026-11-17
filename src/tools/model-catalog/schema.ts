@@ -1,3 +1,6 @@
+// Does:  Validates the inputs of the six model-catalog tools.
+// Holds: model identifiers are capped at 256 characters and list pages at 100 models.
+
 import { z } from 'zod';
 
 export const listModelsInputSchema = z.object({

@@ -1,7 +1,10 @@
+// Does:  Builds the music-composition prompt that guides an audioInference call.
+// Holds: duration over 300 seconds clamps to 300; non-numeric or under-10 values become 30.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'music-composition';
-const PROMPT_DESCRIPTION = 'Generate music and audio compositions with configurable genre, mood, tempo, and instrumentation.';
+const PROMPT_DESCRIPTION =
+  'Generate music and audio compositions with configurable genre, mood, tempo, and instrumentation.';
 
 const DEFAULT_PURPOSE = 'background';
 const DEFAULT_TEMPO = 'moderate';
@@ -126,9 +129,7 @@ export const musicComposition: PromptTemplate = {
     const purposeDesc = PURPOSE_DESCRIPTORS[purpose] ?? PURPOSE_DESCRIPTORS[DEFAULT_PURPOSE] ?? '';
     const tempoDesc = TEMPO_BPM[tempo] ?? TEMPO_BPM[DEFAULT_TEMPO] ?? '';
 
-    const instrumentClause = instruments !== undefined && instruments.length > 0
-      ? ` Featuring: ${instruments}.`
-      : '';
+    const instrumentClause = instruments !== undefined && instruments.length > 0 ? ` Featuring: ${instruments}.` : '';
 
     const prompt = [
       `${genre} music composition.`,
@@ -166,7 +167,9 @@ export const musicComposition: PromptTemplate = {
     ];
 
     if (safeDuration > 60) {
-      lines.push(`- For longer compositions (${String(safeDuration)}s), ensure the model supports the duration. ElevenLabs supports up to 300 seconds.`);
+      lines.push(
+        `- For longer compositions (${String(safeDuration)}s), ensure the model supports the duration. ElevenLabs supports up to 300 seconds.`,
+      );
     }
 
     const content = lines.join('\n');

@@ -1,8 +1,7 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Expands a short prompt into one to five enhanced variations.
+// Holds: Issues one request per requested version in parallel; cost is the sum and is omitted when zero.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
@@ -35,43 +34,30 @@ export async function promptEnhance(
   try {
     await defaultRateLimiter.waitForToken(context?.signal);
 
-    const enhancedPrompts: string[] = [];
-    let totalCost = 0;
-
-    // The API returns a single result per request, so each version needs its own call.
-    const requestParams = buildApiRequest(input);
-
-    const versionsToGenerate = input.promptVersions;
-
-    for (let i = 0; i < versionsToGenerate; i++) {
-      if (context?.signal?.aborted === true) {
-        throw new Error('Operation cancelled');
-      }
-
-      const task = createTaskRequest('promptEnhance', requestParams);
-
-      const response = await runwareClient.requestSingle<PromptEnhanceApiResponse>(task, {
-        signal: context?.signal,
-      });
-
-      enhancedPrompts.push(response.text);
-
-      if (response.cost !== undefined) {
-        totalCost += response.cost;
-      }
+    if (context?.signal?.aborted === true) {
+      throw new Error('Operation cancelled');
     }
+
+    // Why: The API returns a single result per request, so each version needs its own call.
+    const requestParams = buildApiRequest(input);
+    const responses = await Promise.all(
+      Array.from({ length: input.promptVersions }, () =>
+        runwareClient.requestSingle<PromptEnhanceApiResponse>(createTaskRequest('promptEnhance', requestParams), {
+          signal: context?.signal,
+        }),
+      ),
+    );
+
+    const enhancedPrompts = responses.map((response) => response.text);
+    const totalCost = responses.reduce((sum, response) => sum + (response.cost ?? 0), 0);
 
     const output: PromptEnhanceOutput = {
       enhancedPrompts,
       ...(totalCost > 0 && { cost: totalCost }),
     };
 
-    const versionsText = versionsToGenerate === 1 ? '1 variation' : `${String(versionsToGenerate)} variations`;
-    return successResult(
-      `Prompt enhanced successfully (${versionsText})`,
-      output,
-      output.cost,
-    );
+    const versionsText = input.promptVersions === 1 ? '1 variation' : `${String(input.promptVersions)} variations`;
+    return successResult(`Prompt enhanced successfully (${versionsText})`, output, output.cost);
   } catch (error) {
     const mcpError = wrapError(error);
     return errorResult(mcpError.message, mcpError.data);

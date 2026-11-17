@@ -1,3 +1,6 @@
+// Does:  Validates styleTransfer input and describes the styled image it returns.
+// Holds: style, intensity and colorPalette are closed enums, so every prompt descriptor switch stays exhaustive.
+
 import { z } from 'zod';
 
 import {
@@ -43,10 +46,8 @@ export const styleTransferInputSchema = z.object({
 
   style: artStyleSchema,
 
-  /** Omitted subjects are auto-captioned from the source image. */
   subject: z.string().min(2).max(500).optional(),
 
-  /** Maps to CFGScale: subtle 5, moderate 7, strong 10. */
   intensity: intensitySchema.optional().default('moderate'),
 
   colorPalette: colorPaletteSchema.optional().default('vibrant'),
@@ -59,7 +60,6 @@ export const styleTransferInputSchema = z.object({
 
   steps: stepsSchema.optional(),
 
-  /** Lower values preserve more of the original image. */
   strength: strengthSchema.optional().default(0.65),
 
   outputType: outputTypeSchema.optional(),
@@ -69,7 +69,6 @@ export const styleTransferInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const styleTransferOutputSchema = z.object({
   imageUUID: z.string(),
 
@@ -81,7 +80,6 @@ const styleTransferOutputSchema = z.object({
 
   captionUsed: z.string().optional(),
 
-  /** Caption plus generation, in USD. */
   cost: z.number().optional(),
 });
 

@@ -1,14 +1,12 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Runs Runware text and multimodal language-model inference, sync or async with polling.
+// Holds: Only fields the caller set are forwarded; sync cost is the sum across every returned result.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type AsyncTaskResponse,
-  type TaskUUID,
   type ToolContext,
   type ToolResult,
   errorResult,
@@ -55,7 +53,7 @@ export async function textInference(
 
     if (input.deliveryMethod === 'async') {
       await runwareClient.request([task], { signal: context?.signal });
-      const polled = await pollForResult<TextInferenceResponse>(task.taskUUID as TaskUUID, {
+      const polled = await pollForResult<TextInferenceResponse>(task.taskUUID, {
         client: runwareClient,
         progress: context?.progress,
         signal: context?.signal,
@@ -63,14 +61,8 @@ export async function textInference(
       return successResult('Text inference completed', polled.result, polled.result.cost);
     }
 
-    const response = await runwareClient.request<TextInferenceResponse>(
-      [task],
-      { signal: context?.signal },
-    );
-    const totalCost = response.data.reduce(
-      (total, result) => total + (result.cost ?? 0),
-      0,
-    );
+    const response = await runwareClient.request<TextInferenceResponse>([task], { signal: context?.signal });
+    const totalCost = response.data.reduce((total, result) => total + (result.cost ?? 0), 0);
     return successResult(
       `Text inference completed with ${String(response.data.length)} result(s)`,
       { taskUUID: task.taskUUID, results: response.data },

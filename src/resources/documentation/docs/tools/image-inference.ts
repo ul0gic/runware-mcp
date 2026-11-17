@@ -1,10 +1,13 @@
+// Does:  Documents the imageInference tool: text-to-image, img2img, inpainting and outpainting.
+// Holds: Every feature doc lists runware://docs/tools/image-inference in its relatedDocs.
 import type { DocResource } from '../../types.js';
 
 export const imageInferenceDoc: DocResource = {
   id: 'image-inference',
   category: 'tools',
   title: 'Image Generation',
-  summary: 'Generate images from text prompts or transform existing images with support for ControlNet, LoRA, IP-Adapters, identity preservation, and provider-specific features',
+  summary:
+    'Generate images from text prompts or transform existing images with support for ControlNet, LoRA, IP-Adapters, identity preservation, and provider-specific features',
   tags: ['image', 'generation', 'text-to-image', 'img2img', 'inpainting', 'outpainting', 'ControlNet', 'LoRA'],
   content: {
     description:
@@ -55,11 +58,13 @@ export const imageInferenceDoc: DocResource = {
         type: 'number',
         range: '0-50',
         default: '7',
-        description: 'Classifier-Free Guidance scale. Higher values follow the prompt more closely. 5-10 is recommended.',
+        description:
+          'Classifier-Free Guidance scale. Higher values follow the prompt more closely. 5-10 is recommended.',
       },
       {
         name: 'seed',
         type: 'integer',
+        // biome-ignore lint/security/noSecrets: numeric seed range, not a credential.
         range: '1-9223372036854776000',
         description: 'Random seed for reproducible generation. Omit for random seed.',
       },
@@ -95,7 +100,8 @@ export const imageInferenceDoc: DocResource = {
       {
         name: 'controlNet',
         type: 'array',
-        description: 'Array of ControlNet configs (max 4). Each has model, guideImage, weight, startStep, endStep, controlMode.',
+        description:
+          'Array of ControlNet configs (max 4). Each has model, guideImage, weight, startStep, endStep, controlMode.',
       },
       {
         name: 'lora',
@@ -105,7 +111,8 @@ export const imageInferenceDoc: DocResource = {
       {
         name: 'ipAdapters',
         type: 'array',
-        description: 'Array of IP-Adapter configs (max 4). Each has model, guideImages, weight, mode (style_transfer, composition, face_id, plus, plus_face).',
+        description:
+          'Array of IP-Adapter configs (max 4). Each has model, guideImages, weight, mode (style_transfer, composition, face_id, plus, plus_face).',
       },
       {
         name: 'acceleration',
@@ -159,7 +166,8 @@ export const imageInferenceDoc: DocResource = {
           steps: 25,
           cfgScale: 7,
         },
-        explanation: 'Minimal text-to-image call. Uses default SDXL model, 1024x1024 resolution, 25 steps for good quality.',
+        explanation:
+          'Minimal text-to-image call. Uses default SDXL model, 1024x1024 resolution, 25 steps for good quality.',
       },
       {
         title: 'Image-to-image with LoRA style',
@@ -173,7 +181,8 @@ export const imageInferenceDoc: DocResource = {
           height: 768,
           steps: 30,
         },
-        explanation: 'Transforms a reference image with a LoRA style. Strength 0.65 preserves some of the original composition while allowing significant changes.',
+        explanation:
+          'Transforms a reference image with a LoRA style. Strength 0.65 preserves some of the original composition while allowing significant changes.',
       },
       {
         title: 'Inpainting with face enhancement',
@@ -186,7 +195,8 @@ export const imageInferenceDoc: DocResource = {
           strength: 0.85,
           ultralytics: { confidence: 0.5 },
         },
-        explanation: 'Inpaints the masked area with face enhancement. maskMargin adds surrounding context for better blending. Ultralytics detects and refines faces.',
+        explanation:
+          'Inpaints the masked area with face enhancement. maskMargin adds surrounding context for better blending. Ultralytics detects and refines faces.',
       },
     ],
     tips: [

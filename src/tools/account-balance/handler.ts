@@ -1,9 +1,8 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
-import { wrapError } from '../../shared/errors.js';
+// Does:  Reads the account credit balance through the accountManagement getDetails operation.
+// Holds: Accepts both the nested and flat balance response shapes; a response without an amount is an error result.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
+import { GenerationFailedError, wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 
@@ -12,11 +11,13 @@ import type { AccountBalanceInput, AccountBalanceOutput } from './schema.js';
 interface AccountBalanceApiResponse {
   readonly taskType: 'accountManagement' | 'accountBalance';
   readonly taskUUID: string;
-  readonly balance?: number | {
-    readonly amount?: number;
-    readonly freeBalance?: number;
-    readonly currency?: string;
-  };
+  readonly balance?:
+    | number
+    | {
+        readonly amount?: number;
+        readonly freeBalance?: number;
+        readonly currency?: string;
+      };
   readonly currency?: string;
 }
 
@@ -36,24 +37,24 @@ export async function accountBalance(
       signal: context?.signal,
     });
 
-    const currentBalance = typeof response.balance === 'object'
-      ? response.balance.amount
-      : response.balance;
-    const currentCurrency = typeof response.balance === 'object'
-      ? response.balance.currency
-      : response.currency;
+    const currentBalance = typeof response.balance === 'object' ? response.balance.amount : response.balance;
+    const currentCurrency = typeof response.balance === 'object' ? response.balance.currency : response.currency;
+
+    if (currentBalance === undefined) {
+      throw new GenerationFailedError('Balance response did not include a balance amount', {
+        taskType: response.taskType,
+        taskUUID: response.taskUUID,
+      });
+    }
 
     const output: AccountBalanceOutput = {
-      balance: currentBalance ?? 0,
+      balance: currentBalance,
       currency: currentCurrency ?? 'USD',
       retrievedAt: new Date().toISOString(),
     };
 
     const formattedBalance = output.balance.toFixed(2);
-    return successResult(
-      `Current balance: ${output.currency} ${formattedBalance}`,
-      output,
-    );
+    return successResult(`Current balance: ${output.currency} ${formattedBalance}`, output);
   } catch (error) {
     const mcpError = wrapError(error);
     return errorResult(mcpError.message, mcpError.data);

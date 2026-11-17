@@ -1,3 +1,6 @@
+// Does:  Detects faces, hands or other elements and returns an inpainting mask.
+// Holds: detections is always an array, empty rather than undefined when nothing is found.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -9,13 +12,9 @@ import type { z } from 'zod';
 type ImageMaskingInput = z.infer<typeof imageMaskingInputSchema>;
 
 interface DetectionBox {
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   readonly x_min: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   readonly y_min: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   readonly x_max: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   readonly y_max: number;
 }
 
@@ -73,17 +72,15 @@ export async function imageMasking(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('imageMasking', requestParams);
 
-    const response = await runwareClient.requestSingle<ImageMaskingApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.requestSingle<ImageMaskingApiResponse>(task, { signal: context?.signal });
 
     const output = processResponse(response);
     const detectionCount = output.detections.length;
 
-    const message = detectionCount === 1
-      ? 'Detected 1 element and generated mask'
-      : `Detected ${String(detectionCount)} elements and generated mask`;
+    const message =
+      detectionCount === 1
+        ? 'Detected 1 element and generated mask'
+        : `Detected ${String(detectionCount)} elements and generated mask`;
 
     return successResult(message, output, output.cost);
   } catch (error) {

@@ -1,8 +1,11 @@
+// Does:  Generates a video by submitting an async videoInference task and polling for the result.
+// Holds: deliveryMethod is always async; output params are applied after provider settings, which cannot override them.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
-import { type ToolContext, type ToolResult, type TaskUUID, successResult, errorResult } from '../../shared/types.js';
+import { type ToolContext, type ToolResult, successResult, errorResult } from '../../shared/types.js';
 
 import type { videoInferenceInputSchema, VideoInferenceOutput } from './schema.js';
 import type { z } from 'zod';
@@ -19,17 +22,15 @@ interface VideoInferenceApiResponse {
   readonly cost?: number;
 }
 
-/** Keys are compile-time constants, not user input. */
+// Why: Keys come from literal lists in this file, never from input, so the dynamic write cannot be steered.
 function addOptionalParams(
   request: Record<string, unknown>,
   input: VideoInferenceInput,
   keys: readonly (keyof VideoInferenceInput)[],
 ): void {
   for (const key of keys) {
-    // eslint-disable-next-line security/detect-object-injection -- keys are compile-time constants
     const value = input[key];
     if (value !== undefined) {
-      // eslint-disable-next-line security/detect-object-injection -- keys are compile-time constants
       request[key] = value;
     }
   }
@@ -74,7 +75,6 @@ function addProviderParams(request: Record<string, unknown>, input: VideoInferen
 
 function addOutputParams(request: Record<string, unknown>, input: VideoInferenceInput): void {
   addOptionalParams(request, input, ['outputFormat', 'outputQuality', 'outputType', 'safety']);
-  // includeCost always has a default value from schema
   request.includeCost = input.includeCost;
 }
 
@@ -110,7 +110,6 @@ function processResponse(
   };
 }
 
-/** Always async: the submit is acknowledged, then the video arrives via polling. */
 export async function videoInference(
   input: VideoInferenceInput,
   client?: RunwareClient,
@@ -124,10 +123,7 @@ export async function videoInference(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('videoInference', requestParams);
 
-    await runwareClient.requestSingle<VideoInferenceApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    await runwareClient.requestSingle<VideoInferenceApiResponse>(task, { signal: context?.signal });
 
     context?.progress?.report({
       progress: 0,
@@ -135,20 +131,13 @@ export async function videoInference(
       message: 'Video generation task submitted, polling for result...',
     });
 
-    const pollResult = await pollForResult<VideoInferenceApiResponse>(
-      task.taskUUID as TaskUUID,
-      {
-        client: runwareClient,
-        signal: context?.signal,
-        progress: context?.progress,
-      },
-    );
+    const pollResult = await pollForResult<VideoInferenceApiResponse>(task.taskUUID, {
+      client: runwareClient,
+      signal: context?.signal,
+      progress: context?.progress,
+    });
 
-    const output = processResponse(
-      pollResult.result,
-      pollResult.attempts,
-      pollResult.elapsedMs,
-    );
+    const output = processResponse(pollResult.result, pollResult.attempts, pollResult.elapsedMs);
 
     context?.progress?.report({
       progress: 100,

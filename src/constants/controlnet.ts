@@ -1,6 +1,9 @@
-export type ControlNetOutputType = 'edge' | 'depth' | 'pose' | 'segmentation' | 'other';
+// Does:  Catalogs the ControlNet preprocessors and maps between their internal IDs and API identifiers.
+// Holds: Every CONTROLNET_PREPROCESSORS key equals its entry's id, and every API identifier maps to one internal ID.
 
-export type ControlNetPreprocessorId =
+type ControlNetOutputType = 'edge' | 'depth' | 'pose' | 'segmentation' | 'other';
+
+type ControlNetPreprocessorId =
   | 'canny'
   | 'depth'
   | 'mlsd'
@@ -16,7 +19,7 @@ export type ControlNetPreprocessorId =
 
 export interface ControlNetPreprocessor {
   readonly id: ControlNetPreprocessorId;
-  /** May differ from the object key. */
+  // Holds: The wire name sent to the API, which may differ from id (lineart_anime vs lineartAnime).
   readonly apiId: string;
   readonly name: string;
   readonly description: string;
@@ -32,7 +35,7 @@ export interface ControlNetPreprocessor {
   readonly notes?: string;
 }
 
-export const CONTROLNET_PREPROCESSORS: Record<ControlNetPreprocessorId, ControlNetPreprocessor> = {
+const CONTROLNET_PREPROCESSORS: Record<ControlNetPreprocessorId, ControlNetPreprocessor> = {
   canny: {
     id: 'canny',
     apiId: 'canny',
@@ -238,7 +241,7 @@ export const CONTROLNET_PREPROCESSORS: Record<ControlNetPreprocessorId, ControlN
   },
 };
 
-export const CONTROLNET_PREPROCESSOR_IDS: readonly ControlNetPreprocessorId[] = [
+const CONTROLNET_PREPROCESSOR_IDS: readonly ControlNetPreprocessorId[] = [
   'canny',
   'depth',
   'mlsd',
@@ -268,11 +271,11 @@ const API_ID_TO_INTERNAL_ID: Record<string, ControlNetPreprocessorId> = {
   softedge: 'softedge',
 };
 
-// Also map the underscore version for API compatibility
+// Why: The API spells this preprocessor lineart_anime, so both spellings must resolve.
 const LINEART_ANIME_API_KEY = 'lineart_anime';
 API_ID_TO_INTERNAL_ID[LINEART_ANIME_API_KEY] = 'lineartAnime';
 
-/** Accepts either the internal ID or the API identifier. */
+// Holds: Accepts either the internal ID or the API identifier.
 export function getPreprocessor(id: string): ControlNetPreprocessor | undefined {
   if (isValidPreprocessor(id)) {
     return CONTROLNET_PREPROCESSORS[id];
@@ -281,65 +284,10 @@ export function getPreprocessor(id: string): ControlNetPreprocessor | undefined 
   return internalId === undefined ? undefined : CONTROLNET_PREPROCESSORS[internalId];
 }
 
-export function getPreprocessorsByOutputType(
-  outputType: ControlNetOutputType,
-): ControlNetPreprocessor[] {
-  return Object.values(CONTROLNET_PREPROCESSORS).filter(
-    (p: ControlNetPreprocessor) => p.outputType === outputType,
-  );
-}
-
-export function isValidPreprocessor(id: string): id is ControlNetPreprocessorId {
-  return CONTROLNET_PREPROCESSOR_IDS.includes(id as ControlNetPreprocessorId);
+function isValidPreprocessor(id: string): id is ControlNetPreprocessorId {
+  return CONTROLNET_PREPROCESSOR_IDS.some((known) => known === id);
 }
 
 export function isValidApiPreprocessor(id: string): boolean {
   return Object.hasOwn(API_ID_TO_INTERNAL_ID, id);
-}
-
-export function getPreprocessorsWithThresholds(): ControlNetPreprocessor[] {
-  return Object.values(CONTROLNET_PREPROCESSORS).filter(
-    (p: ControlNetPreprocessor) => p.hasThresholds,
-  );
-}
-
-export function getPreprocessorsWithPoseOptions(): ControlNetPreprocessor[] {
-  return Object.values(CONTROLNET_PREPROCESSORS).filter(
-    (p: ControlNetPreprocessor) => p.supportsPoseOptions,
-  );
-}
-
-export function getRecommendedPreprocessor(
-  useCase:
-    | 'architecture'
-    | 'portrait'
-    | 'anime'
-    | 'sketch'
-    | 'scene'
-    | 'texture'
-    | 'pose',
-): ControlNetPreprocessorId {
-  const recommendations: Record<string, ControlNetPreprocessorId> = {
-    architecture: 'mlsd',
-    portrait: 'openpose',
-    anime: 'lineartAnime',
-    sketch: 'scribble',
-    scene: 'depth',
-    texture: 'tile',
-    pose: 'openpose',
-  };
-  const result = recommendations[useCase];
-  return result ?? 'canny';
-}
-
-export function getAllPreprocessors(): ControlNetPreprocessor[] {
-  return Object.values(CONTROLNET_PREPROCESSORS);
-}
-
-export function getEdgePreprocessors(): ControlNetPreprocessor[] {
-  return getPreprocessorsByOutputType('edge');
-}
-
-export function getDefaultPreprocessor(): ControlNetPreprocessor {
-  return CONTROLNET_PREPROCESSORS.canny;
 }

@@ -1,8 +1,7 @@
-import {
-  config,
-  DEFAULT_POLL_INTERVAL_MS,
-  MAX_POLL_INTERVAL_MS,
-} from '../../shared/config.js';
+// Does:  Polls getResponse for an async task with capped 1.5x backoff until it succeeds, fails, or exhausts attempts.
+// Holds: Stops after at most maxAttempts polls with no wall-clock deadline; every cancellation is one PollTimeoutError.
+
+import { config, DEFAULT_POLL_INTERVAL_MS, MAX_POLL_INTERVAL_MS } from '../../shared/config.js';
 import { GenerationFailedError, PollTimeoutError } from '../../shared/errors.js';
 
 import { type RequestOptions, type RunwareClient, getDefaultClient } from './client.js';
@@ -10,20 +9,15 @@ import { type RequestOptions, type RunwareClient, getDefaultClient } from './cli
 import type { AsyncTaskResponse, ProgressReporter, TaskStatus, TaskUUID } from '../../shared/types.js';
 
 export interface PollOptions extends RequestOptions {
-  /** Defaults to config.POLL_MAX_ATTEMPTS. */
-  readonly maxAttempts?: number;
+  readonly maxAttempts?: number | undefined;
 
-  /** Defaults to DEFAULT_POLL_INTERVAL_MS. */
-  readonly initialIntervalMs?: number;
+  readonly initialIntervalMs?: number | undefined;
 
-  /** Caps the exponential backoff; defaults to MAX_POLL_INTERVAL_MS. */
-  readonly maxIntervalMs?: number;
+  readonly maxIntervalMs?: number | undefined;
 
-  /** Invoked after each poll attempt. */
-  readonly progress?: ProgressReporter;
+  readonly progress?: ProgressReporter | undefined;
 
-  /** Defaults to the shared client instance. */
-  readonly client?: RunwareClient;
+  readonly client?: RunwareClient | undefined;
 }
 
 export interface PollResult<T extends AsyncTaskResponse> {
@@ -36,55 +30,65 @@ interface GetResponseResult extends AsyncTaskResponse {
   readonly status: TaskStatus;
 }
 
-/** Throws PollTimeoutError on max attempts or cancellation, GenerationFailedError when the task itself fails. */
+// Why: A function call, not an inline check, so TypeScript does not narrow aborted to false across an await.
+function isAborted(signal: AbortSignal | undefined): boolean {
+  return signal?.aborted === true;
+}
+
+function cancellationError(taskUUID: TaskUUID, attempts: number, startTime: number): PollTimeoutError {
+  return new PollTimeoutError('Polling was cancelled', { taskUUID, attempts, elapsedMs: Date.now() - startTime });
+}
+
+// Holds: A request that fails after the signal aborted rejects with the cancellation error, never its own error.
+async function requestOrCancel<R>(
+  request: Promise<R>,
+  signal: AbortSignal | undefined,
+  cancelled: () => PollTimeoutError,
+): Promise<R> {
+  try {
+    return await request;
+  } catch (error) {
+    throw isAborted(signal) ? cancelled() : error;
+  }
+}
+
+// Holds: Once the signal aborts, before a poll, mid-request, or mid-sleep, the only rejection is cancellationError.
 export async function pollForResult<T extends AsyncTaskResponse>(
   taskUUID: TaskUUID,
   options?: PollOptions,
 ): Promise<PollResult<T>> {
   const client = options?.client ?? getDefaultClient();
   const maxAttempts = options?.maxAttempts ?? config.POLL_MAX_ATTEMPTS;
-  const initialInterval = options?.initialIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
   const maxInterval = options?.maxIntervalMs ?? MAX_POLL_INTERVAL_MS;
   const progress = options?.progress;
   const signal = options?.signal;
 
   const startTime = Date.now();
-  let currentInterval = initialInterval;
+  let currentInterval = options?.initialIntervalMs ?? DEFAULT_POLL_INTERVAL_MS;
   let attempts = 0;
 
   while (attempts < maxAttempts) {
-    if (signal?.aborted === true) {
-      throw new PollTimeoutError('Polling was cancelled', {
-        taskUUID,
-        attempts,
-        elapsedMs: Date.now() - startTime,
-      });
+    if (isAborted(signal)) {
+      throw cancellationError(taskUUID, attempts, startTime);
     }
 
     attempts += 1;
 
-    if (progress !== undefined) {
-      progress.report({
-        progress: attempts,
-        total: maxAttempts,
-        message: `Polling for result (attempt ${String(attempts)}/${String(maxAttempts)})`,
-      });
-    }
+    progress?.report({
+      progress: attempts,
+      total: maxAttempts,
+      message: `Polling for result (attempt ${String(attempts)}/${String(maxAttempts)})`,
+    });
 
-    const response = await client.requestSingle<GetResponseResult>(
-      {
-        taskType: 'getResponse',
-        taskUUID,
-      },
-      { signal },
+    // biome-ignore lint/performance/noAwaitInLoops: each poll must observe the previous status before waiting and asking again.
+    const response = await requestOrCancel(
+      client.requestSingle<T & GetResponseResult>({ taskType: 'getResponse', taskUUID }, { signal }),
+      signal,
+      () => cancellationError(taskUUID, attempts, startTime),
     );
 
     if (response.status === 'success') {
-      return {
-        result: response as T,
-        attempts,
-        elapsedMs: Date.now() - startTime,
-      };
+      return { result: response, attempts, elapsedMs: Date.now() - startTime };
     }
 
     if (response.status === 'error') {
@@ -100,84 +104,44 @@ export async function pollForResult<T extends AsyncTaskResponse>(
     currentInterval = Math.min(currentInterval * 1.5, maxInterval);
   }
 
-  throw new PollTimeoutError(
-    `Polling timed out after ${String(maxAttempts)} attempts`,
-    {
-      taskUUID,
-      attempts,
-      elapsedMs: Date.now() - startTime,
-    },
-  );
+  throw new PollTimeoutError(`Polling timed out after ${String(maxAttempts)} attempts`, {
+    taskUUID,
+    attempts,
+    elapsedMs: Date.now() - startTime,
+  });
 }
 
-async function sleep(ms: number, signal?: AbortSignal): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted === true) {
-      reject(new Error('Sleep was aborted'));
+// Holds: Never rejects; an abort ends the wait early, and the timer and abort listener are both released either way.
+function sleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise((resolve) => {
+    if (isAborted(signal)) {
+      resolve();
       return;
     }
 
-    const timeoutId = setTimeout(() => {
+    const finish = (): void => {
+      clearTimeout(timeoutId);
+      signal?.removeEventListener('abort', finish);
       resolve();
-    }, ms);
-
-    signal?.addEventListener(
-      'abort',
-      () => {
-        clearTimeout(timeoutId);
-        reject(new Error('Sleep was aborted'));
-      },
-      { once: true },
-    );
+    };
+    const timeoutId = setTimeout(finish, ms);
+    signal?.addEventListener('abort', finish, { once: true });
   });
 }
 
-/** For operations that always require async processing (video, audio). */
 export async function submitAndPoll<TResult extends AsyncTaskResponse>(
   client: RunwareClient,
-  task: { taskType: string; taskUUID: string },
+  task: { taskType: string; taskUUID: TaskUUID },
   options?: PollOptions,
 ): Promise<PollResult<TResult>> {
-  // request() not requestSingle(): async tasks may return { data: [] } on submission, which requestSingle() rejects.
-  await client.request([task], {
-    signal: options?.signal,
-  });
+  const startTime = Date.now();
+  // Why: Async submissions may return { data: [] }, which requestSingle() rejects.
+  await requestOrCancel(client.request([task], { signal: options?.signal }), options?.signal, () =>
+    cancellationError(task.taskUUID, 0, startTime),
+  );
 
-  return pollForResult<TResult>(task.taskUUID as TaskUUID, {
+  return pollForResult<TResult>(task.taskUUID, {
     ...options,
     client,
   });
-}
-
-export function estimateMaxPollTime(
-  maxAttempts: number = config.POLL_MAX_ATTEMPTS,
-  initialIntervalMs: number = DEFAULT_POLL_INTERVAL_MS,
-  maxIntervalMs: number = MAX_POLL_INTERVAL_MS,
-): number {
-  let totalTime = 0;
-  let currentInterval = initialIntervalMs;
-
-  for (let i = 0; i < maxAttempts; i++) {
-    totalTime += currentInterval;
-    currentInterval = Math.min(currentInterval * 1.5, maxIntervalMs);
-  }
-
-  return totalTime;
-}
-
-export function formatDuration(ms: number): string {
-  if (ms < 1000) {
-    return `${String(ms)}ms`;
-  }
-
-  const seconds = Math.floor(ms / 1000);
-
-  if (seconds < 60) {
-    return `${String(seconds)}s`;
-  }
-
-  const minutes = Math.floor(seconds / 60);
-  const remainingSeconds = seconds % 60;
-
-  return remainingSeconds === 0 ? `${String(minutes)}m` : `${String(minutes)}m ${String(remainingSeconds)}s`;
 }

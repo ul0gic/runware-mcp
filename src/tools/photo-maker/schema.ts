@@ -1,3 +1,6 @@
+// Does:  Validates photoMaker input and describes the images it returns.
+// Holds: Reference images are limited to 1-4, and styleStrength to 0-1.
+
 import { z } from 'zod';
 
 import {
@@ -16,7 +19,6 @@ import {
 } from '../../shared/validation.js';
 
 export const photoMakerInputSchema = z.object({
-  /** The "img" trigger word is auto-prepended if not present. */
   positivePrompt: positivePromptSchema,
 
   inputImages: z.array(imageInputSchema).min(1).max(4),
@@ -29,7 +31,6 @@ export const photoMakerInputSchema = z.object({
 
   steps: stepsSchema.optional(),
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- CFGScale is the Runware API parameter name
   CFGScale: cfgScaleSchema.optional(),
 
   seed: seedSchema,
@@ -40,10 +41,8 @@ export const photoMakerInputSchema = z.object({
 
   negativePrompt: negativePromptSchema,
 
-  /** Lower values preserve identity more strictly; higher values allow more creative freedom. */
   styleStrength: z.number().min(0).max(1).optional().default(0.5),
 
-  /** Higher values diverge further from the reference images. */
   strength: strengthSchema.optional(),
 
   outputType: outputTypeSchema.optional(),
@@ -67,7 +66,6 @@ const photoMakerResultSchema = z.object({
   seed: z.number().optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const photoMakerOutputSchema = z.object({
   images: z.array(photoMakerResultSchema),
 

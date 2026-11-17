@@ -1,22 +1,24 @@
-import type { ProgressReporter } from '../shared/types.js';
+// Does:  Adapts a tool's ProgressReporter to MCP notifications/progress messages for one request.
+// Holds: Every notification carries the client's progressToken unchanged, so a numeric token stays a number.
 
-/** Narrowed to the shape Server.notification() accepts for progress notifications. */
+import type { ProgressReporter } from '../shared/types.js';
+import type { ProgressToken } from '@modelcontextprotocol/sdk/types.js';
+
 export type SendProgressNotification = (params: {
-  readonly progressToken: string;
+  readonly progressToken: ProgressToken;
   readonly progress: number;
   readonly total: number;
   readonly message?: string;
 }) => void;
 
-/** The MCP request ID doubles as the progress token. */
 export function createProgressReporter(
-  requestId: string,
+  progressToken: ProgressToken,
   sendNotification: SendProgressNotification,
 ): ProgressReporter {
   return {
     report(info): void {
       sendNotification({
-        progressToken: requestId,
+        progressToken,
         progress: info.progress,
         total: info.total,
         message: info.message,

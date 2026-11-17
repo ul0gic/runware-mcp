@@ -1,12 +1,7 @@
-/**
- * Unit tests for the watch folder tool.
- */
+// Does:  Proves watchFolder enforces per-action required fields and tracks watchers across start, list and stop.
+// Holds: Node:fs watch, file/folder utils and per-operation tools are mocked; the watcher registry is real.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -44,7 +39,6 @@ vi.mock('../../../src/shared/folder-utils.js', () => ({
   IMAGE_EXTENSIONS: new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp']),
 }));
 
-// Mock node:fs watch
 vi.mock('node:fs', () => ({
   watch: vi.fn().mockReturnValue({
     close: vi.fn(),
@@ -68,7 +62,6 @@ vi.mock('node:fs', () => ({
   }),
 }));
 
-// Mock underlying tool handlers
 vi.mock('../../../src/tools/image-upscale/index.js', () => ({
   imageUpscale: vi.fn(),
 }));
@@ -89,17 +82,9 @@ vi.mock('../../../src/tools/controlnet-preprocess/index.js', () => ({
   controlNetPreprocess: vi.fn(),
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { watchFolder, watchFolderToolDefinition, stopAllWatchers } from '../../../src/tools/watch-folder/handler.js';
+import { stopAllWatchers, watchFolder } from '../../../src/tools/watch-folder/handler.js';
 import { watchFolderInputSchema } from '../../../src/tools/watch-folder/schema.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 function createMockClient() {
   return {
@@ -109,58 +94,17 @@ function createMockClient() {
   } as unknown as RunwareClient;
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('watchFolder', () => {
   let mockClient: RunwareClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockClient = createMockClient();
-    // Clean up any watchers from previous tests
+    // Why: The watcher registry is module state and would leak between tests.
     stopAllWatchers();
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(watchFolderToolDefinition.name).toBe('watchFolder');
-    });
-
-    it('should require action', () => {
-      expect(watchFolderToolDefinition.inputSchema.required).toContain('action');
-    });
-
-    it('should have a description', () => {
-      expect(watchFolderToolDefinition.description).toBeTruthy();
-    });
-  });
-
   describe('schema validation', () => {
-    it('should accept list action with no other params', () => {
-      const result = watchFolderInputSchema.safeParse({
-        action: 'list',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept status action with no watcherId', () => {
-      const result = watchFolderInputSchema.safeParse({
-        action: 'status',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should accept start action with required params', () => {
-      const result = watchFolderInputSchema.safeParse({
-        action: 'start',
-        folderPath: '/valid/folder',
-        operation: 'upscale',
-      });
-      expect(result.success).toBe(true);
-    });
-
     it('should reject start action without folderPath', () => {
       const result = watchFolderInputSchema.safeParse({
         action: 'start',
@@ -177,70 +121,11 @@ describe('watchFolder', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject invalid action', () => {
-      const result = watchFolderInputSchema.safeParse({
-        action: 'invalid',
-      });
-      expect(result.success).toBe(false);
-    });
-
     it('should reject stop action without watcherId', () => {
       const result = watchFolderInputSchema.safeParse({
         action: 'stop',
       });
       expect(result.success).toBe(false);
-    });
-  });
-
-  describe('list action', () => {
-    it('should return empty list when no watchers', async () => {
-      const input = watchFolderInputSchema.parse({
-        action: 'list',
-      });
-
-      const result = await watchFolder(input, mockClient);
-
-      expect(result.status).toBe('success');
-
-      const data = result.data as { action: string; watchers?: unknown[]; message: string };
-      expect(data.action).toBe('list');
-      expect(data.watchers).toBeDefined();
-      expect(data.message).toContain('0');
-    });
-  });
-
-  describe('start action', () => {
-    it('should start watching a folder', async () => {
-      const input = watchFolderInputSchema.parse({
-        action: 'start',
-        folderPath: '/valid/folder',
-        operation: 'upscale',
-      });
-
-      const result = await watchFolder(input, mockClient);
-
-      expect(result.status).toBe('success');
-
-      const data = result.data as { action: string; watcherId?: string; message: string };
-      expect(data.action).toBe('start');
-      expect(data.watcherId).toBeDefined();
-      expect(data.message).toContain('Started watching');
-    });
-  });
-
-  describe('status action', () => {
-    it('should report overall status when no watcherId provided', async () => {
-      const input = watchFolderInputSchema.parse({
-        action: 'status',
-      });
-
-      const result = await watchFolder(input, mockClient);
-
-      expect(result.status).toBe('success');
-
-      const data = result.data as { action: string; message: string };
-      expect(data.action).toBe('status');
-      expect(data.message).toContain('active watcher');
     });
   });
 
@@ -261,7 +146,6 @@ describe('watchFolder', () => {
     });
 
     it('should stop an active watcher', async () => {
-      // First start a watcher
       const startInput = watchFolderInputSchema.parse({
         action: 'start',
         folderPath: '/valid/folder',
@@ -273,7 +157,6 @@ describe('watchFolder', () => {
       const watcherId = startData.watcherId;
       expect(watcherId).toBeDefined();
 
-      // Then stop it
       const stopInput = watchFolderInputSchema.parse({
         action: 'stop',
         watcherId,

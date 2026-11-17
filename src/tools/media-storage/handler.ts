@@ -1,8 +1,7 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Uploads media to, or deletes media from, Runware managed storage in one synchronous call.
+// Holds: The validated input is sent as-is; errors return as an error ToolResult and never throw.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
@@ -19,14 +18,8 @@ export async function mediaStorage(
   try {
     await defaultRateLimiter.waitForToken(context?.signal);
     const task = createTaskRequest('mediaStorage', input);
-    const response = await runwareClient.requestSingle<Record<string, unknown>>(
-      task,
-      { signal: context?.signal },
-    );
-    return successResult(
-      input.operation === 'delete' ? 'Stored media deleted' : 'Media stored',
-      response,
-    );
+    const response = await runwareClient.requestSingle<Record<string, unknown>>(task, { signal: context?.signal });
+    return successResult(input.operation === 'delete' ? 'Stored media deleted' : 'Media stored', response);
   } catch (error) {
     const wrapped = wrapError(error);
     return errorResult(wrapped.message, wrapped.data);
@@ -35,8 +28,7 @@ export async function mediaStorage(
 
 export const mediaStorageToolDefinition = {
   name: 'mediaStorage',
-  description:
-    'Upload media to Runware managed storage or permanently delete a stored media UUID.',
+  description: 'Upload media to Runware managed storage or permanently delete a stored media UUID.',
   annotations: { readOnlyHint: false, destructiveHint: true },
   inputSchema: {
     type: 'object',

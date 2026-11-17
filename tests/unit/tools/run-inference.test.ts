@@ -1,3 +1,6 @@
+// Does:  Proves runInference infers task type from the live model schema, validates against it, blocks admin tasks.
+// Holds: config, the rate limiter and resolveModelSchema are mocked; schema validation and task routing are real.
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../src/shared/config.js', () => ({
@@ -19,10 +22,7 @@ vi.mock('../../../src/integrations/runware/schema-registry.js', () => ({
 
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 import { resolveModelSchema } from '../../../src/integrations/runware/schema-registry.js';
-import {
-  runInference,
-  runInferenceInputSchema,
-} from '../../../src/tools/run-inference/index.js';
+import { runInference, runInferenceInputSchema } from '../../../src/tools/run-inference/index.js';
 
 function createMockClient(): RunwareClient {
   return {
@@ -64,21 +64,26 @@ describe('runInference', () => {
     expect(result.status).toBe('success');
     expect(result.cost).toBe(0.01);
     expect(client.request).toHaveBeenCalledWith(
-      [expect.objectContaining({
-        taskType: 'imageInference',
-        model: 'runware:400@1',
-        positivePrompt: 'A cat',
-        width: 1024,
-      })],
+      [
+        expect.objectContaining({
+          taskType: 'imageInference',
+          model: 'runware:400@1',
+          positivePrompt: 'A cat',
+          width: 1024,
+        }),
+      ],
       expect.any(Object),
     );
   });
 
   it('rejects model parameters that fail live schema validation', async () => {
-    const result = await runInference(runInferenceInputSchema.parse({
-      model: 'runware:400@1',
-      parameters: { width: 128 },
-    }), createMockClient());
+    const result = await runInference(
+      runInferenceInputSchema.parse({
+        model: 'runware:400@1',
+        parameters: { width: 128 },
+      }),
+      createMockClient(),
+    );
 
     expect(result.status).toBe('error');
     expect(result.message).toContain('Model parameter validation failed');
@@ -90,9 +95,12 @@ describe('runInference', () => {
       schema: { type: 'object' },
     });
     const client = createMockClient();
-    const result = await runInference(runInferenceInputSchema.parse({
-      model: 'private:model@1',
-    }), client);
+    const result = await runInference(
+      runInferenceInputSchema.parse({
+        model: 'private:model@1',
+      }),
+      client,
+    );
 
     expect(result.status).toBe('error');
     expect(client.request).not.toHaveBeenCalled();

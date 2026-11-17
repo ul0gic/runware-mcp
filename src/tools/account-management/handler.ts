@@ -1,8 +1,7 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Runs read-only accountManagement operations for organization details and usage reports.
+// Holds: Keys naming a secret, token, credential or API key are [REDACTED] at any depth; *UUID keys pass.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
@@ -47,14 +46,8 @@ export async function accountManagement(
       ...(input.groupBy !== undefined && { groupBy: input.groupBy }),
       ...(input.timezone !== undefined && { timezone: input.timezone }),
     });
-    const response = await runwareClient.requestSingle<Record<string, unknown>>(
-      task,
-      { signal: context?.signal },
-    );
-    return successResult(
-      `Account operation ${input.operation} completed`,
-      redactSensitiveFields(response),
-    );
+    const response = await runwareClient.requestSingle<Record<string, unknown>>(task, { signal: context?.signal });
+    return successResult(`Account operation ${input.operation} completed`, redactSensitiveFields(response));
   } catch (error) {
     const wrapped = wrapError(error);
     return errorResult(wrapped.message, wrapped.data);

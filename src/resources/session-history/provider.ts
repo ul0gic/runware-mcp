@@ -1,3 +1,5 @@
+// Does:  Merges every in-memory generation store into one newest-first history at runware://session/history.
+// Holds: Image, video and audio entries are read from their own stores, so each generation appears once.
 import { getSessionAudio } from '../generated-audio/provider.js';
 import { getSessionImages } from '../generated-images/provider.js';
 import { getSessionVideos } from '../generated-videos/provider.js';
@@ -9,7 +11,7 @@ const SESSION_START = new Date();
 
 const MAX_SESSION_SIZE = 10_000;
 
-/** Holds only events with no dedicated store: upscale, caption, vectorize, and similar. */
+// Holds: Only events with no dedicated store (upscale, caption, vectorize); recording others here double-counts.
 const SESSION_EVENTS = new Map<string, SessionHistoryEntry>();
 
 export function recordSessionEvent(event: SessionHistoryEntry): void {
@@ -23,13 +25,17 @@ export function recordSessionEvent(event: SessionHistoryEntry): void {
   }
 }
 
-/** Test-support hook — production code never clears the store. */
+export function getSessionEvents(): readonly SessionHistoryEntry[] {
+  return SESSION_EVENTS.values().toArray();
+}
+
+// Why: Tests reset the store with this; production code never clears it, so it is not dead code.
 export function clearSessionEvents(): void {
   SESSION_EVENTS.clear();
 }
 
 function getAllSessionEvents(): readonly SessionHistoryEntry[] {
-  const events: SessionHistoryEntry[] = Array.from(getSessionImages(), image => ({
+  const events: SessionHistoryEntry[] = Array.from(getSessionImages(), (image) => ({
     id: image.id,
     taskType: 'imageInference',
     prompt: image.prompt,
@@ -63,13 +69,9 @@ function getAllSessionEvents(): readonly SessionHistoryEntry[] {
     });
   }
 
-  for (const event of SESSION_EVENTS.values()) {
-    events.push(event);
-  }
+  events.push(...getSessionEvents());
 
-  return events.toSorted(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
-  );
+  return events.toSorted((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 }
 
 const HISTORY_URI = 'runware://session/history';
@@ -83,12 +85,14 @@ export const sessionHistoryProvider: ResourceProvider = {
   list(): Promise<readonly ResourceEntry[]> {
     const events = getAllSessionEvents();
 
-    return Promise.resolve([{
-      uri: HISTORY_URI,
-      name: 'Session History',
-      description: `${String(events.length)} generations this session`,
-      mimeType: 'application/json',
-    }]);
+    return Promise.resolve([
+      {
+        uri: HISTORY_URI,
+        name: 'Session History',
+        description: `${String(events.length)} generations this session`,
+        mimeType: 'application/json',
+      },
+    ]);
   },
 
   get(uri: string): Promise<ResourceContent | null> {
@@ -98,10 +102,7 @@ export const sessionHistoryProvider: ResourceProvider = {
 
     const allEvents = getAllSessionEvents();
 
-    const totalCost = allEvents.reduce(
-      (sum, event) => sum + (event.cost ?? 0),
-      0,
-    );
+    const totalCost = allEvents.reduce((sum, event) => sum + (event.cost ?? 0), 0);
 
     const history: SessionHistory = {
       totalGenerations: allEvents.length,

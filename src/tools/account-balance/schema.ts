@@ -1,12 +1,14 @@
+// Does:  Declares the empty input and the balance output shape for accountBalance.
+// Holds: The input is an object schema with no keys, so any extra arguments are stripped before the handler runs.
+
 import { z } from 'zod';
 
 export const accountBalanceInputSchema = z.object({
-  // Intentionally empty: object form keeps parity with every other tool input schema.
+  // Why: An object schema, not z.void(), so bindTool can parse it like every other tool input.
 });
 
 export type AccountBalanceInput = z.infer<typeof accountBalanceInputSchema>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const accountBalanceOutputSchema = z.object({
   balance: z.number(),
 

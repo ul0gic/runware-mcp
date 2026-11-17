@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/naming-convention -- CFGScale is the Runware API parameter name */
+// Does:  Guides tuning steps, CFG scale, scheduler and resolution for output quality.
+// Holds: Served at runware://docs/guides/quality-tuning; cost-optimization and this guide link to each other.
 import type { DocResource } from '../../types.js';
 
 const EXAMPLE_MODEL = 'civitai:101195@128078';
@@ -7,7 +8,8 @@ export const qualityTuningDoc: DocResource = {
   id: 'quality-tuning',
   category: 'guides',
   title: 'Quality Tuning',
-  summary: 'How to maximize image quality through CFGScale, steps, schedulers, seeds, negative prompts, and resolution control',
+  summary:
+    'How to maximize image quality through CFGScale, steps, schedulers, seeds, negative prompts, and resolution control',
   tags: ['quality', 'CFGScale', 'steps', 'scheduler', 'seed', 'negative-prompt', 'resolution'],
   content: {
     description:

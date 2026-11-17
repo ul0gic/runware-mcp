@@ -1,3 +1,5 @@
+// Does:  Documents the promptEnhance tool and its version count and length parameters.
+// Holds: Served at runware://docs/tools/prompt-enhancer, while the MCP tool it describes is named promptEnhance.
 import type { DocResource } from '../../types.js';
 
 export const promptEnhancerDoc: DocResource = {
@@ -49,7 +51,8 @@ export const promptEnhancerDoc: DocResource = {
           prompt: 'a cat sitting on a windowsill',
           promptVersions: 1,
         },
-        explanation: 'Enhances the simple prompt with additional descriptive keywords like lighting, mood, style, and detail.',
+        explanation:
+          'Enhances the simple prompt with additional descriptive keywords like lighting, mood, style, and detail.',
       },
       {
         title: 'Multiple variations for selection',
@@ -58,7 +61,8 @@ export const promptEnhancerDoc: DocResource = {
           promptVersions: 3,
           promptMaxLength: 200,
         },
-        explanation: 'Generates 3 different enhanced versions of the prompt, each with different artistic directions. Max 200 tokens per variation.',
+        explanation:
+          'Generates 3 different enhanced versions of the prompt, each with different artistic directions. Max 200 tokens per variation.',
       },
     ],
     tips: [
@@ -68,10 +72,7 @@ export const promptEnhancerDoc: DocResource = {
       'The enhanced prompt text can be passed directly as positivePrompt to imageInference.',
       'Set promptMaxLength to control verbosity. Shorter prompts (50-100 tokens) give the model more freedom.',
     ],
-    relatedDocs: [
-      'runware://docs/tools/image-inference',
-      'runware://docs/tools/caption',
-    ],
+    relatedDocs: ['runware://docs/tools/image-inference', 'runware://docs/tools/caption'],
   },
   lastUpdated: '2026-02-05',
 };

@@ -1,3 +1,6 @@
+// Does:  Validates modelSearch filters and describes the normalised result page.
+// Holds: limit is bounded to 1-100 and offset can never be negative.
+
 import { z } from 'zod';
 
 const MODEL_CATEGORIES = [
@@ -6,7 +9,7 @@ const MODEL_CATEGORIES = [
   'lycoris',
   'vae',
   'embeddings',
-  // Legacy aliases retained for existing clients.
+  // Why: Older clients still send these capitalised names; the handler maps them to API categories.
   'LoRA',
   'Lycoris',
   'ControlNet',
@@ -34,16 +37,18 @@ export const modelSearchInputSchema = z.object({
 
   visibility: z.enum(['public', 'private', 'favorite', 'owned', 'all']).optional(),
 
-  sort: z.enum([
-    'popularity',
-    '-popularity',
-    'name',
-    '-name',
-    'addedUnixTimestamp',
-    '-addedUnixTimestamp',
-    'updatedDateUnixTimestamp',
-    '-updatedDateUnixTimestamp',
-  ]).optional(),
+  sort: z
+    .enum([
+      'popularity',
+      '-popularity',
+      'name',
+      '-name',
+      'addedUnixTimestamp',
+      '-addedUnixTimestamp',
+      'updatedDateUnixTimestamp',
+      '-updatedDateUnixTimestamp',
+    ])
+    .optional(),
 
   limit: z.number().int().min(1).max(100).optional().default(20),
 
@@ -89,7 +94,6 @@ const modelSearchResultSchema = z.object({
   shortDescription: z.string().optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const modelSearchOutputSchema = z.object({
   models: z.array(modelSearchResultSchema),
 

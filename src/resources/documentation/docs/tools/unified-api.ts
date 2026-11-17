@@ -1,3 +1,5 @@
+// Does:  Documents the discovery-first flow: listCapabilities, listModels, modelSchema, runInference.
+// Holds: The only doc with a lastUpdated later than 2026-02-05; served at runware://docs/tools/unified-api.
 import type { DocResource } from '../../types.js';
 
 export const unifiedApiDoc: DocResource = {

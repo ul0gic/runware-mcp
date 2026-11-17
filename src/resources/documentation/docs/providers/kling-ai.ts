@@ -1,3 +1,5 @@
+// Does:  Documents Kling video models across versions and Standard and Pro tiers.
+// Holds: Served at runware://docs/providers/kling-ai; every other video provider doc links here.
 import type { DocResource } from '../../types.js';
 
 export const klingAiDoc: DocResource = {
@@ -39,8 +41,7 @@ export const klingAiDoc: DocResource = {
       {
         title: 'Text-to-video with native audio',
         input: {
-          positivePrompt:
-            'a busy coffee shop interior, morning light streaming through windows, people chatting',
+          positivePrompt: 'a busy coffee shop interior, morning light streaming through windows, people chatting',
           model: 'klingai:1.6@2',
           width: 1920,
           height: 1080,
@@ -57,8 +58,7 @@ export const klingAiDoc: DocResource = {
       {
         title: 'Fixed-camera product showcase',
         input: {
-          positivePrompt:
-            'a luxury watch rotating slowly on a dark velvet surface, studio lighting, close-up',
+          positivePrompt: 'a luxury watch rotating slowly on a dark velvet surface, studio lighting, close-up',
           model: 'klingai:2@1',
           width: 1920,
           height: 1080,

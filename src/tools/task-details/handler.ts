@@ -1,7 +1,7 @@
-import {
-  type RunwareClient,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Fetches the stored request and response for one Runware task UUID.
+// Holds: Sends the caller's UUID as taskUUID verbatim; no new task UUID is generated for this lookup.
+
+import { type RunwareClient, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';

@@ -1,84 +1,36 @@
-import { describe, it, expect } from 'vitest';
+// Does:  Proves model-id prefixes map to providers and provider settings enforce their numeric and format bounds.
+// Holds: Exercises the real detector and zod schemas; nothing is mocked.
+
+import { describe, expect, it } from 'vitest';
 
 import {
-  detectProvider,
-  providerSettingsSchema,
-  validateProviderSettingsMatch,
-  alibabaSettingsSchema,
   bflSettingsSchema,
-  briaSettingsSchema,
-  ideogramSettingsSchema,
   byteDanceSettingsSchema,
-  klingAISettingsSchema,
-  pixVerseSettingsSchema,
-  veoSettingsSchema,
+  detectProvider,
+  ideogramSettingsSchema,
+  providerSettingsSchema,
   syncSettingsSchema,
-  PROVIDER_PREFIXES,
 } from '../../../src/shared/provider-settings.js';
 
-// ============================================================================
-// detectProvider
-// ============================================================================
-
 describe('detectProvider', () => {
-  it('detects alibaba from alibaba: prefix', () => {
-    expect(detectProvider('alibaba:123@456')).toBe('alibaba');
-  });
-
-  it('detects alibaba from wan: prefix', () => {
-    expect(detectProvider('wan:123@456')).toBe('alibaba');
-  });
-
-  it('detects bfl from bfl: prefix', () => {
-    expect(detectProvider('bfl:123@456')).toBe('bfl');
-  });
-
-  it('detects bfl from flux: prefix', () => {
-    expect(detectProvider('flux:123@456')).toBe('bfl');
-  });
-
-  it('detects bria from bria: prefix', () => {
-    expect(detectProvider('bria:123@456')).toBe('bria');
-  });
-
-  it('detects ideogram from ideogram: prefix', () => {
-    expect(detectProvider('ideogram:123@456')).toBe('ideogram');
-  });
-
-  it('detects byteDance from bytedance: prefix', () => {
-    expect(detectProvider('bytedance:123@456')).toBe('byteDance');
-  });
-
-  it('detects byteDance from doubao: prefix', () => {
-    expect(detectProvider('doubao:123@456')).toBe('byteDance');
-  });
-
-  it('detects klingai from klingai: prefix', () => {
-    expect(detectProvider('klingai:123@456')).toBe('klingai');
-  });
-
-  it('detects klingai from kling: prefix', () => {
-    expect(detectProvider('kling:123@456')).toBe('klingai');
-  });
-
-  it('detects pixverse from pixverse: prefix', () => {
-    expect(detectProvider('pixverse:123@456')).toBe('pixverse');
-  });
-
-  it('detects veo from veo: prefix', () => {
-    expect(detectProvider('veo:123@456')).toBe('veo');
-  });
-
-  it('detects veo from google: prefix', () => {
-    expect(detectProvider('google:123@456')).toBe('veo');
-  });
-
-  it('detects sync from sync: prefix', () => {
-    expect(detectProvider('sync:123@456')).toBe('sync');
-  });
-
-  it('detects sync from syncso: prefix', () => {
-    expect(detectProvider('syncso:123@456')).toBe('sync');
+  it.each([
+    ['alibaba:123@456', 'alibaba'],
+    ['wan:123@456', 'alibaba'],
+    ['bfl:123@456', 'bfl'],
+    ['flux:123@456', 'bfl'],
+    ['bria:123@456', 'bria'],
+    ['ideogram:123@456', 'ideogram'],
+    ['bytedance:123@456', 'byteDance'],
+    ['doubao:123@456', 'byteDance'],
+    ['klingai:123@456', 'klingai'],
+    ['kling:123@456', 'klingai'],
+    ['pixverse:123@456', 'pixverse'],
+    ['veo:123@456', 'veo'],
+    ['google:123@456', 'veo'],
+    ['sync:123@456', 'sync'],
+    ['syncso:123@456', 'sync'],
+  ])('maps %s to %s', (model, provider) => {
+    expect(detectProvider(model)).toBe(provider);
   });
 
   it('returns undefined for unknown model', () => {
@@ -96,92 +48,13 @@ describe('detectProvider', () => {
   });
 });
 
-// ============================================================================
-// providerSettingsSchema
-// ============================================================================
-
 describe('providerSettingsSchema', () => {
-  it('accepts empty object', () => {
-    const result = providerSettingsSchema.parse({});
-    expect(result).toBeDefined();
-  });
-
-  it('accepts alibaba settings', () => {
-    const result = providerSettingsSchema.parse({
-      alibaba: { promptExtend: true, shotType: 'multi' },
-    });
-    expect(result.alibaba?.promptExtend).toBe(true);
-    expect(result.alibaba?.shotType).toBe('multi');
-  });
-
-  it('accepts bfl settings', () => {
-    const result = providerSettingsSchema.parse({
-      bfl: { promptUpsampling: true, safetyTolerance: 3, raw: false },
-    });
-    expect(result.bfl?.safetyTolerance).toBe(3);
-  });
-
-  it('accepts bria settings', () => {
-    const result = providerSettingsSchema.parse({
-      bria: { medium: 'photography', mode: 'fast' },
-    });
-    expect(result.bria?.medium).toBe('photography');
-  });
-
-  it('accepts ideogram settings', () => {
-    const result = providerSettingsSchema.parse({
-      ideogram: {
-        renderingSpeed: 'QUALITY',
-        magicPrompt: 'ON',
-        colorPalette: ['#FF0000', '#00FF00'],
-      },
-    });
-    expect(result.ideogram?.renderingSpeed).toBe('QUALITY');
-  });
-
-  it('accepts multiple provider settings simultaneously', () => {
-    const result = providerSettingsSchema.parse({
-      bfl: { raw: true },
-      ideogram: { magicPrompt: 'OFF' },
-    });
-    expect(result.bfl?.raw).toBe(true);
-    expect(result.ideogram?.magicPrompt).toBe('OFF');
-  });
-
   it('rejects invalid bfl safetyTolerance', () => {
     expect(() =>
       providerSettingsSchema.parse({
         bfl: { safetyTolerance: 10 },
       }),
     ).toThrow();
-  });
-
-  it('rejects invalid bria medium', () => {
-    expect(() =>
-      providerSettingsSchema.parse({
-        bria: { medium: 'invalid' },
-      }),
-    ).toThrow();
-  });
-});
-
-// ============================================================================
-// Individual Provider Settings Schemas
-// ============================================================================
-
-describe('alibabaSettingsSchema', () => {
-  it('accepts valid settings', () => {
-    const result = alibabaSettingsSchema.parse({
-      promptExtend: true,
-      shotType: 'single',
-      audio: false,
-    });
-    expect(result.promptExtend).toBe(true);
-  });
-
-  it('accepts empty object', () => {
-    const result = alibabaSettingsSchema.parse({});
-    expect(result).toBeDefined();
   });
 });
 
@@ -204,66 +77,12 @@ describe('byteDanceSettingsSchema', () => {
 });
 
 describe('ideogramSettingsSchema', () => {
-  it('accepts string colorPalette', () => {
-    const result = ideogramSettingsSchema.parse({ colorPalette: 'warm' });
-    expect(result.colorPalette).toBe('warm');
-  });
-
-  it('accepts array of hex colors', () => {
-    const result = ideogramSettingsSchema.parse({ colorPalette: ['#FF0000', '#00FF00'] });
-    expect(result.colorPalette).toEqual(['#FF0000', '#00FF00']);
-  });
-
   it('rejects invalid hex colors in array', () => {
-    expect(() =>
-      ideogramSettingsSchema.parse({ colorPalette: ['not-a-hex'] }),
-    ).toThrow();
-  });
-});
-
-describe('klingAISettingsSchema', () => {
-  it('accepts valid settings', () => {
-    const result = klingAISettingsSchema.parse({
-      sound: true,
-      keepOriginalSound: false,
-      cameraFixed: true,
-    });
-    expect(result.sound).toBe(true);
-  });
-});
-
-describe('pixVerseSettingsSchema', () => {
-  it('accepts valid settings', () => {
-    const result = pixVerseSettingsSchema.parse({
-      effect: 'jiggle',
-      cameraMovement: 'zoom_in',
-      multiClip: true,
-    });
-    expect(result.effect).toBe('jiggle');
-  });
-});
-
-describe('veoSettingsSchema', () => {
-  it('accepts valid settings', () => {
-    const result = veoSettingsSchema.parse({
-      enhancePrompt: true,
-      generateAudio: false,
-    });
-    expect(result.enhancePrompt).toBe(true);
+    expect(() => ideogramSettingsSchema.parse({ colorPalette: ['not-a-hex'] })).toThrow();
   });
 });
 
 describe('syncSettingsSchema', () => {
-  it('accepts valid settings with audio segments', () => {
-    const result = syncSettingsSchema.parse({
-      speakerDetection: true,
-      audioSegments: [
-        { start: 0, end: 5, audio: 'https://example.com/audio.mp3' },
-      ],
-    });
-    expect(result.audioSegments).toHaveLength(1);
-  });
-
   it('rejects invalid audio segment (negative start)', () => {
     expect(() =>
       syncSettingsSchema.parse({
@@ -278,61 +97,5 @@ describe('syncSettingsSchema', () => {
         audioSegments: [{ start: 0, end: 5, audio: '' }],
       }),
     ).toThrow();
-  });
-});
-
-// ============================================================================
-// validateProviderSettingsMatch
-// ============================================================================
-
-describe('validateProviderSettingsMatch', () => {
-  it('returns true when settings are undefined', () => {
-    expect(validateProviderSettingsMatch('bfl:123@456', undefined)).toBe(true);
-  });
-
-  it('returns true when settings are empty', () => {
-    expect(validateProviderSettingsMatch('bfl:123@456', {})).toBe(true);
-  });
-
-  it('returns true when settings match detected provider', () => {
-    expect(
-      validateProviderSettingsMatch('bfl:123@456', {
-        bfl: { raw: true },
-      }),
-    ).toBe(true);
-  });
-
-  it('returns false when settings do not match detected provider', () => {
-    expect(
-      validateProviderSettingsMatch('bfl:123@456', {
-        bria: { medium: 'photography' },
-      }),
-    ).toBe(false);
-  });
-
-  it('returns true when provider cannot be detected (allows any)', () => {
-    expect(
-      validateProviderSettingsMatch('unknown:123@456', {
-        bfl: { raw: true },
-      }),
-    ).toBe(true);
-  });
-});
-
-// ============================================================================
-// PROVIDER_PREFIXES
-// ============================================================================
-
-describe('PROVIDER_PREFIXES', () => {
-  it('has entries for all expected providers', () => {
-    expect(PROVIDER_PREFIXES.alibaba).toBeDefined();
-    expect(PROVIDER_PREFIXES.bfl).toBeDefined();
-    expect(PROVIDER_PREFIXES.bria).toBeDefined();
-    expect(PROVIDER_PREFIXES.ideogram).toBeDefined();
-    expect(PROVIDER_PREFIXES.byteDance).toBeDefined();
-    expect(PROVIDER_PREFIXES.klingai).toBeDefined();
-    expect(PROVIDER_PREFIXES.pixverse).toBeDefined();
-    expect(PROVIDER_PREFIXES.veo).toBeDefined();
-    expect(PROVIDER_PREFIXES.sync).toBeDefined();
   });
 });

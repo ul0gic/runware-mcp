@@ -1,4 +1,5 @@
-// Kept separate from the registry so providers can import types without a cycle.
+// Does:  Defines the resource provider contract and the entry and content shapes it returns.
+// Holds: Type-only module, kept apart from resources/index.ts so providers import it without a cycle.
 
 export interface ResourceEntry {
   readonly uri: string;
@@ -15,18 +16,17 @@ export interface ResourceContent {
 }
 
 export interface ResourceProvider {
-  /** URI pattern, e.g. `runware://images/{id}`. */
+  // Holds: The text before the first `{` is the prefix findProviderForUri routes on.
   readonly uri: string;
 
   readonly name: string;
 
   readonly description: string;
 
-  /** Default MIME type for resources from this provider. */
   readonly mimeType: string;
 
   list(): Promise<readonly ResourceEntry[]>;
 
-  /** Resolves to null when the URI does not match a known resource. */
+  // Holds: Resolves null, never rejects, for a URI this provider has no resource for.
   get(uri: string): Promise<ResourceContent | null>;
 }

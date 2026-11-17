@@ -1,11 +1,12 @@
+// Does:  Documents ByteDance image models and sequential multi-image generation.
+// Holds: Served at runware://docs/providers/bytedance; the ideogram provider doc links back here.
 import type { DocResource } from '../../types.js';
 
 export const bytedanceDoc: DocResource = {
   id: 'bytedance',
   category: 'providers',
   title: 'ByteDance (Image)',
-  summary:
-    'Image generation with sequential narrative images (1-15) and standard/fast prompt optimization modes',
+  summary: 'Image generation with sequential narrative images (1-15) and standard/fast prompt optimization modes',
   tags: ['bytedance', 'image', 'provider', 'sequential-images', 'narrative', 'prompt-optimization'],
   content: {
     description:
@@ -31,7 +32,7 @@ export const bytedanceDoc: DocResource = {
 
     examples: [
       {
-        title: 'Story sequence for a children\'s book',
+        title: "Story sequence for a children's book",
         input: {
           positivePrompt:
             'a little fox discovers a magical garden, meets friendly animals, illustration style, warm colors, storybook',

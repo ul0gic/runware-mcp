@@ -1,3 +1,5 @@
+// Does:  Documents ControlNet guidance: guide images, weights and start and end steps.
+// Holds: Served at runware://docs/features/controlnet-guide; links to tools/controlnet-preprocess for guide images.
 import type { DocResource } from '../../types.js';
 
 const EXAMPLE_CHECKPOINT_MODEL = 'civitai:133005@357609';
@@ -6,8 +8,7 @@ export const controlnetGuideDoc: DocResource = {
   id: 'controlnet-guide',
   category: 'features',
   title: 'ControlNet Guidance',
-  summary:
-    'Structural guidance for image generation using preprocessed guide images and configurable influence',
+  summary: 'Structural guidance for image generation using preprocessed guide images and configurable influence',
   tags: ['controlnet', 'image-generation', 'guidance', 'preprocessing', 'structural-control'],
   content: {
     description:
@@ -40,8 +41,7 @@ export const controlnetGuideDoc: DocResource = {
         name: 'controlNet[].model',
         type: 'string',
         required: false,
-        description:
-          'ControlNet model identifier. If omitted, a default model matching the preprocessor is used.',
+        description: 'ControlNet model identifier. If omitted, a default model matching the preprocessor is used.',
       },
       {
         name: 'controlNet[].weight',

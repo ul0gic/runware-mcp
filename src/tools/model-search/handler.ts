@@ -1,3 +1,6 @@
+// Does:  Searches the Runware model library and normalises each hit into a flat model summary.
+// Holds: Legacy category aliases are translated before sending; every model has a name, falling back to its AIR.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -40,7 +43,7 @@ interface ModelSearchApiModel {
   readonly shortDescription?: string;
 }
 
-/** The API may wrap models in a single data item, or return them flat — both shapes are modelled here. */
+// Why: The API either wraps models in one data item or returns them flat, so this type covers both shapes.
 interface ModelSearchApiResult {
   readonly taskType?: string;
   readonly taskUUID?: string;
@@ -118,9 +121,10 @@ function mapModelDefaults(result: ModelSearchApiModel): Partial<ModelSearchResul
     ...(result.defaultCFG !== undefined && { defaultCFG: result.defaultCFG }),
     ...(result.defaultStrength !== undefined && { defaultStrength: result.defaultStrength }),
     ...(result.positiveTriggerWords !== undefined && {
-      positiveTriggerWords: typeof result.positiveTriggerWords === 'string'
-        ? [result.positiveTriggerWords]
-        : [...result.positiveTriggerWords],
+      positiveTriggerWords:
+        typeof result.positiveTriggerWords === 'string'
+          ? [result.positiveTriggerWords]
+          : [...result.positiveTriggerWords],
     }),
   };
 }
@@ -153,11 +157,7 @@ function mapModelResult(result: ModelSearchApiModel): ModelSearchResult {
   };
 }
 
-/** Handles both API shapes: a single wrapper item with `totalResults` plus nested `results`, or model objects directly in `data`. */
-function processResponse(
-  results: readonly ModelSearchApiResult[],
-  input: ModelSearchInput,
-): ModelSearchOutput {
+function processResponse(results: readonly ModelSearchApiResult[], input: ModelSearchInput): ModelSearchOutput {
   const limit = input.limit;
   const offset = input.offset;
 
@@ -201,20 +201,16 @@ export async function modelSearch(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('modelSearch', requestParams);
 
-    const response = await runwareClient.request<ModelSearchApiResult>(
-      [task],
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.request<ModelSearchApiResult>([task], { signal: context?.signal });
 
     const output = processResponse(response.data, input);
 
-    const searchDescription = input.search === undefined
-      ? ''
-      : ` for "${input.search}"`;
+    const searchDescription = input.search === undefined ? '' : ` for "${input.search}"`;
 
-    const message = output.models.length === 0
-      ? `No models found${searchDescription}`
-      : `Found ${String(output.totalResults)} model(s)${searchDescription}`;
+    const message =
+      output.models.length === 0
+        ? `No models found${searchDescription}`
+        : `Found ${String(output.totalResults)} model(s)${searchDescription}`;
 
     return successResult(message, output);
   } catch (error) {

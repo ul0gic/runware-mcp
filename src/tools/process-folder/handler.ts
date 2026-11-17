@@ -1,50 +1,37 @@
+// Does:  Runs one image operation over every image in a validated folder with bounded concurrency.
+// Holds: Nothing is written to disk; outputPath is only a suggested destination for the caller.
+
 import path from 'node:path';
 
-import {
-  type RunwareClient,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+import { type RunwareClient, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { readFileAsBase64 } from '../../shared/file-utils.js';
-import {
-  getImagesInFolder,
-  validateFolder,
-} from '../../shared/folder-utils.js';
-import {
-  type ToolContext,
-  type ToolResult,
-  errorResult,
-  successResult,
-} from '../../shared/types.js';
-import { mapWithConcurrency } from '../../shared/utils.js';
+import { getImagesInFolder, validateFolder } from '../../shared/folder-utils.js';
+import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
+import { isObject, mapWithConcurrency } from '../../shared/utils.js';
 import { controlNetPreprocess } from '../controlnet-preprocess/index.js';
 import { imageBackgroundRemoval } from '../image-background-removal/index.js';
 import { imageCaption } from '../image-caption/index.js';
 import { imageUpscale } from '../image-upscale/index.js';
 import { vectorize } from '../vectorize/index.js';
 
-import type {
-  FileResult,
-  FolderOperation,
-  ProcessFolderOutput,
-  processFolderInputSchema,
-} from './schema.js';
+import type { FileResult, FolderOperation, ProcessFolderOutput, processFolderInputSchema } from './schema.js';
 import type { z } from 'zod';
 
 type ProcessFolderInputType = z.infer<typeof processFolderInputSchema>;
 
 interface OperationParams {
-  readonly model?: string;
-  readonly upscaleFactor?: 2 | 4;
-  readonly outputType?: 'URL' | 'base64Data' | 'dataURI';
-  readonly outputFormat?: 'JPG' | 'PNG' | 'WEBP';
-  readonly prompt?: string;
-  readonly preprocessor?: string;
-  readonly width?: number;
-  readonly height?: number;
-  readonly lowThresholdCanny?: number;
-  readonly highThresholdCanny?: number;
-  readonly includeHandsAndFaceOpenPose?: boolean;
+  readonly model?: string | undefined;
+  readonly upscaleFactor?: 2 | 4 | undefined;
+  readonly outputType?: 'URL' | 'base64Data' | 'dataURI' | undefined;
+  readonly outputFormat?: 'JPG' | 'PNG' | 'WEBP' | undefined;
+  readonly prompt?: string | undefined;
+  readonly preprocessor?: string | undefined;
+  readonly width?: number | undefined;
+  readonly height?: number | undefined;
+  readonly lowThresholdCanny?: number | undefined;
+  readonly highThresholdCanny?: number | undefined;
+  readonly includeHandsAndFaceOpenPose?: boolean | undefined;
 }
 
 function isOneOf<const T extends readonly unknown[]>(value: unknown, options: T): value is T[number] {
@@ -63,11 +50,12 @@ function extractOperationParams(params: Record<string, unknown>): OperationParam
     height: typeof params.height === 'number' ? params.height : undefined,
     lowThresholdCanny: typeof params.lowThresholdCanny === 'number' ? params.lowThresholdCanny : undefined,
     highThresholdCanny: typeof params.highThresholdCanny === 'number' ? params.highThresholdCanny : undefined,
-    includeHandsAndFaceOpenPose: typeof params.includeHandsAndFaceOpenPose === 'boolean' ? params.includeHandsAndFaceOpenPose : undefined,
+    includeHandsAndFaceOpenPose:
+      typeof params.includeHandsAndFaceOpenPose === 'boolean' ? params.includeHandsAndFaceOpenPose : undefined,
   };
 }
 
-async function runUpscale(
+function runUpscale(
   imageData: string,
   params: OperationParams,
   client: RunwareClient,
@@ -87,7 +75,7 @@ async function runUpscale(
   );
 }
 
-async function runRemoveBackground(
+function runRemoveBackground(
   imageData: string,
   params: OperationParams,
   client: RunwareClient,
@@ -107,7 +95,7 @@ async function runRemoveBackground(
   );
 }
 
-async function runCaption(
+function runCaption(
   imageData: string,
   params: OperationParams,
   client: RunwareClient,
@@ -126,7 +114,7 @@ async function runCaption(
   );
 }
 
-async function runVectorize(
+function runVectorize(
   imageData: string,
   params: OperationParams,
   client: RunwareClient,
@@ -146,7 +134,7 @@ async function runVectorize(
   );
 }
 
-async function runControlNetPreprocess(
+function runControlNetPreprocess(
   imageData: string,
   params: OperationParams,
   client: RunwareClient,
@@ -154,22 +142,32 @@ async function runControlNetPreprocess(
 ): Promise<ToolResult> {
   const preprocessor = params.preprocessor;
   if (preprocessor === undefined) {
-    return errorResult('controlNetPreprocess requires preprocessor parameter');
+    return Promise.resolve(errorResult('controlNetPreprocess requires preprocessor parameter'));
   }
 
   const validPreprocessors = [
-    'canny', 'depth', 'mlsd', 'normalbae', 'openpose', 'tile',
-    'seg', 'lineart', 'lineart_anime', 'shuffle', 'scribble', 'softedge',
+    'canny',
+    'depth',
+    'mlsd',
+    'normalbae',
+    'openpose',
+    'tile',
+    'seg',
+    'lineart',
+    'lineart_anime',
+    'shuffle',
+    'scribble',
+    'softedge',
   ] as const;
 
-  if (!validPreprocessors.includes(preprocessor as typeof validPreprocessors[number])) {
-    return errorResult(`Invalid preprocessor: ${preprocessor}`);
+  if (!isOneOf(preprocessor, validPreprocessors)) {
+    return Promise.resolve(errorResult(`Invalid preprocessor: ${preprocessor}`));
   }
 
   return controlNetPreprocess(
     {
       inputImage: imageData,
-      preprocessor: preprocessor as typeof validPreprocessors[number],
+      preprocessor,
       width: params.width,
       height: params.height,
       lowThresholdCanny: params.lowThresholdCanny,
@@ -182,7 +180,7 @@ async function runControlNetPreprocess(
   );
 }
 
-async function runOperation(
+function runOperation(
   operation: FolderOperation,
   imageData: string,
   params: OperationParams,
@@ -278,7 +276,7 @@ async function processFile(
 
     const outputPath = getOutputPath(imagePath, outputFolder, outputSuffix, operation);
 
-    const resultData = result.data as Record<string, unknown> | undefined;
+    const resultData = isObject(result.data) ? result.data : undefined;
 
     return {
       inputPath: imagePath,
@@ -383,9 +381,10 @@ export async function processFolder(
       ...(input.includeCost && { totalCost }),
     };
 
-    const statusMessage = failed > 0
-      ? `Processed ${String(processed)}/${String(images.length)} images with ${String(failed)} failures`
-      : `Successfully processed ${String(processed)}/${String(images.length)} images`;
+    const statusMessage =
+      failed > 0
+        ? `Processed ${String(processed)}/${String(images.length)} images with ${String(failed)} failures`
+        : `Successfully processed ${String(processed)}/${String(images.length)} images`;
 
     return successResult(statusMessage, output, totalCost);
   } catch (error) {
@@ -414,7 +413,8 @@ export const processFolderToolDefinition = {
       },
       operationParams: {
         type: 'object',
-        description: 'Operation-specific parameters (e.g., upscaleFactor for upscale, preprocessor for controlNetPreprocess)',
+        description:
+          'Operation-specific parameters (e.g., upscaleFactor for upscale, preprocessor for controlNetPreprocess)',
       },
       recursive: {
         type: 'boolean',

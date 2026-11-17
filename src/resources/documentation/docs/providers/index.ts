@@ -1,3 +1,5 @@
+// Does:  Collects the nine provider docs into providerDocs.
+// Holds: Every file in docs/providers is listed here, or register-features-providers.ts never registers it.
 import { alibabaDoc } from './alibaba.js';
 import { bflDoc } from './bfl.js';
 import { briaDoc } from './bria.js';

@@ -1,3 +1,5 @@
+// Does:  Documents the imageUpscale tool and its 2x and 4x upscale factors.
+// Holds: States upscaleFactor 2 and quality 95 as defaults; served at runware://docs/tools/upscale via registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const upscaleDoc: DocResource = {
@@ -29,7 +31,8 @@ export const upscaleDoc: DocResource = {
       {
         name: 'model',
         type: 'string',
-        description: 'Upscale model identifier. Available: Clarity Upscaler, SwinIR (supports 4x), Real-ESRGAN (supports 4x).',
+        description:
+          'Upscale model identifier. Available: Clarity Upscaler, SwinIR (supports 4x), Real-ESRGAN (supports 4x).',
       },
       {
         name: 'outputType',
@@ -73,7 +76,8 @@ export const upscaleDoc: DocResource = {
           model: 'runware:xxx@3',
           outputFormat: 'PNG',
         },
-        explanation: 'Quadruples resolution using Real-ESRGAN. A 256x256 image becomes 1024x1024. Best for illustrations and graphics.',
+        explanation:
+          'Quadruples resolution using Real-ESRGAN. A 256x256 image becomes 1024x1024. Best for illustrations and graphics.',
       },
     ],
     tips: [

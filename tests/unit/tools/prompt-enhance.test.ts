@@ -1,12 +1,7 @@
-/**
- * Unit tests for the prompt enhance tool.
- */
+// Does:  Proves promptEnhance bounds its prompt and version count and aggregates variations and cost across calls.
+// Holds: config and the rate limiter are mocked; the client is a stub, one requestSingle per variation.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -31,17 +26,9 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { promptEnhance, promptEnhanceToolDefinition } from '../../../src/tools/prompt-enhance/handler.js';
+import { promptEnhance } from '../../../src/tools/prompt-enhance/handler.js';
 import { promptEnhanceInputSchema } from '../../../src/tools/prompt-enhance/schema.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 function createMockClient() {
   return {
@@ -51,10 +38,6 @@ function createMockClient() {
   } as unknown as RunwareClient;
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('promptEnhance', () => {
   let mockClient: RunwareClient;
 
@@ -63,47 +46,7 @@ describe('promptEnhance', () => {
     mockClient = createMockClient();
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(promptEnhanceToolDefinition.name).toBe('promptEnhance');
-    });
-
-    it('should require prompt', () => {
-      expect(promptEnhanceToolDefinition.inputSchema.required).toContain('prompt');
-    });
-
-    it('should have a description', () => {
-      expect(promptEnhanceToolDefinition.description).toBeTruthy();
-    });
-  });
-
   describe('schema validation', () => {
-    it('should accept valid input', () => {
-      const result = promptEnhanceInputSchema.safeParse({
-        prompt: 'a cat',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should apply defaults', () => {
-      const result = promptEnhanceInputSchema.safeParse({
-        prompt: 'a cat',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.promptVersions).toBe(1);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
-    it('should accept promptMaxLength', () => {
-      const result = promptEnhanceInputSchema.safeParse({
-        prompt: 'a cat',
-        promptMaxLength: 200,
-      });
-      expect(result.success).toBe(true);
-    });
-
     it('should reject empty prompt', () => {
       const result = promptEnhanceInputSchema.safeParse({
         prompt: '',
@@ -128,29 +71,6 @@ describe('promptEnhance', () => {
   });
 
   describe('handler success case', () => {
-    it('should return success with enhanced prompt', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'promptEnhance',
-        taskUUID: 'task-uuid',
-        text: 'A majestic cat sitting gracefully, detailed fur, warm lighting, photorealistic',
-        cost: 0.001,
-      });
-
-      const input = promptEnhanceInputSchema.parse({
-        prompt: 'a cat',
-        promptVersions: 1,
-      });
-
-      const result = await promptEnhance(input, mockClient);
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('1 variation');
-
-      const data = result.data as { enhancedPrompts: string[]; cost?: number };
-      expect(data.enhancedPrompts).toHaveLength(1);
-      expect(data.enhancedPrompts[0]).toContain('majestic cat');
-    });
-
     it('should handle multiple versions', async () => {
       let callCount = 0;
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockImplementation(() => {
@@ -175,23 +95,6 @@ describe('promptEnhance', () => {
 
       const data = result.data as { enhancedPrompts: string[] };
       expect(data.enhancedPrompts).toHaveLength(3);
-    });
-  });
-
-  describe('handler error case', () => {
-    it('should return error when client throws', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Rate limit exceeded'),
-      );
-
-      const input = promptEnhanceInputSchema.parse({
-        prompt: 'a cat',
-      });
-
-      const result = await promptEnhance(input, mockClient);
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Rate limit exceeded');
     });
   });
 

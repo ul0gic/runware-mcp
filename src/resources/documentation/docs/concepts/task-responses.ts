@@ -1,10 +1,13 @@
+// Does:  Documents the taskUUID-keyed response envelope every Runware task returns.
+// Holds: Served at runware://docs/concepts/task-responses; every relatedDocs URI resolves to a registered doc.
 import type { DocResource } from '../../types.js';
 
 export const taskResponsesDoc: DocResource = {
   id: 'task-responses',
   category: 'concepts',
   title: 'Task Response Structure',
-  summary: 'How Runware API responses are structured, including taskUUID matching, status fields, cost tracking, and error handling',
+  summary:
+    'How Runware API responses are structured, including taskUUID matching, status fields, cost tracking, and error handling',
   tags: ['responses', 'taskUUID', 'status', 'polling', 'errors', 'cost'],
   content: {
     description:
@@ -19,7 +22,8 @@ export const taskResponsesDoc: DocResource = {
         name: 'taskUUID',
         type: 'string (UUID v4)',
         required: true,
-        description: 'Unique identifier assigned to each task request. Used to match responses to requests and to poll for async results.',
+        description:
+          'Unique identifier assigned to each task request. Used to match responses to requests and to poll for async results.',
       },
       {
         name: 'status',
@@ -66,10 +70,7 @@ export const taskResponsesDoc: DocResource = {
       'Cost tracking is enabled by default (includeCost: true) in all MCP server tools to help monitor usage.',
       'Error responses include error details — check the error field for actionable information about what went wrong.',
     ],
-    relatedDocs: [
-      'runware://docs/concepts/async-delivery',
-      'runware://docs/concepts/connection',
-    ],
+    relatedDocs: ['runware://docs/concepts/async-delivery', 'runware://docs/concepts/connection'],
   },
   lastUpdated: '2026-02-05',
 };

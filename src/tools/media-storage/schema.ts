@@ -1,3 +1,6 @@
+// Does:  Validates the mediaStorage upload and delete operations as a discriminated union.
+// Holds: Delete accepts only a UUID, so no URL or payload can be passed as the target of a permanent deletion.
+
 import { z } from 'zod';
 
 import { uuidSchema } from '../../shared/validation.js';

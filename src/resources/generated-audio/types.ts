@@ -1,3 +1,5 @@
+// Does:  Defines the record kept for each audio clip generated this session.
+// Holds: AudioType is limited to music, sfx, speech and ambient.
 type AudioType = 'music' | 'sfx' | 'speech' | 'ambient';
 
 export interface GeneratedAudioEntry {

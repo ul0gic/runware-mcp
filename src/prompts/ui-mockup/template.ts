@@ -1,3 +1,5 @@
+// Does:  Builds the ui-mockup prompt that guides an imageInference call for an interface mockup.
+// Holds: Mobile mockups use 512x1024 and everything else 1280x832.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'ui-mockup';
@@ -91,7 +93,8 @@ export const uiMockup: PromptTemplate = {
     const complexity = args.complexity ?? DEFAULT_COMPLEXITY;
 
     const appTypeDesc = APP_TYPE_DESCRIPTORS[appType] ?? APP_TYPE_DESCRIPTORS['web-app'] ?? '';
-    const designDesc = DESIGN_SYSTEM_DESCRIPTORS[designSystem] ?? DESIGN_SYSTEM_DESCRIPTORS[DEFAULT_DESIGN_SYSTEM] ?? '';
+    const designDesc =
+      DESIGN_SYSTEM_DESCRIPTORS[designSystem] ?? DESIGN_SYSTEM_DESCRIPTORS[DEFAULT_DESIGN_SYSTEM] ?? '';
     const colorDesc = COLOR_SCHEME_DESCRIPTORS[colorScheme] ?? COLOR_SCHEME_DESCRIPTORS[DEFAULT_COLOR_SCHEME] ?? '';
     const complexityDesc = COMPLEXITY_DESCRIPTORS[complexity] ?? COMPLEXITY_DESCRIPTORS[DEFAULT_COMPLEXITY] ?? '';
 
@@ -109,9 +112,10 @@ export const uiMockup: PromptTemplate = {
       'Single screen view, no device frame, flat design render.',
     ].join(' ');
 
-    const complexityTip = complexity === 'wireframe'
-      ? 'keep the prompt focused on layout structure without visual embellishment'
-      : 'include specific UI element descriptions for better accuracy';
+    const complexityTip =
+      complexity === 'wireframe'
+        ? 'keep the prompt focused on layout structure without visual embellishment'
+        : 'include specific UI element descriptions for better accuracy';
 
     const content = [
       'Generate a UI mockup using the imageInference tool:',

@@ -1,3 +1,6 @@
+// Does:  Validates videoInference input, including frame, reference, speech and provider settings.
+// Holds: width and height must be multiples of 8, and at most 4 reference images are accepted.
+
 import { z } from 'zod';
 
 import {
@@ -20,11 +23,7 @@ import {
   fpsSchema,
 } from '../../shared/validation.js';
 
-const framePositionSchema = z.union([
-  z.literal('first'),
-  z.literal('last'),
-  z.number().int().min(0),
-]);
+const framePositionSchema = z.union([z.literal('first'), z.literal('last'), z.number().int().min(0)]);
 
 const frameImageSchema = z.object({
   inputImage: imageInputSchema,
@@ -42,17 +41,13 @@ const videoSafetyConfigSchema = z.object({
   mode: z.enum(['none', 'fast', 'full']).optional(),
 });
 
-/**
- * Mode follows the inputs: prompt alone is text-to-video, plus frameImages is
- * image-to-video, plus referenceVideos is video-to-video.
- */
+// Holds: There is no mode field; text, image or video-to-video follows from which inputs are present.
 export const videoInferenceInputSchema = z.object({
   positivePrompt: positivePromptSchema,
 
-  /** AIR-format identifier. */
   model: z.string(),
 
-  /** Seconds; the accepted range is model-specific. */
+  // Holds: Only a global bound is checked here; each model's own duration range is enforced by the API.
   duration: videoDurationSchema,
 
   width: z.number().int().min(256).max(7680).multipleOf(8).optional(),
@@ -63,7 +58,6 @@ export const videoInferenceInputSchema = z.object({
 
   steps: z.number().int().min(10).max(50).optional(),
 
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter name
   CFGScale: cfgScaleSchema.optional(),
 
   seed: seedSchema,
@@ -101,7 +95,6 @@ export const videoInferenceInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const videoInferenceOutputSchema = z.object({
   videoUUID: z.string(),
 
