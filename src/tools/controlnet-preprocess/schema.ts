@@ -1,3 +1,6 @@
+// Does:  Validates controlNetPreprocess input and describes its guide-image output.
+// Holds: Resize dimensions are bounded to 64-2048 px and Canny thresholds to 0-255.
+
 import { z } from 'zod';
 
 import {
@@ -9,24 +12,18 @@ import {
 } from '../../shared/validation.js';
 
 export const controlNetPreprocessInputSchema = z.object({
-  /** Accepts an image UUID, URL, base64 payload, or data URI. */
   inputImage: imageInputSchema,
 
   preprocessor: controlNetPreprocessorSchema,
 
-  /** Resizes the guide image when set. */
   height: z.number().int().min(64).max(2048).optional(),
 
-  /** Resizes the guide image when set. */
   width: z.number().int().min(64).max(2048).optional(),
 
-  /** Only applicable when preprocessor is 'canny'. */
   lowThresholdCanny: z.number().int().min(0).max(255).optional(),
 
-  /** Only applicable when preprocessor is 'canny'. */
   highThresholdCanny: z.number().int().min(0).max(255).optional(),
 
-  /** Only applicable when preprocessor is 'openpose'. */
   includeHandsAndFaceOpenPose: z.boolean().optional(),
 
   outputType: outputTypeSchema.optional(),
@@ -40,7 +37,6 @@ export const controlNetPreprocessInputSchema = z.object({
 
 export type ControlNetPreprocessInput = z.infer<typeof controlNetPreprocessInputSchema>;
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const controlNetPreprocessOutputSchema = z.object({
   guideImageUUID: z.string(),
 
@@ -52,7 +48,6 @@ const controlNetPreprocessOutputSchema = z.object({
 
   guideImageDataURI: z.string().optional(),
 
-  /** Cost in USD. */
   cost: z.number().optional(),
 });
 

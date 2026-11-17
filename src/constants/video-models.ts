@@ -1,3 +1,6 @@
+// Does:  Catalogs the Runware video models with their providers, limits, features, and pricing.
+// Holds: Every VIDEO_MODELS key equals its entry's id, the model's AIR identifier.
+
 const FEATURE_TEXT_TO_VIDEO = 'text-to-video';
 const FEATURE_IMAGE_TO_VIDEO = 'image-to-video';
 const FEATURE_VIDEO_TO_VIDEO = 'video-to-video';
@@ -24,16 +27,14 @@ const FEATURE_OCCLUSION_HANDLING = 'occlusion-handling';
 const FEATURE_SEGMENT_EDITING = 'segment-editing';
 const FEATURE_LONG_FORM = 'long-form';
 
+// Holds: Durations are seconds and cost is USD per second.
 export interface VideoModel {
-  /** AIR identifier (e.g., 'klingai:1@1') */
   readonly id: string;
   readonly name: string;
   readonly provider: VideoProvider;
   readonly maxWidth: number;
   readonly maxHeight: number;
-  /** Seconds. */
   readonly minDuration: number;
-  /** Seconds. */
   readonly maxDuration: number;
   readonly supportsFPS: boolean;
   readonly defaultFPS?: number;
@@ -41,12 +42,11 @@ export interface VideoModel {
   readonly supportsImageInput: boolean;
   readonly supportsVideoInput: boolean;
   readonly features: readonly string[];
-  /** USD. */
   readonly costPerSecond?: number;
   readonly notes?: string;
 }
 
-export type VideoProvider =
+type VideoProvider =
   | 'klingai'
   | 'google'
   | 'minimax'
@@ -57,7 +57,6 @@ export type VideoProvider =
   | 'seedance'
   | 'sync';
 
-/** Keys use the AIR format (provider:version@variant) required by the Runware API. */
 export const VIDEO_MODELS = {
   'klingai:1@1': {
     id: 'klingai:1@1',
@@ -123,12 +122,7 @@ export const VIDEO_MODELS = {
     supportsAudio: true,
     supportsImageInput: true,
     supportsVideoInput: false,
-    features: [
-      FEATURE_TEXT_TO_VIDEO,
-      FEATURE_IMAGE_TO_VIDEO,
-      FEATURE_NATIVE_AUDIO,
-      FEATURE_EXTENDED_DURATION,
-    ],
+    features: [FEATURE_TEXT_TO_VIDEO, FEATURE_IMAGE_TO_VIDEO, FEATURE_NATIVE_AUDIO, FEATURE_EXTENDED_DURATION],
     costPerSecond: 0.05,
   },
 
@@ -705,49 +699,12 @@ export const VIDEO_MODELS = {
   },
 } as const satisfies Record<string, VideoModel>;
 
-export type VideoModelId = keyof typeof VIDEO_MODELS;
+type VideoModelId = keyof typeof VIDEO_MODELS;
 
 export function getVideoModel(modelId: string): VideoModel | undefined {
   return isValidVideoModel(modelId) ? VIDEO_MODELS[modelId] : undefined;
 }
 
-export function getVideoModelsByProvider(provider: VideoProvider): VideoModel[] {
-  return Object.values(VIDEO_MODELS).filter((model) => model.provider === provider);
-}
-
-export function getAllVideoProviders(): VideoProvider[] {
-  const providers = new Set(Object.values(VIDEO_MODELS).map((model) => model.provider));
-  return [...providers];
-}
-
-export function getDefaultVideoModel(): VideoModel {
-  return VIDEO_MODELS['klingai:1.5@2'];
-}
-
-export function getVideoModelsByFeature(feature: string): VideoModel[] {
-  return Object.values(VIDEO_MODELS).filter((model: VideoModel) =>
-    (model.features).includes(feature),
-  );
-}
-
-export function getVideoModelsWithAudio(): VideoModel[] {
-  return Object.values(VIDEO_MODELS).filter((model) => model.supportsAudio);
-}
-
-export function getVideoModelsByMinDuration(minDurationSeconds: number): VideoModel[] {
-  return Object.values(VIDEO_MODELS).filter((model) => model.maxDuration >= minDurationSeconds);
-}
-
-export function getVideoModelsByResolution(width: number, height: number): VideoModel[] {
-  return Object.values(VIDEO_MODELS).filter(
-    (model) => model.maxWidth >= width && model.maxHeight >= height,
-  );
-}
-
-export function isValidVideoModel(modelId: string): modelId is VideoModelId {
+function isValidVideoModel(modelId: string): modelId is VideoModelId {
   return Object.hasOwn(VIDEO_MODELS, modelId);
-}
-
-export function getAllVideoModelIds(): VideoModelId[] {
-  return Object.keys(VIDEO_MODELS) as VideoModelId[];
 }

@@ -1,11 +1,12 @@
+// Does:  Documents the acceleration preset and the lower-level speed options for image generation.
+// Holds: Joins the registry through featureDocs in features/index.ts, not a direct registerDoc call.
 import type { DocResource } from '../../types.js';
 
 export const accelerationDoc: DocResource = {
   id: 'acceleration',
   category: 'features',
   title: 'Generation Acceleration',
-  summary:
-    'Speed optimization for image generation using TeaCache, DeepCache, and preset acceleration levels',
+  summary: 'Speed optimization for image generation using TeaCache, DeepCache, and preset acceleration levels',
   tags: ['acceleration', 'speed', 'performance', 'teacache', 'deepcache', 'image-generation'],
   content: {
     description:
@@ -71,10 +72,7 @@ export const accelerationDoc: DocResource = {
       'Do not combine the acceleration preset with explicit teaCache/deepCache settings. Use one approach or the other.',
     ],
 
-    relatedDocs: [
-      'runware://docs/tools/image-inference',
-      'runware://docs/features/refiner-models',
-    ],
+    relatedDocs: ['runware://docs/tools/image-inference', 'runware://docs/features/refiner-models'],
   },
   lastUpdated: '2026-02-05',
 };

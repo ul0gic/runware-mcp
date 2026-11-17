@@ -1,9 +1,8 @@
+// Does:  Turns an input image into a ControlNet guide image with the chosen preprocessor.
+// Holds: Unknown preprocessors are rejected locally; friendly names are always translated to the API identifier.
+
 import { getPreprocessor, isValidApiPreprocessor } from '../../constants/controlnet.js';
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { RunwareApiError, wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
@@ -22,7 +21,7 @@ interface ControlNetPreprocessApiResponse {
 }
 
 function validatePreprocessor(preprocessor: string): void {
-  // Accepts both the internal preprocessor name and the raw API identifier.
+  // Holds: Both the internal preprocessor name and the raw API identifier are accepted.
   const preprocessorInfo = getPreprocessor(preprocessor);
 
   if (preprocessorInfo === undefined && !isValidApiPreprocessor(preprocessor)) {
@@ -114,11 +113,7 @@ export async function controlNetPreprocess(
 
     const preprocessorInfo = getPreprocessor(input.preprocessor);
     const preprocessorName = preprocessorInfo?.name ?? input.preprocessor;
-    return successResult(
-      `Image preprocessed with ${preprocessorName} successfully`,
-      output,
-      output.cost,
-    );
+    return successResult(`Image preprocessed with ${preprocessorName} successfully`, output, output.cost);
   } catch (error) {
     const mcpError = wrapError(error);
     return errorResult(mcpError.message, mcpError.data);

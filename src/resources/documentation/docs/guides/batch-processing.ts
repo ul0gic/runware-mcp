@@ -1,10 +1,13 @@
+// Does:  Guides choosing between the tools that process many images in one workflow.
+// Holds: Parameter-free guide registered by register-guides.ts; served at runware://docs/guides/batch-processing.
 import type { DocResource } from '../../types.js';
 
 export const batchProcessingDoc: DocResource = {
   id: 'batch-processing',
   category: 'guides',
   title: 'Batch Processing Guide',
-  summary: 'When to use processFolder vs batchImageInference vs watchFolder for bulk image operations, with concurrency settings and error handling tips',
+  summary:
+    'When to use processFolder vs batchImageInference vs watchFolder for bulk image operations, with concurrency settings and error handling tips',
   tags: ['batch', 'folder', 'concurrency', 'bulk', 'processFolder', 'batchImageInference', 'watchFolder'],
   content: {
     description:

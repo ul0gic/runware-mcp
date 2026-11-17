@@ -1,3 +1,6 @@
+// Does:  Builds a RunwareClient stand-in whose methods are vi.fn() with empty default results.
+// Holds: No network; callers override any method through the partial they pass in.
+
 import { vi } from 'vitest';
 
 import type { RunwareClient } from '../../src/integrations/runware/client.js';

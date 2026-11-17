@@ -1,10 +1,13 @@
+// Does:  Documents the URL, base64 and data-URI output types and the image output formats.
+// Holds: States outputType URL, outputFormat JPG and outputQuality 95 as defaults; registered by registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const outputTypesDoc: DocResource = {
   id: 'output-types',
   category: 'concepts',
   title: 'Output Types & Formats',
-  summary: 'How to control output delivery (URL, base64Data, dataURI) and image format (JPG, PNG, WEBP) across all tools',
+  summary:
+    'How to control output delivery (URL, base64Data, dataURI) and image format (JPG, PNG, WEBP) across all tools',
   tags: ['output', 'URL', 'base64', 'dataURI', 'format', 'quality', 'JPG', 'PNG', 'WEBP'],
   content: {
     description:
@@ -20,43 +23,50 @@ export const outputTypesDoc: DocResource = {
         name: 'outputType',
         type: 'string',
         default: 'URL',
-        description: 'How to deliver the result. "URL" returns a hosted link, "base64Data" returns raw base64, "dataURI" returns a data URI string.',
+        description:
+          'How to deliver the result. "URL" returns a hosted link, "base64Data" returns raw base64, "dataURI" returns a data URI string.',
       },
       {
         name: 'outputFormat',
         type: 'string',
         default: 'JPG',
-        description: 'Image format: "JPG" (smallest, lossy), "PNG" (lossless, transparency), "WEBP" (efficient, lossy/lossless). Video: "MP4", "WEBM", "MOV". Audio: "MP3", "WAV", "OGG".',
+        description:
+          'Image format: "JPG" (smallest, lossy), "PNG" (lossless, transparency), "WEBP" (efficient, lossy/lossless). Video: "MP4", "WEBM", "MOV". Audio: "MP3", "WAV", "OGG".',
       },
       {
         name: 'outputQuality',
         type: 'integer',
         range: '20-99',
         default: '95',
-        description: 'Compression quality for lossy formats (JPG, WEBP). Higher values = better quality but larger file size.',
+        description:
+          'Compression quality for lossy formats (JPG, WEBP). Higher values = better quality but larger file size.',
       },
       {
         name: 'ttl',
         type: 'integer',
         range: '60+',
-        description: 'Time-to-live in seconds for URL outputs. After expiration, the URL is no longer accessible. Minimum 60 seconds.',
+        description:
+          'Time-to-live in seconds for URL outputs. After expiration, the URL is no longer accessible. Minimum 60 seconds.',
       },
     ],
     examples: [
       {
         title: 'URL output (default, most common)',
         input: { outputType: 'URL', outputFormat: 'JPG', outputQuality: 95 },
-        explanation: 'Returns a temporary URL to the generated image. Best for most use cases — the URL can be displayed, downloaded, or passed to other tools.',
+        explanation:
+          'Returns a temporary URL to the generated image. Best for most use cases — the URL can be displayed, downloaded, or passed to other tools.',
       },
       {
         title: 'Base64 output for inline processing',
         input: { outputType: 'base64Data', outputFormat: 'PNG' },
-        explanation: 'Returns raw base64 data without a URL. Useful when you need to process the image data directly without an HTTP fetch.',
+        explanation:
+          'Returns raw base64 data without a URL. Useful when you need to process the image data directly without an HTTP fetch.',
       },
       {
         title: 'PNG with transparency for background removal',
         input: { outputType: 'URL', outputFormat: 'PNG' },
-        explanation: 'PNG is required when the output includes transparency (background removal, LayerDiffuse). JPG does not support alpha channels.',
+        explanation:
+          'PNG is required when the output includes transparency (background removal, LayerDiffuse). JPG does not support alpha channels.',
       },
     ],
     tips: [

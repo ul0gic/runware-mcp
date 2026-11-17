@@ -1,11 +1,12 @@
+// Does:  Documents two-stage generation where a refiner model enhances base-model output.
+// Holds: Served at runware://docs/features/refiner-models; acceleration and refiner docs link to each other.
 import type { DocResource } from '../../types.js';
 
 export const refinerModelsDoc: DocResource = {
   id: 'refiner-models',
   category: 'features',
   title: 'Refiner Models',
-  summary:
-    'Two-stage SDXL generation using refiner models to enhance fine detail and overall image quality',
+  summary: 'Two-stage SDXL generation using refiner models to enhance fine detail and overall image quality',
   tags: ['refiner', 'sdxl', 'quality', 'two-stage', 'detail-enhancement', 'image-generation'],
   content: {
     description:
@@ -16,8 +17,7 @@ export const refinerModelsDoc: DocResource = {
         name: 'refiner',
         type: 'object',
         required: false,
-        description:
-          'Refiner configuration for two-stage generation. Only applicable to SDXL-compatible models.',
+        description: 'Refiner configuration for two-stage generation. Only applicable to SDXL-compatible models.',
       },
       {
         name: 'refiner.model',
@@ -40,8 +40,7 @@ export const refinerModelsDoc: DocResource = {
       {
         title: 'SDXL base + refiner for portrait quality',
         input: {
-          positivePrompt:
-            'portrait of a woman, natural lighting, detailed skin texture, photorealistic',
+          positivePrompt: 'portrait of a woman, natural lighting, detailed skin texture, photorealistic',
           model: 'civitai:133005@357609',
           width: 1024,
           height: 1024,
@@ -57,8 +56,7 @@ export const refinerModelsDoc: DocResource = {
       {
         title: 'Earlier refiner handoff for maximum detail',
         input: {
-          positivePrompt:
-            'macro photograph of a butterfly wing, extreme detail, iridescent colors',
+          positivePrompt: 'macro photograph of a butterfly wing, extreme detail, iridescent colors',
           model: 'civitai:133005@357609',
           width: 1024,
           height: 1024,

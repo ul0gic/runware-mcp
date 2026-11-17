@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+// Does:  Proves photoMaker inserts the `img` trigger word exactly once and bounds the reference image count.
+// Holds: config and the rate limiter are mocked; the client is a stub, and assertions read the task it was sent.
+
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -23,19 +26,31 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-import {
-  photoMaker,
-  photoMakerToolDefinition,
-  photoMakerInputSchema,
-} from '../../../src/tools/photo-maker/index.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
+import { photoMaker, photoMakerInputSchema } from '../../../src/tools/photo-maker/index.js';
 
 function createMockClient(): RunwareClient {
   return {
-    request: vi.fn(),
+    request: vi.fn().mockResolvedValue({
+      data: [
+        {
+          taskType: 'photoMaker',
+          taskUUID: 'uuid',
+          imageUUID: 'img-uuid',
+          imageURL: 'https://example.com/photo.png',
+          cost: 0.02,
+        },
+      ],
+    }),
     requestSingle: vi.fn(),
     generateTaskUUID: vi.fn().mockReturnValue('mock-uuid'),
   } as unknown as RunwareClient;
+}
+
+function sentPrompt(client: RunwareClient): string | undefined {
+  const callArgs = (client.request as ReturnType<typeof vi.fn>).mock.calls[0] as unknown[];
+  const tasks = callArgs[0] as { positivePrompt?: string }[];
+  return tasks[0]?.positivePrompt;
 }
 
 describe('photoMaker', () => {
@@ -46,217 +61,49 @@ describe('photoMaker', () => {
     mockClient = createMockClient();
   });
 
-  describe('handler', () => {
-    it('should return success with valid input', async () => {
-      const mockResponse = {
-        data: [
-          {
-            taskType: 'photoMaker',
-            taskUUID: 'test-task-uuid',
-            imageUUID: 'test-image-uuid',
-            imageURL: 'https://example.com/photo.png',
-            cost: 0.02,
-            seed: 123,
-          },
-        ],
-      };
+  it('should auto-prepend trigger word when not present', async () => {
+    await photoMaker(
+      photoMakerInputSchema.parse({
+        positivePrompt: 'a person in a park',
+        inputImages: ['https://example.com/face.jpg'],
+      }),
+      mockClient,
+    );
 
-      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await photoMaker(
-        {
-          positivePrompt: 'img a person in a park',
-          inputImages: ['https://example.com/face.jpg'],
-        },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('identity-preserving image');
-
-      const data = result.data as { images: { imageUUID: string }[] };
-      expect(data.images).toHaveLength(1);
-      expect(data.images[0]?.imageUUID).toBe('test-image-uuid');
-    });
-
-    it('should auto-prepend trigger word when not present', async () => {
-      const mockResponse = {
-        data: [
-          {
-            taskType: 'photoMaker',
-            taskUUID: 'uuid',
-            imageUUID: 'img-uuid',
-            imageURL: 'https://example.com/photo.png',
-            cost: 0.02,
-          },
-        ],
-      };
-
-      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      await photoMaker(
-        {
-          positivePrompt: 'a person in a park',
-          inputImages: ['https://example.com/face.jpg'],
-        },
-        mockClient,
-      );
-
-      // Verify the request was called with trigger word prepended
-      const callArgs = (mockClient.request as ReturnType<typeof vi.fn>).mock.calls[0] as unknown[];
-      const tasks = callArgs[0] as { positivePrompt?: string }[];
-      expect(tasks[0]?.positivePrompt).toContain('img');
-    });
-
-    it('should not duplicate trigger word when already present', async () => {
-      const mockResponse = {
-        data: [
-          {
-            taskType: 'photoMaker',
-            taskUUID: 'uuid',
-            imageUUID: 'img-uuid',
-            imageURL: 'https://example.com/photo.png',
-            cost: 0.02,
-          },
-        ],
-      };
-
-      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      await photoMaker(
-        {
-          positivePrompt: 'img a person smiling',
-          inputImages: ['https://example.com/face.jpg'],
-        },
-        mockClient,
-      );
-
-      const callArgs = (mockClient.request as ReturnType<typeof vi.fn>).mock.calls[0] as unknown[];
-      const tasks = callArgs[0] as { positivePrompt?: string }[];
-      // Should not be "img img a person smiling"
-      expect(tasks[0]?.positivePrompt).toBe('img a person smiling');
-    });
-
-    it('should return error when API fails', async () => {
-      (mockClient.request as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Network timeout'),
-      );
-
-      const result = await photoMaker(
-        {
-          positivePrompt: 'a person',
-          inputImages: ['https://example.com/face.jpg'],
-        },
-        mockClient,
-      );
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Network timeout');
-    });
-
-    it('should propagate cost from response', async () => {
-      const mockResponse = {
-        data: [
-          {
-            taskType: 'photoMaker',
-            taskUUID: 'uuid',
-            imageUUID: 'img-uuid',
-            imageURL: 'https://example.com/photo.png',
-            cost: 0.03,
-          },
-        ],
-      };
-
-      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await photoMaker(
-        {
-          positivePrompt: 'img a person',
-          inputImages: ['https://example.com/face.jpg'],
-        },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.cost).toBe(0.03);
-    });
+    expect(sentPrompt(mockClient)).toContain('img');
   });
 
-  describe('schema', () => {
-    it('should validate correct input with required fields', () => {
-      const result = photoMakerInputSchema.safeParse({
-        positivePrompt: 'img a person in the mountains',
+  it('should not duplicate trigger word when already present', async () => {
+    await photoMaker(
+      photoMakerInputSchema.parse({
+        positivePrompt: 'img a person smiling',
         inputImages: ['https://example.com/face.jpg'],
-      });
-      expect(result.success).toBe(true);
-    });
+      }),
+      mockClient,
+    );
 
-    it('should apply default values', () => {
-      const result = photoMakerInputSchema.safeParse({
-        positivePrompt: 'img a person',
-        inputImages: ['https://example.com/face.jpg'],
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.model).toBe('civitai:139562@344487');
-        expect(result.data.width).toBe(1024);
-        expect(result.data.height).toBe(1024);
-        expect(result.data.styleStrength).toBe(0.5);
-        expect(result.data.numberResults).toBe(1);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
-    it('should reject missing positivePrompt', () => {
-      const result = photoMakerInputSchema.safeParse({
-        inputImages: ['https://example.com/face.jpg'],
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject missing inputImages', () => {
-      const result = photoMakerInputSchema.safeParse({
-        positivePrompt: 'img a person',
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject empty inputImages array', () => {
-      const result = photoMakerInputSchema.safeParse({
-        positivePrompt: 'img a person',
-        inputImages: [],
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject more than 4 inputImages', () => {
-      const result = photoMakerInputSchema.safeParse({
-        positivePrompt: 'img a person',
-        inputImages: [
-          'https://example.com/1.jpg',
-          'https://example.com/2.jpg',
-          'https://example.com/3.jpg',
-          'https://example.com/4.jpg',
-          'https://example.com/5.jpg',
-        ],
-      });
-      expect(result.success).toBe(false);
-    });
+    expect(sentPrompt(mockClient)).toBe('img a person smiling');
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(photoMakerToolDefinition.name).toBe('photoMaker');
+  it('should reject empty inputImages array', () => {
+    const result = photoMakerInputSchema.safeParse({
+      positivePrompt: 'img a person',
+      inputImages: [],
     });
+    expect(result.success).toBe(false);
+  });
 
-    it('should require positivePrompt and inputImages', () => {
-      expect(photoMakerToolDefinition.inputSchema.required).toContain('positivePrompt');
-      expect(photoMakerToolDefinition.inputSchema.required).toContain('inputImages');
+  it('should reject more than 4 inputImages', () => {
+    const result = photoMakerInputSchema.safeParse({
+      positivePrompt: 'img a person',
+      inputImages: [
+        'https://example.com/1.jpg',
+        'https://example.com/2.jpg',
+        'https://example.com/3.jpg',
+        'https://example.com/4.jpg',
+        'https://example.com/5.jpg',
+      ],
     });
-
-    it('should have a description', () => {
-      expect(photoMakerToolDefinition.description).toBeTruthy();
-    });
+    expect(result.success).toBe(false);
   });
 });

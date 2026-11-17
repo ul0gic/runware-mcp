@@ -1,14 +1,12 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Submits a custom safetensors model upload asynchronously and polls until it is deployed.
+// Holds: Explicit metadata fields override anything in defaults, and deliveryMethod is always async.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type AsyncTaskResponse,
-  type TaskUUID,
   type ToolContext,
   type ToolResult,
   errorResult,
@@ -32,25 +30,20 @@ export async function modelUpload(
 
   try {
     await defaultRateLimiter.waitForToken(context?.signal);
-    const {
-      defaults,
-      ...metadata
-    } = input;
+    const { defaults, ...metadata } = input;
     const task = createTaskRequest('modelUpload', {
       ...defaults,
       ...metadata,
       deliveryMethod: 'async',
     });
     await runwareClient.request([task], { signal: context?.signal });
-    const polled = await pollForResult<ModelUploadResponse>(task.taskUUID as TaskUUID, {
+    const polled = await pollForResult<ModelUploadResponse>(task.taskUUID, {
       client: runwareClient,
       progress: context?.progress,
       signal: context?.signal,
     });
     return successResult(
-      polled.result.air === undefined
-        ? 'Model upload completed'
-        : `Model upload completed: ${polled.result.air}`,
+      polled.result.air === undefined ? 'Model upload completed' : `Model upload completed: ${polled.result.air}`,
       {
         ...polled.result,
         pollingAttempts: polled.attempts,
@@ -65,8 +58,7 @@ export async function modelUpload(
 
 export const modelUploadToolDefinition = {
   name: 'modelUpload',
-  description:
-    'Upload and deploy a custom safetensors model. The remote weight URL must use HTTPS.',
+  description: 'Upload and deploy a custom safetensors model. The remote weight URL must use HTTPS.',
   annotations: { readOnlyHint: false, destructiveHint: false },
   inputSchema: {
     type: 'object',

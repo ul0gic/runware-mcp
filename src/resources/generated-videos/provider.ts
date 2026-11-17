@@ -1,3 +1,5 @@
+// Does:  Keeps this session's generated videos in memory and serves them at runware://videos/{id}.
+// Holds: In-process only and capped at 10,000 entries, evicting the earliest-inserted id first.
 import { truncate } from '../../shared/utils.js';
 
 import type { GeneratedVideoEntry } from './types.js';
@@ -22,7 +24,7 @@ export function getSessionVideos(): readonly GeneratedVideoEntry[] {
   return SESSION_VIDEOS.values().toArray();
 }
 
-/** Test-support hook — production code never clears the store. */
+// Why: Tests reset the store with this; production code never clears it, so it is not dead code.
 export function clearSessionVideos(): void {
   SESSION_VIDEOS.clear();
 }
@@ -38,11 +40,9 @@ export const generatedVideosProvider: ResourceProvider = {
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {
-    const entries: ResourceEntry[] = Array.from(SESSION_VIDEOS.values(), video => ({
+    const entries: ResourceEntry[] = Array.from(SESSION_VIDEOS.values(), (video) => ({
       uri: `${URI_PREFIX}${video.id}`,
-      name: video.prompt.length > 0
-        ? truncate(video.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-        : `Video ${video.id}`,
+      name: video.prompt.length > 0 ? truncate(video.prompt, MAX_PROMPT_DISPLAY_LENGTH) : `Video ${video.id}`,
       description: `${String(video.duration)}s ${String(video.width)}x${String(video.height)} via ${video.model}`,
       mimeType: 'application/json',
     }));

@@ -1,3 +1,5 @@
+// Does:  Documents content-safety checking at the API level and per-provider safety settings.
+// Holds: Its relatedDocs reach the bfl and bria provider docs; served at runware://docs/features/safety-filtering.
 import type { DocResource } from '../../types.js';
 
 export const safetyFilteringDoc: DocResource = {
@@ -36,8 +38,7 @@ export const safetyFilteringDoc: DocResource = {
         type: 'boolean',
         required: false,
         default: 'true',
-        description:
-          'Include generation cost in the response. Useful for tracking usage and billing.',
+        description: 'Include generation cost in the response. Useful for tracking usage and billing.',
       },
       {
         name: 'providerSettings.bfl.safetyTolerance',
@@ -97,7 +98,7 @@ export const safetyFilteringDoc: DocResource = {
       'BFL safetyTolerance 0-2 is appropriate for general audiences. 3-4 suits art and creative platforms. 5-6 is only for unrestricted contexts.',
       'Bria contentModeration defaults to true and is recommended for commercial use cases where brand safety is important.',
       'Safety checking adds minimal latency to generation. The performance cost is negligible compared to the risk of displaying inappropriate content.',
-      'Provider-specific safety settings only apply when using that provider\'s models. The API-level safety.checkContent works with any model.',
+      "Provider-specific safety settings only apply when using that provider's models. The API-level safety.checkContent works with any model.",
     ],
 
     relatedDocs: [

@@ -1,6 +1,7 @@
-// Every fs call here takes a non-literal path by design; paths pass through resolveAndValidatePath() (traversal + allowed-root + symlink checks) first.
+// Does:  Checks user-supplied paths against the allowed roots and reads the files under them as base64.
+// Holds: Reads resolve first: the fully resolved real path must sit inside the real path of an allowed root.
 
-import { readFile, lstat, realpath, stat, access, constants } from 'node:fs/promises';
+import { readFile, realpath, stat, access, constants } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import path from 'node:path';
 
@@ -41,111 +42,73 @@ const EXTENSION_TO_MIME = new Map<string, string>([
   ['.m4a', 'audio/mp4'],
 ]);
 
-const ALLOWED_IMAGE_TYPES = new Set([
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-  'image/gif',
-  'image/bmp',
-]);
-
-const ALLOWED_VIDEO_TYPES = new Set([
-  'video/mp4',
-  'video/webm',
-  'video/quicktime',
-]);
-
-const ALLOWED_AUDIO_TYPES = new Set([
-  'audio/mpeg',
-  'audio/wav',
-  'audio/ogg',
-  'audio/flac',
-  'audio/aac',
-  'audio/mp4',
-]);
-
-/** Falls back to common home-directory media folders when ALLOWED_FILE_ROOTS is unset. */
 function getDefaultAllowedRoots(): readonly string[] {
   if (config.ALLOWED_FILE_ROOTS.length > 0) {
     return config.ALLOWED_FILE_ROOTS;
   }
 
   const home = homedir();
-  return [
-    `${home}/Pictures`,
-    `${home}/Images`,
-    `${home}/Downloads`,
-    `${home}/Documents`,
-    `${home}/Desktop`,
-    '/tmp',
-  ];
+  // Why: World-writable /tmp lets any local user plant files for the server to read, so it is opt-in only.
+  return [`${home}/Pictures`, `${home}/Images`, `${home}/Downloads`, `${home}/Documents`, `${home}/Desktop`];
 }
 
-/** Purely lexical check — does not resolve symlinks; use resolveAndValidatePath before touching the filesystem. */
+function isWithinRoot(candidate: string, root: string): boolean {
+  const relative = path.relative(root, candidate);
+  return relative === '' || (relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative));
+}
+
+// Holds: Lexical only; symlinks are not resolved, so call resolveAndValidatePath before any filesystem access.
 export function isPathSafe(filePath: string, allowedRoots?: readonly string[]): boolean {
-  try {
-    if (!path.isAbsolute(filePath)) {
-      return false;
-    }
-
-    const roots = allowedRoots ?? getDefaultAllowedRoots();
-
-    const normalizedPath = path.normalize(filePath);
-
-    if (normalizedPath.includes('..')) {
-      return false;
-    }
-
-    // Trailing separator prevents a sibling directory sharing the root's prefix from passing
-    const isUnderAllowedRoot = roots.some((root) => {
-      const normalizedRoot = path.normalize(root);
-      const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : normalizedRoot + path.sep;
-      return normalizedPath === normalizedRoot || normalizedPath.startsWith(rootWithSep);
-    });
-
-    return isUnderAllowedRoot;
-  } catch {
+  if (!path.isAbsolute(filePath)) {
     return false;
   }
+  const normalizedPath = path.normalize(filePath);
+  const roots = allowedRoots ?? getDefaultAllowedRoots();
+  return roots.some((root) => isWithinRoot(normalizedPath, path.normalize(root)));
 }
 
-/** Resolves symlinks and re-checks the real target against the allowed roots, so a symlink cannot escape them. */
-export async function resolveAndValidatePath(
-  filePath: string,
-  allowedRoots?: readonly string[],
-): Promise<string> {
+async function realRoots(roots: readonly string[]): Promise<string[]> {
+  // Why: A root that does not exist can contain no file, so it is dropped rather than failing the request.
+  const resolved = await Promise.all(roots.map((root) => realpath(root).catch(() => '')));
+  return resolved.filter((root) => root !== '');
+}
+
+async function realPathOf(filePath: string, absolutePath: string): Promise<string> {
+  try {
+    return await realpath(absolutePath);
+  } catch {
+    throw new FileError(`File not found or not readable: ${filePath}`, {
+      filePath,
+      reason: 'File not found or not readable',
+    });
+  }
+}
+
+// Holds: Returns the fully resolved real path, which must sit inside the real path of an allowed root.
+export async function resolveAndValidatePath(filePath: string, allowedRoots?: readonly string[]): Promise<string> {
   const roots = allowedRoots ?? getDefaultAllowedRoots();
+  const absolutePath = path.resolve(process.cwd(), filePath);
+  const resolvedRoots = await realRoots(roots);
 
-  const absolutePath = path.isAbsolute(filePath) ? filePath : path.resolve(process.cwd(), filePath);
-
-  const normalizedPath = path.normalize(absolutePath);
-
-  if (normalizedPath.includes('..')) {
-    throw new PathTraversalError('Path contains traversal sequences', {
+  // Why: Checked before touching the path so a request outside every root cannot probe whether a file exists.
+  if (!isPathSafe(absolutePath, [...roots, ...resolvedRoots])) {
+    throw new PathTraversalError('Path is not under an allowed root directory', {
       requestedPath: filePath,
-      resolvedPath: normalizedPath,
+      resolvedPath: absolutePath,
     });
   }
 
-  // Trailing separator prevents a sibling directory sharing the root's prefix from passing
-  const isUnderAllowedRoot = roots.some((root) => {
-    const normalizedRoot = path.normalize(root);
-    const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : normalizedRoot + path.sep;
-    return normalizedPath === normalizedRoot || normalizedPath.startsWith(rootWithSep);
-  });
+  const realPath = await realPathOf(filePath, absolutePath);
 
-  if (!isUnderAllowedRoot) {
-    throw new PathTraversalError(
-      'Path is not under an allowed root directory',
-      {
-        requestedPath: filePath,
-        resolvedPath: normalizedPath,
-      },
-    );
+  if (!resolvedRoots.some((root) => isWithinRoot(realPath, root))) {
+    throw new PathTraversalError('Resolved path escapes allowed roots', {
+      requestedPath: filePath,
+      resolvedPath: realPath,
+    });
   }
 
   try {
-    await access(absolutePath, constants.R_OK);
+    await access(realPath, constants.R_OK);
   } catch {
     throw new FileError(`File not found or not readable: ${filePath}`, {
       filePath,
@@ -153,47 +116,15 @@ export async function resolveAndValidatePath(
     });
   }
 
-  // eslint-disable-next-line security/detect-non-literal-fs-filename -- path validated above
-  const stats = await lstat(absolutePath);
-
-  if (stats.isSymbolicLink()) {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path validated above; real target re-checked below
-    const realPath = await realpath(absolutePath);
-    const normalizedRealPath = path.normalize(realPath);
-
-    // Trailing separator prevents a sibling directory sharing the root's prefix from passing
-    const realPathSafe = roots.some((root) => {
-      const normalizedRoot = path.normalize(root);
-      const rootWithSep = normalizedRoot.endsWith(path.sep) ? normalizedRoot : normalizedRoot + path.sep;
-      return normalizedRealPath === normalizedRoot || normalizedRealPath.startsWith(rootWithSep);
-    });
-
-    if (!realPathSafe) {
-      throw new PathTraversalError(
-        'Symlink target escapes allowed roots',
-        {
-          requestedPath: filePath,
-          resolvedPath: normalizedRealPath,
-        },
-      );
-    }
-
-    return normalizedRealPath;
-  }
-
-  return normalizedPath;
+  return realPath;
 }
 
-export async function readFileAsBase64(
-  filePath: string,
-  allowedRoots?: readonly string[],
-): Promise<string> {
+export async function readFileAsBase64(filePath: string, allowedRoots?: readonly string[]): Promise<string> {
   const resolvedPath = await resolveAndValidatePath(filePath, allowedRoots);
 
   await validateFileSize(resolvedPath);
 
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path validated above
     const buffer = await readFile(resolvedPath);
     return buffer.toString('base64');
   } catch (error) {
@@ -205,51 +136,25 @@ export async function readFileAsBase64(
   }
 }
 
-/** Extension-based only — never inspects file contents. */
+// Holds: Decided by extension alone; file contents are never inspected.
 export function getFileMimeType(filePath: string): string {
   const ext = path.extname(filePath).toLowerCase();
   return EXTENSION_TO_MIME.get(ext) ?? MIME_OCTET_STREAM;
 }
 
-export function isAllowedImageType(mimeType: string): boolean {
-  return ALLOWED_IMAGE_TYPES.has(mimeType);
-}
-
-export function isAllowedVideoType(mimeType: string): boolean {
-  return ALLOWED_VIDEO_TYPES.has(mimeType);
-}
-
-export function isAllowedAudioType(mimeType: string): boolean {
-  return ALLOWED_AUDIO_TYPES.has(mimeType);
-}
-
-export function isAllowedImageFile(filePath: string): boolean {
-  const mimeType = getFileMimeType(filePath);
-  return isAllowedImageType(mimeType);
-}
-
-/** Caller must pass a path already through resolveAndValidatePath. */
-export async function validateFileSize(
-  filePath: string,
-  maxSizeMB?: number,
-): Promise<void> {
-  const maxSizeBytes = maxSizeMB === undefined
-    ? getMaxFileSizeBytes()
-    : maxSizeMB * 1024 * 1024;
+// Holds: Performs no path validation; pass only a path returned by resolveAndValidatePath.
+export async function validateFileSize(filePath: string, maxSizeMB?: number): Promise<void> {
+  const maxSizeBytes = maxSizeMB === undefined ? getMaxFileSizeBytes() : maxSizeMB * 1024 * 1024;
 
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- caller validates the path
     const stats = await stat(filePath);
 
     if (stats.size > maxSizeBytes) {
-      throw new FileTooLargeError(
-        `File exceeds maximum size of ${String(maxSizeMB ?? config.MAX_FILE_SIZE_MB)}MB`,
-        {
-          filePath,
-          sizeBytes: stats.size,
-          maxSizeBytes,
-        },
-      );
+      throw new FileTooLargeError(`File exceeds maximum size of ${String(maxSizeMB ?? config.MAX_FILE_SIZE_MB)}MB`, {
+        filePath,
+        sizeBytes: stats.size,
+        maxSizeBytes,
+      });
     }
   } catch (error) {
     if (error instanceof FileTooLargeError) {
@@ -262,15 +167,12 @@ export async function validateFileSize(
   }
 }
 
-export async function validateFilePath(filePath: string): Promise<string> {
+export function validateFilePath(filePath: string): Promise<string> {
   return resolveAndValidatePath(filePath);
 }
 
-/** Accepts the extension with or without a leading dot; allowedExtensions must include the dot. */
-export function validateFileType(
-  extension: string,
-  allowedExtensions: readonly string[],
-): void {
+// Holds: extension may omit the leading dot, but every allowedExtensions entry must include it.
+export function validateFileType(extension: string, allowedExtensions: readonly string[]): void {
   const normalizedExt = extension.startsWith('.') ? extension.toLowerCase() : `.${extension.toLowerCase()}`;
 
   if (!allowedExtensions.includes(normalizedExt)) {

@@ -1,3 +1,5 @@
+// Does:  Documents Bria commercial-safe image models and their provider settings.
+// Holds: Served at runware://docs/providers/bria; registered via providerDocs by register-features-providers.ts.
 import type { DocResource } from '../../types.js';
 
 export const briaDoc: DocResource = {
@@ -76,8 +78,7 @@ export const briaDoc: DocResource = {
       {
         title: 'Fast art generation for design iteration',
         input: {
-          positivePrompt:
-            'abstract geometric pattern, vibrant colors, modern design, teal and coral palette',
+          positivePrompt: 'abstract geometric pattern, vibrant colors, modern design, teal and coral palette',
           model: 'bria:1@1',
           width: 1024,
           height: 1024,

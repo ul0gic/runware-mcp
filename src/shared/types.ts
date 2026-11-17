@@ -1,37 +1,30 @@
+// Does:  Defines branded ID types, the Runware response envelope, and the tool result shape.
+// Holds: Brands exist only at compile time; the create* helpers cast without checking the string format.
+
+function brand<B extends string>(value: string): B {
+  // biome-ignore lint/nursery/noUnsafeTypeAssertion: a nominal brand has no runtime form, so minting one is necessarily a cast.
+  return value as B;
+}
+
 declare const API_KEY_BRAND: unique symbol;
 export type ApiKey = string & { readonly [API_KEY_BRAND]: typeof API_KEY_BRAND };
 
 export function createApiKey(key: string): ApiKey {
-  return key as ApiKey;
+  return brand<ApiKey>(key);
 }
 
 declare const TASK_UUID_BRAND: unique symbol;
 export type TaskUUID = string & { readonly [TASK_UUID_BRAND]: typeof TASK_UUID_BRAND };
 
 export function createTaskUUID(uuid: string): TaskUUID {
-  return uuid as TaskUUID;
+  return brand<TaskUUID>(uuid);
 }
 
 declare const IMAGE_UUID_BRAND: unique symbol;
-export type ImageUUID = string & { readonly [IMAGE_UUID_BRAND]: typeof IMAGE_UUID_BRAND };
-
-export function createImageUUID(uuid: string): ImageUUID {
-  return uuid as ImageUUID;
-}
 
 declare const VIDEO_UUID_BRAND: unique symbol;
-export type VideoUUID = string & { readonly [VIDEO_UUID_BRAND]: typeof VIDEO_UUID_BRAND };
-
-export function createVideoUUID(uuid: string): VideoUUID {
-  return uuid as VideoUUID;
-}
 
 declare const AUDIO_UUID_BRAND: unique symbol;
-export type AudioUUID = string & { readonly [AUDIO_UUID_BRAND]: typeof AUDIO_UUID_BRAND };
-
-export function createAudioUUID(uuid: string): AudioUUID {
-  return uuid as AudioUUID;
-}
 
 interface RunwareApiErrorData {
   readonly message: string;
@@ -88,7 +81,7 @@ export interface ProgressReporter {
 }
 
 export interface ToolContext {
-  readonly progress?: ProgressReporter;
+  readonly progress?: ProgressReporter | undefined;
   readonly signal?: AbortSignal;
 }
 

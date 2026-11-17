@@ -1,14 +1,12 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Generates 3D assets via an async 3dInference task and polls for the output files.
+// Holds: files is always an array, empty rather than undefined when the task returns none.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type AsyncTaskResponse,
-  type TaskUUID,
   type ToolContext,
   type ToolResult,
   errorResult,
@@ -46,7 +44,7 @@ export async function threeDInference(
     });
 
     await runwareClient.request([task], { signal: context?.signal });
-    const polled = await pollForResult<ThreeDInferenceResponse>(task.taskUUID as TaskUUID, {
+    const polled = await pollForResult<ThreeDInferenceResponse>(task.taskUUID, {
       client: runwareClient,
       progress: context?.progress,
       signal: context?.signal,
@@ -82,9 +80,6 @@ export const threeDInferenceToolDefinition = {
       includeCost: { type: 'boolean', default: true },
     },
     required: ['model'],
-    anyOf: [
-      { required: ['positivePrompt'] },
-      { required: ['inputImage'] },
-    ],
+    anyOf: [{ required: ['positivePrompt'] }, { required: ['inputImage'] }],
   },
 } as const;

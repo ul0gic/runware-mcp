@@ -1,3 +1,5 @@
+// Does:  Documents Alibaba Wan video models and their provider-specific settings.
+// Holds: Served at runware://docs/providers/alibaba; joins the registry through providerDocs in providers/index.ts.
 import type { DocResource } from '../../types.js';
 
 export const alibabaDoc: DocResource = {
@@ -57,8 +59,7 @@ export const alibabaDoc: DocResource = {
       {
         title: 'Multi-shot composition for storytelling',
         input: {
-          positivePrompt:
-            'a day in the life of a street food vendor in Bangkok, colorful market, cooking, customers',
+          positivePrompt: 'a day in the life of a street food vendor in Bangkok, colorful market, cooking, customers',
           model: 'wan:1@2',
           width: 1920,
           height: 1080,

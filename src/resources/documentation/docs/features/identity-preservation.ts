@@ -1,3 +1,5 @@
+// Does:  Documents PuLID, ACE++ and PhotoMaker for keeping a face consistent across images.
+// Holds: Served at runware://docs/features/identity-preservation; ip-adapters-guide and this doc link to each other.
 import type { DocResource } from '../../types.js';
 
 export const identityPreservationDoc: DocResource = {
@@ -6,18 +8,10 @@ export const identityPreservationDoc: DocResource = {
   title: 'Identity Preservation (PuLID / ACE++ / PhotoMaker)',
   summary:
     'Preserve specific facial identity and character consistency across generated images using PuLID, ACE++, or PhotoMaker',
-  tags: [
-    'identity',
-    'face',
-    'pulid',
-    'ace++',
-    'photomaker',
-    'character-consistency',
-    'image-generation',
-  ],
+  tags: ['identity', 'face', 'pulid', 'ace++', 'photomaker', 'character-consistency', 'image-generation'],
   content: {
     description:
-      'Identity preservation techniques allow you to generate images that maintain a specific person\'s facial features, expression characteristics, or overall appearance. Runware supports three approaches: PuLID (Pure and Lightning ID Customization) for fast, high-fidelity identity transfer; ACE++ for character-consistent generation across different scenes and poses with portrait, subject, and local editing modes; and PhotoMaker for photorealistic identity results via the dedicated photoMaker tool. Choose based on your use case: PuLID excels at single-image identity transfer with speed, ACE++ excels at multi-scene character consistency, and PhotoMaker targets photorealistic portrait results.',
+      "Identity preservation techniques allow you to generate images that maintain a specific person's facial features, expression characteristics, or overall appearance. Runware supports three approaches: PuLID (Pure and Lightning ID Customization) for fast, high-fidelity identity transfer; ACE++ for character-consistent generation across different scenes and poses with portrait, subject, and local editing modes; and PhotoMaker for photorealistic identity results via the dedicated photoMaker tool. Choose based on your use case: PuLID excels at single-image identity transfer with speed, ACE++ excels at multi-scene character consistency, and PhotoMaker targets photorealistic portrait results.",
 
     parameters: [
       {
@@ -32,8 +26,7 @@ export const identityPreservationDoc: DocResource = {
         type: 'array of image inputs',
         required: true,
         range: '1-4 images',
-        description:
-          'Reference face images for identity extraction. Multiple images improve identity accuracy.',
+        description: 'Reference face images for identity extraction. Multiple images improve identity accuracy.',
       },
       {
         name: 'pulid.idWeight',
@@ -48,8 +41,7 @@ export const identityPreservationDoc: DocResource = {
         type: 'number',
         required: false,
         range: '1-3',
-        description:
-          'True CFG scale for PuLID. Controls the balance between identity fidelity and prompt adherence.',
+        description: 'True CFG scale for PuLID. Controls the balance between identity fidelity and prompt adherence.',
       },
       {
         name: 'pulid.startStep',
@@ -69,15 +61,13 @@ export const identityPreservationDoc: DocResource = {
         name: 'acePlusPlus',
         type: 'object',
         required: false,
-        description:
-          'ACE++ configuration for character-consistent generation across scenes.',
+        description: 'ACE++ configuration for character-consistent generation across scenes.',
       },
       {
         name: 'acePlusPlus.referenceImage',
         type: 'string (UUID | URL | base64 | dataURI)',
         required: true,
-        description:
-          'Reference image for character consistency. Should clearly show the character or subject.',
+        description: 'Reference image for character consistency. Should clearly show the character or subject.',
       },
       {
         name: 'acePlusPlus.mode',
@@ -91,8 +81,7 @@ export const identityPreservationDoc: DocResource = {
         type: 'number',
         required: false,
         range: '0-1',
-        description:
-          'Reference influence weight. Higher values enforce stronger character consistency.',
+        description: 'Reference influence weight. Higher values enforce stronger character consistency.',
       },
     ],
 

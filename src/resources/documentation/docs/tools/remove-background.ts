@@ -1,3 +1,5 @@
+// Does:  Documents the imageBackgroundRemoval tool, its models and alpha-matting options.
+// Holds: Lists runware:109@1 as the default model; the id is remove-background, not the tool name.
 import type { DocResource } from '../../types.js';
 
 export const removeBackgroundDoc: DocResource = {
@@ -18,7 +20,8 @@ export const removeBackgroundDoc: DocResource = {
         name: 'inputImage',
         type: 'string',
         required: true,
-        description: 'Image to process. Accepts UUID of a previously uploaded/generated image, public URL, base64 data, or data URI.',
+        description:
+          'Image to process. Accepts UUID of a previously uploaded/generated image, public URL, base64 data, or data URI.',
       },
       {
         name: 'model',
@@ -29,7 +32,8 @@ export const removeBackgroundDoc: DocResource = {
       {
         name: 'settings',
         type: 'object',
-        description: 'Advanced settings (RemBG 1.4 only): rgba, postProcessMask, returnOnlyMask, alphaMatting, alphaMattingForegroundThreshold (1-255), alphaMattingBackgroundThreshold (1-255), alphaMattingErodeSize (1-255).',
+        description:
+          'Advanced settings (RemBG 1.4 only): rgba, postProcessMask, returnOnlyMask, alphaMatting, alphaMattingForegroundThreshold (1-255), alphaMattingBackgroundThreshold (1-255), alphaMattingErodeSize (1-255).',
       },
       {
         name: 'outputType',
@@ -79,7 +83,8 @@ export const removeBackgroundDoc: DocResource = {
           },
           outputFormat: 'PNG',
         },
-        explanation: 'Alpha matting refines edges for subjects with fine details like hair or fur. Adjust thresholds to balance foreground retention vs background removal.',
+        explanation:
+          'Alpha matting refines edges for subjects with fine details like hair or fur. Adjust thresholds to balance foreground retention vs background removal.',
       },
     ],
     tips: [

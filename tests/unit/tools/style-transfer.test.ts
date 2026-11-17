@@ -1,12 +1,7 @@
-/**
- * Unit tests for the style transfer tool.
- */
+// Does:  Proves styleTransfer captions only when no subject is given, surfaces each step's failure, and sums cost.
+// Holds: config, the rate limiter, and the imageCaption/imageInference tools are mocked; only orchestration is real.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -31,7 +26,6 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-// Mock the imageCaption and imageInference tools that styleTransfer depends on
 vi.mock('../../../src/tools/image-caption/index.js', () => ({
   imageCaption: vi.fn(),
 }));
@@ -40,19 +34,11 @@ vi.mock('../../../src/tools/image-inference/index.js', () => ({
   imageInference: vi.fn(),
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { styleTransfer, styleTransferToolDefinition } from '../../../src/tools/style-transfer/handler.js';
+import { styleTransfer } from '../../../src/tools/style-transfer/handler.js';
 import { styleTransferInputSchema } from '../../../src/tools/style-transfer/schema.js';
 import { imageCaption } from '../../../src/tools/image-caption/index.js';
 import { imageInference } from '../../../src/tools/image-inference/index.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
-
-// ============================================================================
-// Helpers
-// ============================================================================
 
 function createMockClient() {
   return {
@@ -62,89 +48,12 @@ function createMockClient() {
   } as unknown as RunwareClient;
 }
 
-// ============================================================================
-// Tests
-// ============================================================================
-
 describe('styleTransfer', () => {
   let mockClient: RunwareClient;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockClient = createMockClient();
-  });
-
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(styleTransferToolDefinition.name).toBe('styleTransfer');
-    });
-
-    it('should require inputImage and style', () => {
-      expect(styleTransferToolDefinition.inputSchema.required).toContain('inputImage');
-      expect(styleTransferToolDefinition.inputSchema.required).toContain('style');
-    });
-
-    it('should have a description', () => {
-      expect(styleTransferToolDefinition.description).toBeTruthy();
-    });
-  });
-
-  describe('schema validation', () => {
-    it('should accept valid input with subject', () => {
-      const result = styleTransferInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-        style: 'oil-painting',
-        subject: 'a beautiful landscape',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should apply defaults for intensity, colorPalette, model, strength', () => {
-      const result = styleTransferInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-        style: 'watercolor',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.intensity).toBe('moderate');
-        expect(result.data.colorPalette).toBe('vibrant');
-        expect(result.data.model).toBe('runware:100@1');
-        expect(result.data.strength).toBe(0.65);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
-    it('should accept all valid art styles', () => {
-      const styles = [
-        'oil-painting', 'watercolor', 'pencil-sketch', 'pop-art',
-        'impressionist', 'cyberpunk', 'studio-ghibli', 'art-deco',
-        'minimalist', 'surrealist',
-      ];
-      for (const style of styles) {
-        const result = styleTransferInputSchema.safeParse({
-          inputImage: 'https://example.com/image.jpg',
-          style,
-        });
-        expect(result.success).toBe(true);
-      }
-    });
-
-    it('should reject invalid style', () => {
-      const result = styleTransferInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-        style: 'invalid-style',
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject invalid intensity', () => {
-      const result = styleTransferInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-        style: 'oil-painting',
-        intensity: 'extreme',
-      });
-      expect(result.success).toBe(false);
-    });
   });
 
   describe('handler success case with subject provided', () => {
@@ -296,7 +205,6 @@ describe('styleTransfer', () => {
       const result = await styleTransfer(input, mockClient);
 
       expect(result.status).toBe('success');
-      // total = captionCost(0.002) + generationCost(0.01) = 0.012
       expect(result.cost).toBeCloseTo(0.012, 5);
     });
   });

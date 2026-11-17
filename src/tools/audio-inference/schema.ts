@@ -1,3 +1,6 @@
+// Does:  Validates audioInference input, including ElevenLabs composition plans and Mirelo offsets.
+// Holds: Composition plans hold 1-10 sections; sample rate is bounded to 8-48 kHz and bitrate to 32-320 kbps.
+
 import { z } from 'zod';
 
 import { audioDurationSchema, outputTypeSchema } from '../../shared/validation.js';
@@ -10,23 +13,18 @@ const AUDIO_TYPES = ['music', 'sfx', 'speech', 'ambient'] as const;
 
 const audioTypeSchema = z.enum(AUDIO_TYPES);
 
-/** Composition section for the ElevenLabs structured-music feature. */
 const compositionSectionSchema = z.object({
   name: z.string().min(1).max(100),
 
-  /** Start time in seconds. */
   startTime: z.number().min(0),
 
-  /** End time in seconds. */
   endTime: z.number().min(0),
 
-  /** Overrides the top-level prompt for this section. */
   prompt: z.string().max(500).optional(),
 
   lyrics: z.string().max(2000).optional(),
 });
 
-/** ElevenLabs structured composition: ordered sections with timing and lyrics. */
 const compositionPlanSchema = z.object({
   globalStyle: z.string().max(200).optional(),
 
@@ -34,10 +32,8 @@ const compositionPlanSchema = z.object({
 });
 
 const audioSettingsSchema = z.object({
-  /** Sample rate in Hz. */
   sampleRate: z.number().int().min(8000).max(48_000).optional(),
 
-  /** Bitrate in kbps. */
   bitrate: z.number().int().min(32).max(320).optional(),
 });
 
@@ -46,23 +42,18 @@ const elevenLabsSettingsSchema = z.object({
 });
 
 const mireloSettingsSchema = z.object({
-  /** Start offset in seconds for video-synchronized audio. */
   startOffset: z.number().min(0).optional(),
 });
 
 export const audioInferenceInputSchema = z.object({
-  /** Describes the desired audio; for speech, the text to synthesize. */
   positivePrompt: z.string().min(2).max(2000),
 
-  /** Audio model in AIR format, e.g. 'elevenlabs:1@1' or 'mirelo:1@1'. */
   model: z.string().min(1),
 
-  /** Duration in seconds. */
   duration: audioDurationSchema.optional().default(30),
 
   audioType: audioTypeSchema.optional(),
 
-  /** Only applicable when generating speech. */
   voice: z.string().optional(),
 
   numberResults: z.number().int().min(1).max(3).optional().default(1),
@@ -92,11 +83,9 @@ const audioResultSchema = z.object({
   audioDataURI: z.string().optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const audioInferenceOutputSchema = z.object({
   results: z.array(audioResultSchema),
 
-  /** Cost in USD. */
   cost: z.number().optional(),
 
   pollingAttempts: z.number().optional(),

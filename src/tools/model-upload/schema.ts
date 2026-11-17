@@ -1,11 +1,13 @@
+// Does:  Validates modelUpload metadata and weight locations.
+// Holds: downloadURL and heroImageURL must be HTTPS; defaults obeys the run-inference reserved-field rules.
+
 import { z } from 'zod';
 
 import { inferenceParametersSchema } from '../run-inference/schema.js';
 
-const httpsUrlSchema = z.url().refine(
-  (value) => new URL(value).protocol === 'https:',
-  { message: 'URL must use HTTPS' },
-);
+const httpsUrlSchema = z
+  .url()
+  .refine((value) => new URL(value).protocol === 'https:', { message: 'URL must use HTTPS' });
 
 export const modelUploadInputSchema = z.object({
   category: z.enum(['checkpoint', 'lora', 'lycoris', 'vae', 'embeddings']),

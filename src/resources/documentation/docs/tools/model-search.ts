@@ -1,3 +1,5 @@
+// Does:  Documents the modelSearch tool: filters, pagination and the AIR ids it returns.
+// Holds: States visibility all, limit 20 and offset 0 as the pagination defaults; registered by registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const modelSearchDoc: DocResource = {
@@ -38,7 +40,8 @@ export const modelSearchDoc: DocResource = {
       {
         name: 'architecture',
         type: 'string',
-        description: 'Filter by architecture: "FLUX.1-dev", "FLUX.1-schnell", "FLUX.1-pro", "Imagen", "SD1.5", "SDXL", "SD3", "Playground", "Pony".',
+        description:
+          'Filter by architecture: "FLUX.1-dev", "FLUX.1-schnell", "FLUX.1-pro", "Imagen", "SD1.5", "SDXL", "SD3", "Playground", "Pony".',
       },
       {
         name: 'conditioning',
@@ -80,7 +83,8 @@ export const modelSearchDoc: DocResource = {
           architecture: 'FLUX.1-dev',
           limit: 10,
         },
-        explanation: 'Finds FLUX.1-dev checkpoint models matching "realistic portrait". Results include AIR identifiers and recommended defaults.',
+        explanation:
+          'Finds FLUX.1-dev checkpoint models matching "realistic portrait". Results include AIR identifiers and recommended defaults.',
       },
       {
         title: 'Find LoRA models by tag',
@@ -89,7 +93,8 @@ export const modelSearchDoc: DocResource = {
           tags: ['anime', 'style'],
           limit: 20,
         },
-        explanation: 'Searches for anime-style LoRA models. Use the AIR identifier from results in the lora array of imageInference.',
+        explanation:
+          'Searches for anime-style LoRA models. Use the AIR identifier from results in the lora array of imageInference.',
       },
     ],
     tips: [

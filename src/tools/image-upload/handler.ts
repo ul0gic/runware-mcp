@@ -1,8 +1,12 @@
+// Does:  Uploads an image from a local file, base64, URL or data URI and returns its Runware UUID.
+// Holds: A local file is read only once its real path is under a root, its type is an image and it fits the size cap.
+
 import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
-import { validateFilePath, validateFileType } from '../../shared/file-utils.js';
+import { validateFilePath, validateFileSize, validateFileType } from '../../shared/file-utils.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, successResult, errorResult } from '../../shared/types.js';
 
@@ -39,10 +43,10 @@ async function resolveImageSource(input: ImageUploadInput): Promise<string> {
   if (input.filePath !== undefined) {
     const validatedPath = await validateFilePath(input.filePath);
 
-    const extension = validatedPath.toLowerCase().slice(validatedPath.lastIndexOf('.'));
+    const extension = path.extname(validatedPath).toLowerCase();
     validateFileType(extension, ALLOWED_EXTENSIONS);
+    await validateFileSize(validatedPath);
 
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path validated above
     const fileBuffer = await readFile(validatedPath);
     const base64Data = fileBuffer.toString('base64');
 
@@ -52,7 +56,7 @@ async function resolveImageSource(input: ImageUploadInput): Promise<string> {
   }
 
   if (input.base64 !== undefined) {
-    // Assume JPEG if no prefix
+    // Why: Raw base64 carries no MIME type, so it is labelled JPEG to form a valid data URI.
     return `data:${MIME_JPEG};base64,${input.base64}`;
   }
 
@@ -91,17 +95,11 @@ export async function imageUpload(
 
     const task = createTaskRequest('imageUpload', { image });
 
-    const response = await runwareClient.requestSingle<ImageUploadApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.requestSingle<ImageUploadApiResponse>(task, { signal: context?.signal });
 
     const output = processResponse(response);
 
-    return successResult(
-      `Image uploaded successfully. UUID: ${output.imageUUID}`,
-      output,
-    );
+    return successResult(`Image uploaded successfully. UUID: ${output.imageUUID}`, output);
   } catch (error) {
     const mcpError = wrapError(error);
     return errorResult(mcpError.message, mcpError.data);
@@ -124,7 +122,7 @@ export const imageUploadToolDefinition = {
       },
       url: {
         type: 'string',
-        description: 'URL to the image',
+        description: 'HTTPS URL to the image',
       },
       dataUri: {
         type: 'string',

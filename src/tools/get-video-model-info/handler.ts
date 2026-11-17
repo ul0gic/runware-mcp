@@ -1,3 +1,6 @@
+// Does:  Looks up one video model's capabilities in the bundled offline catalog.
+// Holds: Never calls the API; an unknown model id is an error result carrying that id.
+
 import { getVideoModel } from '../../constants/video-models.js';
 import { type ToolResult, successResult, errorResult } from '../../shared/types.js';
 
@@ -6,17 +9,11 @@ import type { z } from 'zod';
 
 type GetVideoModelInfoInput = z.infer<typeof getVideoModelInfoInputSchema>;
 
-/** Local lookup against the bundled model table — makes no API call. */
-export function getVideoModelInfo(
-  input: GetVideoModelInfoInput,
-): ToolResult {
+export function getVideoModelInfo(input: GetVideoModelInfoInput): ToolResult {
   const model = getVideoModel(input.modelId);
 
   if (model === undefined) {
-    return errorResult(
-      `Video model not found: ${input.modelId}`,
-      { modelId: input.modelId },
-    );
+    return errorResult(`Video model not found: ${input.modelId}`, { modelId: input.modelId });
   }
 
   const output: GetVideoModelInfoOutput = {

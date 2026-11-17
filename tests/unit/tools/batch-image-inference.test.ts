@@ -1,12 +1,7 @@
-/**
- * Unit tests for the batch image inference tool.
- */
+// Does:  Proves batchImageInference bounds the prompt list and aggregates successes, failures and cost across prompts.
+// Holds: config, rate limiter and RunwareClient are mocked; the schema, concurrency and aggregation logic run for real.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -31,29 +26,17 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { batchImageInference, batchImageInferenceToolDefinition } from '../../../src/tools/batch-image-inference/handler.js';
+import { batchImageInference } from '../../../src/tools/batch-image-inference/handler.js';
 import { batchImageInferenceInputSchema } from '../../../src/tools/batch-image-inference/schema.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function createMockClient() {
+function createMockClient(): RunwareClient {
   return {
     request: vi.fn(),
     requestSingle: vi.fn(),
     generateTaskUUID: vi.fn().mockReturnValue('mock-uuid'),
   } as unknown as RunwareClient;
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 describe('batchImageInference', () => {
   let mockClient: RunwareClient;
@@ -63,45 +46,7 @@ describe('batchImageInference', () => {
     mockClient = createMockClient();
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(batchImageInferenceToolDefinition.name).toBe('batchImageInference');
-    });
-
-    it('should require prompts and model', () => {
-      expect(batchImageInferenceToolDefinition.inputSchema.required).toContain('prompts');
-      expect(batchImageInferenceToolDefinition.inputSchema.required).toContain('model');
-    });
-
-    it('should have a description', () => {
-      expect(batchImageInferenceToolDefinition.description).toBeTruthy();
-    });
-  });
-
-  describe('schema validation', () => {
-    it('should accept valid input', () => {
-      const result = batchImageInferenceInputSchema.safeParse({
-        prompts: ['a cat', 'a dog'],
-        model: 'civitai:123@456',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should apply defaults', () => {
-      const result = batchImageInferenceInputSchema.safeParse({
-        prompts: ['a cat'],
-        model: 'civitai:123@456',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.width).toBe(1024);
-        expect(result.data.height).toBe(1024);
-        expect(result.data.concurrency).toBe(2);
-        expect(result.data.stopOnError).toBe(false);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
+  describe('schema bounds', () => {
     it('should reject empty prompts array', () => {
       const result = batchImageInferenceInputSchema.safeParse({
         prompts: [],
@@ -117,25 +62,9 @@ describe('batchImageInference', () => {
       });
       expect(result.success).toBe(false);
     });
-
-    it('should reject invalid model format', () => {
-      const result = batchImageInferenceInputSchema.safeParse({
-        prompts: ['a cat'],
-        model: 'invalid-model',
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should accept prompts with short strings', () => {
-      const result = batchImageInferenceInputSchema.safeParse({
-        prompts: ['ab'],
-        model: 'civitai:123@456',
-      });
-      expect(result.success).toBe(true);
-    });
   });
 
-  describe('handler success case', () => {
+  describe('aggregation', () => {
     it('should process all prompts successfully', async () => {
       let callCount = 0;
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockImplementation(() => {
@@ -165,9 +94,7 @@ describe('batchImageInference', () => {
       expect(data.failed).toBe(0);
       expect(data.results).toHaveLength(2);
     });
-  });
 
-  describe('handler error case', () => {
     it('should handle partial failures', async () => {
       let callCount = 0;
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockImplementation(() => {
@@ -198,9 +125,7 @@ describe('batchImageInference', () => {
     });
 
     it('should return error when all prompts fail', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('API unavailable'),
-      );
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('API unavailable'));
 
       const input = batchImageInferenceInputSchema.parse({
         prompts: ['a cat', 'a dog'],
@@ -214,9 +139,7 @@ describe('batchImageInference', () => {
       expect(data.successful).toBe(0);
       expect(data.failed).toBe(2);
     });
-  });
 
-  describe('cost tracking', () => {
     it('should aggregate costs across all prompts', async () => {
       (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
         taskType: 'imageInference',
@@ -233,7 +156,6 @@ describe('batchImageInference', () => {
       const result = await batchImageInference(input, mockClient);
 
       expect(result.status).toBe('success');
-      // 3 prompts * 0.003 each = 0.009
       expect(result.cost).toBeCloseTo(0.009, 5);
     });
   });

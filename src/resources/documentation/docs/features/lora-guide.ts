@@ -1,11 +1,12 @@
+// Does:  Documents applying LoRA adapters to a base model and weighting them.
+// Holds: States lora[].weight 1 as the default; served at runware://docs/features/lora-guide.
 import type { DocResource } from '../../types.js';
 
 export const loraGuideDoc: DocResource = {
   id: 'lora-guide',
   category: 'features',
   title: 'LoRA Style Adaptation',
-  summary:
-    'Low-Rank Adaptation models for applying specific styles, subjects, or concepts to generated images',
+  summary: 'Low-Rank Adaptation models for applying specific styles, subjects, or concepts to generated images',
   tags: ['lora', 'style', 'adaptation', 'image-generation', 'fine-tuning'],
   content: {
     description:

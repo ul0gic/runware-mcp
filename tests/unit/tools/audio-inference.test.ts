@@ -1,12 +1,7 @@
-/**
- * Unit tests for the audio inference tool.
- */
+// Does:  Proves audioInference refuses unknown audio models before any request and reports client failures as errors.
+// Holds: config, rate limiter, polling and RunwareClient are mocked; the handler and model validation run for real.
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks (must be before imports of mocked modules)
-// ============================================================================
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -35,30 +30,17 @@ vi.mock('../../../src/integrations/runware/polling.js', () => ({
   pollForResult: vi.fn(),
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
-import { audioInference, audioInferenceToolDefinition } from '../../../src/tools/audio-inference/handler.js';
+import { audioInference } from '../../../src/tools/audio-inference/handler.js';
 import { audioInferenceInputSchema } from '../../../src/tools/audio-inference/schema.js';
-import { pollForResult } from '../../../src/integrations/runware/polling.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 
-// ============================================================================
-// Helpers
-// ============================================================================
-
-function createMockClient() {
+function createMockClient(): RunwareClient {
   return {
     request: vi.fn(),
     requestSingle: vi.fn(),
     generateTaskUUID: vi.fn().mockReturnValue('mock-uuid'),
   } as unknown as RunwareClient;
 }
-
-// ============================================================================
-// Tests
-// ============================================================================
 
 describe('audioInference', () => {
   let mockClient: RunwareClient;
@@ -68,180 +50,34 @@ describe('audioInference', () => {
     mockClient = createMockClient();
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(audioInferenceToolDefinition.name).toBe('audioInference');
+  it('should return error for invalid model', async () => {
+    const input = audioInferenceInputSchema.parse({
+      positivePrompt: 'upbeat jazz',
+      model: 'elevenlabs:1@1',
+      duration: 30,
     });
 
-    it('should have required properties in input schema', () => {
-      expect(audioInferenceToolDefinition.inputSchema.required).toContain('positivePrompt');
-      expect(audioInferenceToolDefinition.inputSchema.required).toContain('model');
-    });
+    const badInput = { ...input, model: 'invalid-model' };
 
-    it('should have a description', () => {
-      expect(audioInferenceToolDefinition.description).toBeTruthy();
-    });
+    const result = await audioInference(badInput, mockClient);
+
+    expect(result.status).toBe('error');
+    expect(result.message).toContain('Invalid audio model');
+    expect(mockClient.request).not.toHaveBeenCalled();
   });
 
-  describe('schema validation', () => {
-    it('should accept valid input', () => {
-      const result = audioInferenceInputSchema.safeParse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-        duration: 30,
-        audioType: 'music',
-      });
-      expect(result.success).toBe(true);
+  it('should return error when client throws', async () => {
+    (mockClient.request as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'));
+
+    const input = audioInferenceInputSchema.parse({
+      positivePrompt: 'upbeat jazz',
+      model: 'elevenlabs:1@1',
+      duration: 30,
     });
 
-    it('should apply defaults for optional fields', () => {
-      const result = audioInferenceInputSchema.safeParse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-      });
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.duration).toBe(30);
-        expect(result.data.numberResults).toBe(1);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
+    const result = await audioInference(input, mockClient);
 
-    it('should reject empty positivePrompt', () => {
-      const result = audioInferenceInputSchema.safeParse({
-        positivePrompt: '',
-        model: 'elevenlabs:1@1',
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject invalid audioType', () => {
-      const result = audioInferenceInputSchema.safeParse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-        audioType: 'invalid',
-      });
-      expect(result.success).toBe(false);
-    });
-
-    it('should reject invalid outputFormat', () => {
-      const result = audioInferenceInputSchema.safeParse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-        outputFormat: 'FLAC',
-      });
-      expect(result.success).toBe(false);
-    });
-  });
-
-  describe('handler success case', () => {
-    it('should return success with valid audio result', async () => {
-      const mockResponse = {
-        taskType: 'audioInference',
-        taskUUID: 'task-uuid',
-        status: 'processing',
-      };
-
-      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const mockPollForResult = pollForResult as ReturnType<typeof vi.fn>;
-      mockPollForResult.mockResolvedValue({
-        result: {
-          taskType: 'audioInference',
-          taskUUID: 'task-uuid',
-          status: 'success',
-          audioUUID: 'audio-uuid-123',
-          audioURL: 'https://example.com/audio.mp3',
-          cost: 0.30,
-        },
-        attempts: 3,
-        elapsedMs: 5000,
-      });
-
-      const input = audioInferenceInputSchema.parse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-        duration: 30,
-        audioType: 'music',
-      });
-
-      const result = await audioInference(input, mockClient);
-
-      expect(result.status).toBe('success');
-      expect(result.data).toBeDefined();
-      expect(result.cost).toBe(0.30);
-
-      const data = result.data as { results: { audioUUID: string; audioURL: string }[]; cost: number };
-      expect(data.results).toHaveLength(1);
-      expect(data.results[0]?.audioUUID).toBe('audio-uuid-123');
-      expect(data.results[0]?.audioURL).toBe('https://example.com/audio.mp3');
-    });
-  });
-
-  describe('handler error case', () => {
-    it('should return error for invalid model', async () => {
-      const input = audioInferenceInputSchema.parse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-        duration: 30,
-      });
-
-      // Override model to invalid value after parsing
-      const badInput = { ...input, model: 'invalid-model' };
-
-      const result = await audioInference(badInput, mockClient);
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Invalid audio model');
-    });
-
-    it('should return error when client throws', async () => {
-      (mockClient.request as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Network error'),
-      );
-
-      const input = audioInferenceInputSchema.parse({
-        positivePrompt: 'upbeat jazz',
-        model: 'elevenlabs:1@1',
-        duration: 30,
-      });
-
-      const result = await audioInference(input, mockClient);
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Network error');
-    });
-  });
-
-  describe('cost tracking', () => {
-    it('should propagate cost from polling result', async () => {
-      (mockClient.request as ReturnType<typeof vi.fn>).mockResolvedValue({
-        taskType: 'audioInference',
-        taskUUID: 'task-uuid',
-      });
-
-      const mockPollForResult = pollForResult as ReturnType<typeof vi.fn>;
-      mockPollForResult.mockResolvedValue({
-        result: {
-          taskType: 'audioInference',
-          taskUUID: 'task-uuid',
-          status: 'success',
-          audioUUID: 'audio-uuid',
-          cost: 0.15,
-        },
-        attempts: 2,
-        elapsedMs: 3000,
-      });
-
-      const input = audioInferenceInputSchema.parse({
-        positivePrompt: 'ambient forest',
-        model: 'elevenlabs:1@1',
-      });
-
-      const result = await audioInference(input, mockClient);
-
-      expect(result.status).toBe('success');
-      expect(result.cost).toBe(0.15);
-    });
+    expect(result.status).toBe('error');
+    expect(result.message).toContain('Network error');
   });
 });

@@ -1,7 +1,7 @@
-import {
-  VIDEO_MODELS,
-  type VideoModel,
-} from '../../constants/video-models.js';
+// Does:  Filters the bundled offline video-model catalog by provider, duration, inputs and features.
+// Holds: Never calls the API; an empty match is a success result with zero models, not an error.
+
+import { VIDEO_MODELS, type VideoModel } from '../../constants/video-models.js';
 import { type ToolResult, successResult } from '../../shared/types.js';
 
 import type { listVideoModelsInputSchema, ListVideoModelsOutput } from './schema.js';
@@ -10,7 +10,7 @@ import type { z } from 'zod';
 type ListVideoModelsInput = z.infer<typeof listVideoModelsInputSchema>;
 
 function filterModels(input: ListVideoModelsInput): VideoModel[] {
-  let models = Object.values(VIDEO_MODELS) as VideoModel[];
+  let models: VideoModel[] = Object.values(VIDEO_MODELS);
 
   if (input.provider !== undefined) {
     models = models.filter((model) => model.provider === input.provider);
@@ -35,9 +35,7 @@ function filterModels(input: ListVideoModelsInput): VideoModel[] {
 
   if (input.feature !== undefined) {
     const feature = input.feature.toLowerCase();
-    models = models.filter((model) =>
-      model.features.some((f) => f.toLowerCase().includes(feature)),
-    );
+    models = models.filter((model) => model.features.some((f) => f.toLowerCase().includes(feature)));
   }
 
   if (input.minWidth !== undefined) {
@@ -69,10 +67,7 @@ function toSummary(model: VideoModel): ListVideoModelsOutput['models'][number] {
   };
 }
 
-/** Local operation over the bundled catalog — never calls the API. */
-export function listVideoModels(
-  input: ListVideoModelsInput,
-): ToolResult {
+export function listVideoModels(input: ListVideoModelsInput): ToolResult {
   const models = filterModels(input);
 
   const providersSet = new Set(models.map((m) => m.provider));
@@ -85,9 +80,10 @@ export function listVideoModels(
   };
 
   const filterDescription = buildFilterDescription(input);
-  const message = models.length === 0
-    ? `No video models found${filterDescription}`
-    : `Found ${String(models.length)} video model(s)${filterDescription}`;
+  const message =
+    models.length === 0
+      ? `No video models found${filterDescription}`
+      : `Found ${String(models.length)} video model(s)${filterDescription}`;
 
   return successResult(message, output);
 }

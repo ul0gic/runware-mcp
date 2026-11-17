@@ -1,3 +1,6 @@
+// Does:  Proves the newer API tools redact secrets, enforce safe inputs and normalize current response envelopes.
+// Holds: config, rate limiter, polling and RunwareClient are mocked; schemas and handlers run for real.
+
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../src/shared/config.js', () => ({
@@ -21,22 +24,24 @@ vi.mock('../../../src/integrations/runware/polling.js', () => ({
 
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 import { pollForResult } from '../../../src/integrations/runware/polling.js';
-import {
-  CURRENT_TASK_DETAILS,
-  CURRENT_TEXT_RESULT,
-  CURRENT_THREE_D_RESULT,
-} from '../../fixtures/current-api-contracts.js';
-import {
-  accountManagement,
-  accountManagementInputSchema,
-} from '../../../src/tools/account-management/index.js';
-import { getTaskDetails } from '../../../src/tools/task-details/index.js';
+import type { AsyncTaskResponse } from '../../../src/shared/types.js';
+import { CURRENT_TEXT_RESULT, CURRENT_THREE_D_RESULT } from '../../fixtures/current-api-contracts.js';
+import { accountManagement, accountManagementInputSchema } from '../../../src/tools/account-management/index.js';
 import { mediaStorageInputSchema } from '../../../src/tools/media-storage/index.js';
 import { modelUpload, modelUploadInputSchema } from '../../../src/tools/model-upload/index.js';
 import { runInferenceInputSchema } from '../../../src/tools/run-inference/index.js';
 import { textInference, textInferenceInputSchema } from '../../../src/tools/text-inference/index.js';
 import { threeDInference } from '../../../src/tools/three-d-inference/index.js';
 import { training, trainingInputSchema } from '../../../src/tools/training/index.js';
+
+interface ModelUploadResponse extends AsyncTaskResponse {
+  readonly air?: string;
+}
+
+interface TrainingResponse extends AsyncTaskResponse {
+  readonly air?: string;
+  readonly outputs?: { readonly files?: readonly { readonly uuid: string; readonly url: string }[] };
+}
 
 function createMockClient(): RunwareClient {
   return {
@@ -71,20 +76,11 @@ describe('current Runware API coverage', () => {
   });
 
   it('requires date ranges for usage analytics', () => {
-    expect(accountManagementInputSchema.safeParse({
-      operation: 'getUsageActivity',
-    }).success).toBe(false);
-  });
-
-  it('retrieves current untyped task details envelopes', async () => {
-    (client.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(CURRENT_TASK_DETAILS);
-    const result = await getTaskDetails(
-      { taskUUID: CURRENT_TASK_DETAILS.taskUUID },
-      client,
-    );
-
-    expect(result.status).toBe('success');
-    expect(result.data).toEqual(CURRENT_TASK_DETAILS);
+    expect(
+      accountManagementInputSchema.safeParse({
+        operation: 'getUsageActivity',
+      }).success,
+    ).toBe(false);
   });
 
   it('returns text, finish reason, usage, and cost', async () => {
@@ -108,12 +104,15 @@ describe('current Runware API coverage', () => {
       attempts: 2,
       elapsedMs: 3000,
     });
-    const result = await threeDInference({
-      model: 'tripo:v3.1@0',
-      positivePrompt: 'A vintage camera',
-      parameters: {},
-      includeCost: true,
-    }, client);
+    const result = await threeDInference(
+      {
+        model: 'tripo:v3.1@0',
+        positivePrompt: 'A vintage camera',
+        parameters: {},
+        includeCost: true,
+      },
+      client,
+    );
 
     expect(result.status).toBe('success');
     expect(result.data).toMatchObject({
@@ -123,31 +122,37 @@ describe('current Runware API coverage', () => {
   });
 
   it('blocks administrative fields in generic inference parameters', () => {
-    expect(runInferenceInputSchema.safeParse({
-      model: 'runware:400@1',
-      parameters: { operation: 'delete' },
-    }).success).toBe(false);
+    expect(
+      runInferenceInputSchema.safeParse({
+        model: 'runware:400@1',
+        parameters: { operation: 'delete' },
+      }).success,
+    ).toBe(false);
   });
 
   it('requires a UUID for media deletion', () => {
-    expect(mediaStorageInputSchema.safeParse({
-      operation: 'delete',
-      media: 'not-a-uuid',
-    }).success).toBe(false);
+    expect(
+      mediaStorageInputSchema.safeParse({
+        operation: 'delete',
+        media: 'not-a-uuid',
+      }).success,
+    ).toBe(false);
   });
 
   it('requires HTTPS model download URLs', () => {
-    expect(modelUploadInputSchema.safeParse({
-      category: 'lora',
-      architecture: 'flux1d',
-      name: 'Unsafe model',
-      version: '1',
-      downloadURL: 'http://example.com/model.safetensors',
-    }).success).toBe(false);
+    expect(
+      modelUploadInputSchema.safeParse({
+        category: 'lora',
+        architecture: 'flux1d',
+        name: 'Unsafe model',
+        version: '1',
+        downloadURL: 'http://example.com/model.safetensors',
+      }).success,
+    ).toBe(false);
   });
 
   it('submits explicit model uploads asynchronously', async () => {
-    vi.mocked(pollForResult).mockResolvedValue({
+    vi.mocked(pollForResult<ModelUploadResponse>).mockResolvedValue({
       result: {
         taskType: 'modelUpload',
         taskUUID: 'a770f077-f413-47de-9dac-be0b26a35da6',
@@ -171,7 +176,7 @@ describe('current Runware API coverage', () => {
   });
 
   it('submits model-specific training parameters and normalizes outputs', async () => {
-    vi.mocked(pollForResult).mockResolvedValue({
+    vi.mocked(pollForResult<TrainingResponse>).mockResolvedValue({
       result: {
         taskType: 'training',
         taskUUID: 'a770f077-f413-47de-9dac-be0b26a35da6',

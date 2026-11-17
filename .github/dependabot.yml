@@ -6,7 +6,7 @@ updates:
     schedule:
       interval: weekly
       day: monday
-      time: '06:00'
+      time: "06:00"
       timezone: America/Chicago
     open-pull-requests-limit: 10
     versioning-strategy: increase-if-necessary
@@ -17,18 +17,18 @@ updates:
       production-dependencies:
         dependency-type: production
         patterns:
-          - '*'
+          - "*"
       development-dependencies:
         dependency-type: development
         patterns:
-          - '*'
+          - "*"
 
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
       day: monday
-      time: '06:30'
+      time: "06:30"
       timezone: America/Chicago
     open-pull-requests-limit: 5
     labels:
@@ -36,4 +36,4 @@ updates:
     groups:
       github-actions:
         patterns:
-          - '*'
+          - "*"

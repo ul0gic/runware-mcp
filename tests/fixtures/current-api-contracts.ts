@@ -1,40 +1,11 @@
-/**
- * Minimal response fixtures matching the public Runware API documentation
- * reviewed on 2026-07-24.
- */
+// Does:  Supplies minimal Runware response bodies for contract tests.
+// Holds: Shapes match the public Runware API documentation as reviewed on 2026-07-24.
 
-export const CURRENT_ACCOUNT_DETAILS = {
-  taskType: 'accountManagement',
-  taskUUID: 'f4dd3dfe-955f-49d5-a785-7e3b633d6e7a',
-  operation: 'getDetails',
-  organizationUUID: 'a6379343-9ff2-46a0-996b-e4a7b3057c88',
-  organizationName: 'Acme Corporation',
-  balance: {
-    amount: 2450.75,
-    freeBalance: 120,
-    currency: 'USD',
-  },
-};
+import type { AsyncTaskResponse } from '../../src/shared/types.js';
 
-export const CURRENT_TASK_DETAILS = {
-  taskType: 'getTaskDetails',
-  taskUUID: 'a770f077-f413-47de-9dac-be0b26a35da6',
-  request: [
-    {
-      taskType: 'imageInference',
-      model: 'runware:101@1',
-      positivePrompt: 'a cat',
-    },
-  ],
-  response: {
-    data: [
-      {
-        taskType: 'imageInference',
-        imageUUID: '77da2d99-a6d3-44d9-b8c0-ae9fb06b6200',
-      },
-    ],
-  },
-};
+interface ThreeDInferenceResult extends AsyncTaskResponse {
+  readonly outputs: { readonly files: readonly { readonly uuid: string; readonly url: string }[] };
+}
 
 export const CURRENT_TEXT_RESULT = {
   taskType: 'textInference',
@@ -58,4 +29,4 @@ export const CURRENT_THREE_D_RESULT = {
     ],
   },
   cost: 0.3,
-};
+} satisfies ThreeDInferenceResult;

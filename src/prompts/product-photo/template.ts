@@ -1,7 +1,10 @@
+// Does:  Builds the product-photo prompt that guides an imageInference call for a commercial shot.
+// Holds: Unknown style, lighting or angle values fall back to the defaults rather than failing.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'product-photo';
-const PROMPT_DESCRIPTION = 'Generate professional e-commerce product photography with configurable style, background, lighting, and camera angle.';
+const PROMPT_DESCRIPTION =
+  'Generate professional e-commerce product photography with configurable style, background, lighting, and camera angle.';
 
 const DEFAULT_STYLE = 'studio';
 const DEFAULT_BACKGROUND = 'white';
@@ -30,7 +33,7 @@ const LIGHTING_DESCRIPTIONS: Record<string, string> = {
 const ANGLE_DESCRIPTIONS: Record<string, string> = {
   front: 'straight-on front-facing',
   '45-degree': 'three-quarter 45-degree',
-  'top-down': 'top-down bird\'s eye',
+  'top-down': "top-down bird's eye",
   'eye-level': 'eye-level perspective',
 };
 
@@ -82,9 +85,10 @@ export const productPhoto: PromptTemplate = {
     const lightingDesc = LIGHTING_DESCRIPTIONS[lighting] ?? LIGHTING_DESCRIPTIONS[DEFAULT_LIGHTING] ?? '';
     const angleDesc = ANGLE_DESCRIPTIONS[angle] ?? ANGLE_DESCRIPTIONS[DEFAULT_ANGLE] ?? '';
 
-    const backgroundClause = background === 'transparent'
-      ? 'on a transparent background (use PNG output format)'
-      : `on a ${background} background`;
+    const backgroundClause =
+      background === 'transparent'
+        ? 'on a transparent background (use PNG output format)'
+        : `on a ${background} background`;
 
     const prompt = [
       `Professional ${style} photography of a ${product}.`,

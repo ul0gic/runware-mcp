@@ -1,33 +1,24 @@
+// Does:  Declares the shared Zod schemas for tool inputs: images, dimensions, prompts, paths, and model settings.
+// Holds: URL inputs accept only https; dimensions are integers in 256..16384 that are multiples of 8.
+
 import { z } from 'zod';
 
 const UUID_V4_REGEX = /^[\da-f]{8}-[\da-f]{4}-4[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/i;
 
-export const uuidSchema = z
-  .string()
-  .regex(UUID_V4_REGEX, 'Must be a valid UUID v4');
+export const uuidSchema = z.string().regex(UUID_V4_REGEX, 'Must be a valid UUID v4');
 
-const ALLOWED_PROTOCOLS = ['http:', 'https:'] as const;
-
-const urlSchema = z.url('Must be a valid URL').refine(
-  (urlString) => {
-    try {
-      const parsedUrl = new URL(urlString);
-      return (ALLOWED_PROTOCOLS as readonly string[]).includes(parsedUrl.protocol);
-    } catch {
-      return false;
-    }
-  },
-  { message: 'URL must use http or https protocol' },
-);
+export const httpsUrlSchema = z.url({ protocol: /^https$/, error: 'Must be a valid https URL' });
 
 const BASE64_REGEX = /^[\w+/]+=*$/;
 
 const DATA_URI_REGEX = /^data:image\/(jpeg|jpg|png|webp|gif|bmp);base64,[\w+/]+=*$/i;
 
+export const imageDataUriSchema = z.string().regex(DATA_URI_REGEX, 'Invalid data URI format');
+
 export const imageInputSchema = z.union([
   uuidSchema.describe('Runware image UUID'),
 
-  urlSchema.describe('Image URL'),
+  httpsUrlSchema.describe('Image URL'),
 
   z
     .string()
@@ -35,10 +26,7 @@ export const imageInputSchema = z.union([
     .regex(BASE64_REGEX, 'Invalid base64 format')
     .describe('Base64 encoded image data'),
 
-  z
-    .string()
-    .regex(DATA_URI_REGEX, 'Invalid data URI format')
-    .describe('Data URI with base64 image'),
+  imageDataUriSchema.describe('Data URI with base64 image'),
 ]);
 
 export const MIN_DIMENSION = 256;
@@ -52,10 +40,9 @@ export const dimensionSchema = z
   .int('Dimension must be an integer')
   .min(MIN_DIMENSION, `Dimension must be at least ${String(MIN_DIMENSION)}px`)
   .max(MAX_DIMENSION, `Dimension cannot exceed ${String(MAX_DIMENSION)}px`)
-  .refine(
-    (value) => value % DIMENSION_STEP === 0,
-    { message: `Dimension must be a multiple of ${String(DIMENSION_STEP)}` },
-  );
+  .refine((value) => value % DIMENSION_STEP === 0, {
+    message: `Dimension must be a multiple of ${String(DIMENSION_STEP)}`,
+  });
 
 export const MIN_STEPS = 1;
 
@@ -76,11 +63,7 @@ export const cfgScaleSchema = z
   .min(MIN_CFG_SCALE, `CFG scale must be at least ${String(MIN_CFG_SCALE)}`)
   .max(MAX_CFG_SCALE, `CFG scale cannot exceed ${String(MAX_CFG_SCALE)}`);
 
-export const seedSchema = z
-  .number()
-  .int('Seed must be an integer')
-  .min(0, 'Seed must be non-negative')
-  .optional();
+export const seedSchema = z.number().int('Seed must be an integer').min(0, 'Seed must be non-negative').optional();
 
 export const numberResultsSchema = z
   .number()
@@ -88,10 +71,7 @@ export const numberResultsSchema = z
   .min(1, 'Must generate at least 1 result')
   .max(20, 'Cannot generate more than 20 results');
 
-export const strengthSchema = z
-  .number()
-  .min(0, 'Strength must be at least 0')
-  .max(1, 'Strength cannot exceed 1');
+export const strengthSchema = z.number().min(0, 'Strength must be at least 0').max(1, 'Strength cannot exceed 1');
 
 const OUTPUT_TYPES = ['URL', 'base64Data', 'dataURI'] as const;
 
@@ -111,14 +91,17 @@ export const outputQualitySchema = z
   .min(20, 'Output quality must be at least 20')
   .max(99, 'Output quality cannot exceed 99');
 
-/** AIR format: provider:modelId@version or civitai:modelId@versionId. */
-const AIR_MODEL_REGEX = /^[\w-]+:\d+@\d+$/;
+// Holds: provider:model@version, each part word characters, dots and hyphens; covers klingai:1.5@1 and tripo:v3.1@0.
+const AIR_MODEL_REGEX = /^[a-z\d][\w.-]*:[\w.-]+@[\w.-]+$/i;
+
+const MAX_AIR_LENGTH = 128;
 
 export const modelIdentifierSchema = z
   .string()
+  .max(MAX_AIR_LENGTH, `Model identifier cannot exceed ${String(MAX_AIR_LENGTH)} characters`)
   .regex(AIR_MODEL_REGEX, 'Model must be in AIR format (e.g., civitai:123@456)');
 
-export const MIN_PROMPT_LENGTH = 2;
+const MIN_PROMPT_LENGTH = 2;
 
 export const MAX_PROMPT_LENGTH = 3000;
 
@@ -152,10 +135,7 @@ export const fpsSchema = z
 export const filePathSchema = z
   .string()
   .min(1, 'File path cannot be empty')
-  .refine(
-    (path) => path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path),
-    { message: 'File path must be absolute' },
-  );
+  .refine((path) => path.startsWith('/') || /^[A-Za-z]:[\\/]/.test(path), { message: 'File path must be absolute' });
 
 export const folderPathSchema = filePathSchema.describe('Absolute folder path');
 
@@ -192,20 +172,13 @@ export const controlNetConfigSchema = z.object({
   endStep: z.number().min(0).max(1).optional(),
 });
 
-export const controlNetArraySchema = z
-  .array(controlNetConfigSchema)
-  .max(4, 'Cannot use more than 4 ControlNets');
+export const controlNetArraySchema = z.array(controlNetConfigSchema).max(4, 'Cannot use more than 4 ControlNets');
 
 export const loraConfigSchema = z.object({
   model: z.string(),
   weight: z.number().min(-2).max(2).optional().default(1),
 });
 
-export const loraArraySchema = z
-  .array(loraConfigSchema)
-  .max(5, 'Cannot use more than 5 LoRAs');
+export const loraArraySchema = z.array(loraConfigSchema).max(5, 'Cannot use more than 5 LoRAs');
 
-export const upscaleFactorSchema = z.union([
-  z.literal(2),
-  z.literal(4),
-]);
+export const upscaleFactorSchema = z.union([z.literal(2), z.literal(4)]);

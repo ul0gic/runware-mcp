@@ -1,18 +1,13 @@
-/**
- * Fetches and caches live per-model JSON Schemas from Runware.
- */
+// Does:  Fetches live per-model request JSON Schemas from Runware and strips the fields the server fills in itself.
+// Holds: Caches up to 500 resolutions for 5 min, evicting oldest-inserted first; 404s and bad schemas skip the cache.
+
+import { isObject } from '../../shared/utils.js';
 
 const SCHEMAS_BASE_URL = 'https://schemas.runware.ai';
 const CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 500;
 const REQUEST_TIMEOUT_MS = 10_000;
-const INTERNAL_FIELDS = new Set([
-  'taskType',
-  'taskUUID',
-  'webhookURL',
-  'uploadEndpoint',
-  'deliveryMethod',
-]);
+const INTERNAL_FIELDS = new Set(['taskType', 'taskUUID', 'webhookURL', 'uploadEndpoint', 'deliveryMethod']);
 
 export interface JsonSchema {
   readonly [key: string]: unknown;
@@ -20,8 +15,16 @@ export interface JsonSchema {
   readonly required?: readonly string[];
 }
 
-interface SchemaEnvelope {
-  readonly requestSchema?: JsonSchema;
+function isJsonSchema(value: unknown): value is JsonSchema {
+  if (!isObject(value)) {
+    return false;
+  }
+  const { properties, required } = value;
+  const requiredValid =
+    required === undefined || (Array.isArray(required) && required.every((name: unknown) => typeof name === 'string'));
+  const propertiesValid =
+    properties === undefined || (isObject(properties) && Object.values(properties).every(isJsonSchema));
+  return requiredValid && propertiesValid;
 }
 
 interface CacheEntry {
@@ -33,7 +36,7 @@ const cache = new Map<string, CacheEntry>();
 
 export interface ModelSchemaResolution {
   readonly schema: JsonSchema;
-  readonly taskType?: string;
+  readonly taskType?: string | undefined;
 }
 
 function inferTaskType(schema: JsonSchema): string | undefined {
@@ -49,9 +52,9 @@ function inferTaskType(schema: JsonSchema): string | undefined {
     return taskTypeSchema.default;
   }
   if (
-    Array.isArray(taskTypeSchema.enum)
-    && taskTypeSchema.enum.length === 1
-    && typeof taskTypeSchema.enum[0] === 'string'
+    Array.isArray(taskTypeSchema.enum) &&
+    taskTypeSchema.enum.length === 1 &&
+    typeof taskTypeSchema.enum[0] === 'string'
   ) {
     return taskTypeSchema.enum[0];
   }
@@ -59,14 +62,11 @@ function inferTaskType(schema: JsonSchema): string | undefined {
 }
 
 function cleanSchema(schema: JsonSchema): JsonSchema {
-  const properties = schema.properties === undefined
-    ? undefined
-    : Object.fromEntries(
-      Object.entries(schema.properties).filter(([name]) => !INTERNAL_FIELDS.has(name)),
-    );
-  const required = schema.required?.filter(
-    (name) => name !== 'taskType' && name !== 'taskUUID',
-  );
+  const properties =
+    schema.properties === undefined
+      ? undefined
+      : Object.fromEntries(Object.entries(schema.properties).filter(([name]) => !INTERNAL_FIELDS.has(name)));
+  const required = schema.required?.filter((name) => name !== 'taskType' && name !== 'taskUUID');
 
   const rest: Record<string, unknown> = { ...schema };
   delete rest.$schema;
@@ -79,10 +79,7 @@ function cleanSchema(schema: JsonSchema): JsonSchema {
   };
 }
 
-export async function getModelSchema(
-  model: string,
-  signal?: AbortSignal,
-): Promise<JsonSchema | undefined> {
+export async function getModelSchema(model: string, signal?: AbortSignal): Promise<JsonSchema | undefined> {
   const resolution = await resolveModelSchema(model, signal);
   return resolution?.schema;
 }
@@ -97,13 +94,11 @@ export async function resolveModelSchema(
   }
 
   const timeoutSignal = AbortSignal.timeout(REQUEST_TIMEOUT_MS);
-  const combinedSignal = signal === undefined
-    ? timeoutSignal
-    : AbortSignal.any([signal, timeoutSignal]);
-  const response = await fetch(
-    `${SCHEMAS_BASE_URL}/resolve/${encodeURIComponent(model)}`,
-    { headers: { accept: 'application/json' }, signal: combinedSignal },
-  );
+  const combinedSignal = signal === undefined ? timeoutSignal : AbortSignal.any([signal, timeoutSignal]);
+  const response = await fetch(`${SCHEMAS_BASE_URL}/resolve/${encodeURIComponent(model)}`, {
+    headers: { accept: 'application/json' },
+    signal: combinedSignal,
+  });
 
   if (response.status === 404) {
     return undefined;
@@ -112,15 +107,16 @@ export async function resolveModelSchema(
     throw new Error(`Runware schema service returned HTTP ${String(response.status)}`);
   }
 
-  const envelope = await response.json() as SchemaEnvelope;
-  if (envelope.requestSchema === undefined) {
+  const envelope: unknown = await response.json();
+  const requestSchema = isObject(envelope) ? envelope.requestSchema : undefined;
+  if (!isJsonSchema(requestSchema)) {
     return undefined;
   }
 
   const resolution = {
-    schema: cleanSchema(envelope.requestSchema),
-    ...(inferTaskType(envelope.requestSchema) !== undefined && {
-      taskType: inferTaskType(envelope.requestSchema),
+    schema: cleanSchema(requestSchema),
+    ...(inferTaskType(requestSchema) !== undefined && {
+      taskType: inferTaskType(requestSchema),
     }),
   };
   if (cache.size >= MAX_CACHE_ENTRIES) {

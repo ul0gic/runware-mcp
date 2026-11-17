@@ -1,3 +1,6 @@
+// Does:  Validates costEstimate input and describes the estimate it returns.
+// Holds: taskType is limited to the task types the handler has an estimator for.
+
 import { z } from 'zod';
 
 const ESTIMABLE_TASK_TYPES = [
@@ -14,40 +17,30 @@ const ESTIMABLE_TASK_TYPES = [
 export const costEstimateInputSchema = z.object({
   taskType: z.enum(ESTIMABLE_TASK_TYPES),
 
-  /** Affects pricing for some task types. */
   model: z.string().optional(),
 
-  /** Applies to image tasks. */
   width: z.number().int().min(128).max(2048).optional(),
 
-  /** Applies to image tasks. */
   height: z.number().int().min(128).max(2048).optional(),
 
-  /** Seconds; applies to video and audio tasks. */
   duration: z.number().min(1).max(300).optional(),
 
   numberResults: z.number().int().min(1).max(20).optional().default(1),
 
-  /** Affects pricing for some image tasks. */
   steps: z.number().int().min(1).max(100).optional(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const costEstimateOutputSchema = z.object({
   taskType: z.string(),
 
-  /** USD per unit. */
   costPerUnit: z.number(),
 
   units: z.number(),
 
-  /** Unit the estimate is priced in, e.g. "image" or "second". */
   unitDescription: z.string(),
 
-  /** Total estimate in USD. */
   totalCost: z.number(),
 
-  /** Pricing tier or model the estimate was derived from. */
   pricingBasis: z.string(),
 
   isEstimate: z.boolean(),

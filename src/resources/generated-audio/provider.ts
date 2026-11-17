@@ -1,3 +1,5 @@
+// Does:  Keeps this session's generated audio in memory and serves it at runware://audio/{id}.
+// Holds: In-process only and capped at 10,000 entries, evicting the earliest-inserted id first.
 import { truncate } from '../../shared/utils.js';
 
 import type { GeneratedAudioEntry } from './types.js';
@@ -22,7 +24,7 @@ export function getSessionAudio(): readonly GeneratedAudioEntry[] {
   return SESSION_AUDIO.values().toArray();
 }
 
-/** Test-support hook — production code never clears the store. */
+// Why: Tests reset the store with this; production code never clears it, so it is not dead code.
 export function clearSessionAudio(): void {
   SESSION_AUDIO.clear();
 }
@@ -38,11 +40,9 @@ export const generatedAudioProvider: ResourceProvider = {
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {
-    const entries: ResourceEntry[] = Array.from(SESSION_AUDIO.values(), audio => ({
+    const entries: ResourceEntry[] = Array.from(SESSION_AUDIO.values(), (audio) => ({
       uri: `${URI_PREFIX}${audio.id}`,
-      name: audio.prompt.length > 0
-        ? truncate(audio.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-        : `Audio ${audio.id}`,
+      name: audio.prompt.length > 0 ? truncate(audio.prompt, MAX_PROMPT_DISPLAY_LENGTH) : `Audio ${audio.id}`,
       description: `${String(audio.duration)}s ${audio.audioType} via ${audio.model}`,
       mimeType: 'application/json',
     }));

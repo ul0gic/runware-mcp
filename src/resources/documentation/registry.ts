@@ -1,3 +1,5 @@
+// Does:  Stores doc resources by category/id and registers the concepts and tools docs.
+// Holds: Concepts and tools docs are registered when this module loads; other categories need the register-* imports.
 import { airIdentifiersDoc } from './docs/concepts/air-identifiers.js';
 import { asyncDeliveryDoc } from './docs/concepts/async-delivery.js';
 import { connectionDoc } from './docs/concepts/connection.js';
@@ -26,7 +28,7 @@ function buildKey(category: string, id: string): string {
   return `${category}/${id}`;
 }
 
-/** Keyed by `{category}/{id}` — re-registering the same key overwrites silently. */
+// Holds: Re-registering an existing category/id overwrites the earlier doc silently.
 export function registerDoc(doc: DocResource): void {
   const key = buildKey(doc.category, doc.id);
   registry.set(key, doc);
@@ -39,10 +41,6 @@ export function getDocResource(category: string, id: string): DocResource | unde
 
 export function listDocResources(): readonly DocResource[] {
   return registry.values().toArray();
-}
-
-export function getDocCount(): number {
-  return registry.size;
 }
 
 registerDoc(airIdentifiersDoc);

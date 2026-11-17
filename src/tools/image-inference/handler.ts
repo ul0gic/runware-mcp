@@ -1,3 +1,6 @@
+// Does:  Generates or transforms images in one imageInference request with every optional feature.
+// Holds: Only the providerSettings block matching the model's provider is merged; unset fields are never sent.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { detectProvider } from '../../shared/provider-settings.js';
@@ -17,7 +20,6 @@ interface ImageInferenceApiResponse {
   readonly imageBase64Data?: string;
   readonly imageDataURI?: string;
   readonly seed?: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   readonly NSFWContent?: boolean;
   readonly cost?: number;
 }
@@ -28,22 +30,15 @@ function addOptionalParams(
   keys: readonly (keyof ImageInferenceInput)[],
 ): void {
   for (const key of keys) {
-    // eslint-disable-next-line security/detect-object-injection -- keys are compile-time constants
     const value = input[key];
     if (value !== undefined) {
-      // eslint-disable-next-line security/detect-object-injection -- keys are compile-time constants
       request[key] = value;
     }
   }
 }
 
 function addGenerationParams(request: Record<string, unknown>, input: ImageInferenceInput): void {
-  addOptionalParams(request, input, [
-    'steps',
-    'seed',
-    'scheduler',
-    'negativePrompt',
-  ]);
+  addOptionalParams(request, input, ['steps', 'seed', 'scheduler', 'negativePrompt']);
   if (input.CFGScale !== undefined) {
     request.CFGScale = input.CFGScale;
   }
@@ -79,20 +74,11 @@ function addAdvancedParams(request: Record<string, unknown>, input: ImageInferen
 }
 
 function addOutputParams(request: Record<string, unknown>, input: ImageInferenceInput): void {
-  addOptionalParams(request, input, [
-    'outputType',
-    'outputFormat',
-    'outputQuality',
-    'safety',
-    'ttl',
-  ]);
+  addOptionalParams(request, input, ['outputType', 'outputFormat', 'outputQuality', 'safety', 'ttl']);
   request.includeCost = input.includeCost;
 }
 
-function addProviderSettings(
-  request: Record<string, unknown>,
-  input: ImageInferenceInput,
-): void {
+function addProviderSettings(request: Record<string, unknown>, input: ImageInferenceInput): void {
   if (input.providerSettings === undefined) {
     return;
   }
@@ -102,7 +88,6 @@ function addProviderSettings(
     return;
   }
 
-  // eslint-disable-next-line security/detect-object-injection -- provider is a validated enum from detectProvider
   const providerConfig = input.providerSettings[provider];
   if (providerConfig !== undefined) {
     Object.assign(request, providerConfig);
@@ -120,15 +105,14 @@ function buildApiRequest(input: ImageInferenceInput): Record<string, unknown> {
   addGenerationParams(request, input);
   addImageInputParams(request, input);
   addAdvancedParams(request, input);
+  // Why: provider settings merge before output params so they can never override includeCost or output options.
   addProviderSettings(request, input);
   addOutputParams(request, input);
 
   return request;
 }
 
-function processResponse(
-  responses: readonly ImageInferenceApiResponse[],
-): ImageInferenceOutput {
+function processResponse(responses: readonly ImageInferenceApiResponse[]): ImageInferenceOutput {
   let totalCost = 0;
 
   const images = responses.map((response) => {
@@ -165,17 +149,13 @@ export async function imageInference(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('imageInference', requestParams);
 
-    const response = await runwareClient.request<ImageInferenceApiResponse>(
-      [task],
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.request<ImageInferenceApiResponse>([task], { signal: context?.signal });
 
     const output = processResponse(response.data);
     const imageCount = output.images.length;
 
-    const message = imageCount === 1
-      ? 'Generated 1 image successfully'
-      : `Generated ${String(imageCount)} images successfully`;
+    const message =
+      imageCount === 1 ? 'Generated 1 image successfully' : `Generated ${String(imageCount)} images successfully`;
 
     return successResult(message, output, output.cost);
   } catch (error) {
@@ -219,7 +199,6 @@ export const imageInferenceToolDefinition = {
         type: 'number',
         description: 'Number of diffusion steps (1-100)',
       },
-      // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter
       CFGScale: {
         type: 'number',
         description: 'Classifier-Free Guidance scale (0-50)',

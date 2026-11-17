@@ -1,3 +1,5 @@
+// Does:  Documents the imageMasking tool and the detection models that produce inpainting masks.
+// Holds: Lists runware:35@1 as the default detection model; served at runware://docs/tools/image-masking.
 import type { DocResource } from '../../types.js';
 
 export const imageMaskingDoc: DocResource = {
@@ -25,14 +27,16 @@ export const imageMaskingDoc: DocResource = {
         name: 'model',
         type: 'string',
         default: 'runware:35@1',
-        description: 'Detection model. Face: 35@1 (yolov8n), 35@2 (yolov8s), 35@6-8 (mediapipe). Features: 35@9-15 (eyes/nose/lips). Hands: 35@3. Person: 35@4-5.',
+        description:
+          'Detection model. Face: 35@1 (yolov8n), 35@2 (yolov8s), 35@6-8 (mediapipe). Features: 35@9-15 (eyes/nose/lips). Hands: 35@3. Person: 35@4-5.',
       },
       {
         name: 'confidence',
         type: 'number',
         range: '0-1',
         default: '0.25',
-        description: 'Confidence threshold. Lower values detect more elements (may include false positives). Higher values are more accurate.',
+        description:
+          'Confidence threshold. Lower values detect more elements (may include false positives). Higher values are more accurate.',
       },
       {
         name: 'maxDetections',
@@ -91,7 +95,8 @@ export const imageMaskingDoc: DocResource = {
           maskPadding: 8,
           maskBlur: 6,
         },
-        explanation: 'Detects faces using YOLOv8 and creates a mask. The mask UUID can be used as maskImage in imageInference for face inpainting.',
+        explanation:
+          'Detects faces using YOLOv8 and creates a mask. The mask UUID can be used as maskImage in imageInference for face inpainting.',
       },
       {
         title: 'Detect eyes only for detailed editing',
@@ -101,7 +106,8 @@ export const imageMaskingDoc: DocResource = {
           confidence: 0.4,
           maskPadding: 12,
         },
-        explanation: 'Uses MediaPipe face mesh to detect eye regions only. Higher padding extends the mask for natural-looking inpainting results.',
+        explanation:
+          'Uses MediaPipe face mesh to detect eye regions only. Higher padding extends the mask for natural-looking inpainting results.',
       },
     ],
     tips: [
@@ -111,10 +117,7 @@ export const imageMaskingDoc: DocResource = {
       'maskBlur creates softer mask edges for smoother inpainting transitions. 4-8 pixels is a good range.',
       'Combine with maskMargin in imageInference for zoomed inpainting — the mask defines the area, maskMargin adds context.',
     ],
-    relatedDocs: [
-      'runware://docs/tools/image-inference',
-      'runware://docs/tools/image-upload',
-    ],
+    relatedDocs: ['runware://docs/tools/image-inference', 'runware://docs/tools/image-upload'],
   },
   lastUpdated: '2026-02-05',
 };

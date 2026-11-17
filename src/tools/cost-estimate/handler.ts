@@ -1,3 +1,6 @@
+// Does:  Estimates the USD cost of a task from bundled rate constants and the video model table.
+// Holds: Pure local computation: never calls the API and never returns an error result.
+
 import { getVideoModel } from '../../constants/video-models.js';
 import { type ToolResult, successResult } from '../../shared/types.js';
 
@@ -6,24 +9,19 @@ import type { z } from 'zod';
 
 type CostEstimateInput = z.infer<typeof costEstimateInputSchema>;
 
+// Holds: Every rate is USD; each *_BASE_COST is a flat charge per image.
 const IMAGE_INFERENCE_BASE_COST_PER_MP = 0.002;
 
-/** USD per image. */
 const PHOTO_MAKER_BASE_COST = 0.004;
 
-/** USD per image. */
 const UPSCALE_BASE_COST = 0.002;
 
-/** USD per image. */
 const REMOVE_BACKGROUND_BASE_COST = 0.001;
 
-/** USD per image. */
 const CAPTION_BASE_COST = 0.0005;
 
-/** USD per image. */
 const MASKING_BASE_COST = 0.0013;
 
-/** Fallback when the model has no known per-second price. */
 const DEFAULT_VIDEO_COST_PER_SECOND = 0.05;
 
 const AUDIO_COST_PER_SECOND = 0.001;
@@ -192,10 +190,7 @@ const estimationFunctions: Record<CostEstimateInput['taskType'], (input: CostEst
   audioInference: estimateAudioInference,
 };
 
-/** Pure local computation from bundled pricing tables — makes no API call. */
-export function costEstimate(
-  input: CostEstimateInput,
-): ToolResult {
+export function costEstimate(input: CostEstimateInput): ToolResult {
   const estimator = estimationFunctions[input.taskType];
   const output = estimator(input);
 
@@ -207,13 +202,23 @@ export function costEstimate(
 
 export const costEstimateToolDefinition = {
   name: 'costEstimate',
-  description: 'Estimate the cost of an operation before executing it. Provides rough estimates based on known pricing.',
+  description:
+    'Estimate the cost of an operation before executing it. Provides rough estimates based on known pricing.',
   inputSchema: {
     type: 'object',
     properties: {
       taskType: {
         type: 'string',
-        enum: ['imageInference', 'photoMaker', 'upscale', 'removeBackground', 'caption', 'imageMasking', 'videoInference', 'audioInference'],
+        enum: [
+          'imageInference',
+          'photoMaker',
+          'upscale',
+          'removeBackground',
+          'caption',
+          'imageMasking',
+          'videoInference',
+          'audioInference',
+        ],
         description: 'Type of task to estimate',
       },
       model: {

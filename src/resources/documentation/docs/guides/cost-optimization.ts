@@ -1,10 +1,13 @@
+// Does:  Guides lowering spend through model, resolution, step-count and output choices.
+// Holds: Served at runware://docs/guides/cost-optimization; registered by register-guides.ts, not registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const costOptimizationDoc: DocResource = {
   id: 'cost-optimization',
   category: 'guides',
   title: 'Cost Optimization',
-  summary: 'How to minimize Runware API credits through efficient model selection, resolution control, acceleration features, and pre-estimation',
+  summary:
+    'How to minimize Runware API credits through efficient model selection, resolution control, acceleration features, and pre-estimation',
   tags: ['cost', 'optimization', 'credits', 'acceleration', 'budget', 'efficiency'],
   content: {
     description:

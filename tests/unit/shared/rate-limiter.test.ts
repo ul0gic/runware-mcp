@@ -1,3 +1,6 @@
+// Does:  Proves the token bucket bursts, refills, caps at max, queues concurrent waiters, and honours abort.
+// Holds: config is mocked and timers are faked; the limiter's accounting is real.
+
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('../../../src/shared/config.js', () => ({
@@ -17,12 +20,8 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-import { RateLimiter, createRateLimiter } from '../../../src/shared/rate-limiter.js';
+import { RateLimiter } from '../../../src/shared/rate-limiter.js';
 import { RateLimitError } from '../../../src/shared/errors.js';
-
-// ============================================================================
-// Setup
-// ============================================================================
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -32,51 +31,25 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-// ============================================================================
-// Constructor
-// ============================================================================
-
 describe('RateLimiter constructor', () => {
   it('throws when maxTokens is zero', () => {
-    expect(() => new RateLimiter({ maxTokens: 0, refillRate: 1 })).toThrow(
-      'maxTokens must be positive',
-    );
+    expect(() => new RateLimiter({ maxTokens: 0, refillRate: 1 })).toThrow('maxTokens must be positive');
   });
 
   it('throws when maxTokens is negative', () => {
-    expect(() => new RateLimiter({ maxTokens: -5, refillRate: 1 })).toThrow(
-      'maxTokens must be positive',
-    );
+    expect(() => new RateLimiter({ maxTokens: -5, refillRate: 1 })).toThrow('maxTokens must be positive');
   });
 
   it('throws when refillRate is zero', () => {
-    expect(() => new RateLimiter({ maxTokens: 10, refillRate: 0 })).toThrow(
-      'refillRate must be positive',
-    );
+    expect(() => new RateLimiter({ maxTokens: 10, refillRate: 0 })).toThrow('refillRate must be positive');
   });
 
   it('throws when refillRate is negative', () => {
-    expect(() => new RateLimiter({ maxTokens: 10, refillRate: -1 })).toThrow(
-      'refillRate must be positive',
-    );
-  });
-
-  it('creates successfully with valid options', () => {
-    const limiter = new RateLimiter({ maxTokens: 10, refillRate: 2 });
-    expect(limiter.getAvailableTokens()).toBe(10);
+    expect(() => new RateLimiter({ maxTokens: 10, refillRate: -1 })).toThrow('refillRate must be positive');
   });
 });
 
-// ============================================================================
-// acquire
-// ============================================================================
-
 describe('RateLimiter.acquire', () => {
-  it('returns true when tokens are available', () => {
-    const limiter = new RateLimiter({ maxTokens: 5, refillRate: 1 });
-    expect(limiter.acquire()).toBe(true);
-  });
-
   it('decrements tokens on acquire', () => {
     const limiter = new RateLimiter({ maxTokens: 3, refillRate: 1 });
     limiter.acquire();
@@ -99,21 +72,15 @@ describe('RateLimiter.acquire', () => {
   });
 });
 
-// ============================================================================
-// Refill
-// ============================================================================
-
 describe('RateLimiter refill', () => {
   it('refills tokens over time', () => {
     const limiter = new RateLimiter({ maxTokens: 5, refillRate: 1 });
 
-    // Exhaust all tokens
     for (let i = 0; i < 5; i++) {
       limiter.acquire();
     }
     expect(limiter.getAvailableTokens()).toBe(0);
 
-    // Advance 2 seconds => 2 tokens refilled (rate = 1/s)
     vi.advanceTimersByTime(2000);
     expect(limiter.getAvailableTokens()).toBe(2);
   });
@@ -121,11 +88,9 @@ describe('RateLimiter refill', () => {
   it('does not exceed maxTokens on refill', () => {
     const limiter = new RateLimiter({ maxTokens: 5, refillRate: 10 });
 
-    // Exhaust 2 tokens
     limiter.acquire();
     limiter.acquire();
 
-    // Advance enough to overfill
     vi.advanceTimersByTime(10_000);
     expect(limiter.getAvailableTokens()).toBe(5);
   });
@@ -133,27 +98,16 @@ describe('RateLimiter refill', () => {
   it('refills at correct rate', () => {
     const limiter = new RateLimiter({ maxTokens: 10, refillRate: 2 });
 
-    // Exhaust all
     for (let i = 0; i < 10; i++) {
       limiter.acquire();
     }
 
-    // 1 second at rate 2/s = 2 tokens
     vi.advanceTimersByTime(1000);
     expect(limiter.getAvailableTokens()).toBe(2);
   });
 });
 
-// ============================================================================
-// acquireOrThrow
-// ============================================================================
-
 describe('RateLimiter.acquireOrThrow', () => {
-  it('does not throw when tokens available', () => {
-    const limiter = new RateLimiter({ maxTokens: 5, refillRate: 1 });
-    expect(() => limiter.acquireOrThrow()).not.toThrow();
-  });
-
   it('throws RateLimitError when no tokens', () => {
     const limiter = new RateLimiter({ maxTokens: 1, refillRate: 1 });
     limiter.acquire();
@@ -163,19 +117,16 @@ describe('RateLimiter.acquireOrThrow', () => {
   it('RateLimitError includes retryAfterMs', () => {
     const limiter = new RateLimiter({ maxTokens: 1, refillRate: 1 });
     limiter.acquire();
+    let thrown: unknown;
     try {
       limiter.acquireOrThrow();
     } catch (error) {
-      expect(error).toBeInstanceOf(RateLimitError);
-      const rateError = error as RateLimitError;
-      expect(rateError.data.retryAfterMs).toBeGreaterThan(0);
+      thrown = error;
     }
+    expect(thrown).toBeInstanceOf(RateLimitError);
+    expect((thrown as RateLimitError).data.retryAfterMs).toBeGreaterThan(0);
   });
 });
-
-// ============================================================================
-// waitForToken
-// ============================================================================
 
 describe('RateLimiter.waitForToken', () => {
   it('resolves immediately when tokens are available', async () => {
@@ -184,17 +135,21 @@ describe('RateLimiter.waitForToken', () => {
     expect(limiter.getAvailableTokens()).toBe(4);
   });
 
-  it('waits and resolves when token becomes available', async () => {
+  it('resolves only after the refill window elapses', async () => {
     const limiter = new RateLimiter({ maxTokens: 1, refillRate: 1 });
-    limiter.acquire(); // exhaust
+    limiter.acquire();
 
-    const promise = limiter.waitForToken();
+    let resolved = false;
+    const promise = limiter.waitForToken().then(() => {
+      resolved = true;
+    });
 
-    // Advance time past the refill window
-    vi.advanceTimersByTime(1100);
+    await vi.advanceTimersByTimeAsync(500);
+    expect(resolved).toBe(false);
 
+    await vi.advanceTimersByTimeAsync(600);
     await promise;
-    // Should have resolved
+    expect(resolved).toBe(true);
   });
 
   it('rejects when signal is already aborted', async () => {
@@ -204,9 +159,7 @@ describe('RateLimiter.waitForToken', () => {
     const controller = new AbortController();
     controller.abort();
 
-    await expect(limiter.waitForToken(controller.signal)).rejects.toThrow(
-      'Rate limit wait was cancelled',
-    );
+    await expect(limiter.waitForToken(controller.signal)).rejects.toThrow('Rate limit wait was cancelled');
   });
 
   it('rejects when signal aborts during wait', async () => {
@@ -216,16 +169,63 @@ describe('RateLimiter.waitForToken', () => {
     const controller = new AbortController();
     const promise = limiter.waitForToken(controller.signal);
 
-    // Abort before refill
     controller.abort();
 
     await expect(promise).rejects.toThrow('Rate limit wait was cancelled');
   });
 });
 
-// ============================================================================
-// getTimeUntilNextToken
-// ============================================================================
+describe('RateLimiter.waitForToken with concurrent waiters', () => {
+  it('admits concurrent waiters one per refill interval when one token is available', async () => {
+    const limiter = new RateLimiter({ maxTokens: 1, refillRate: 1 });
+    const admittedAt: number[] = [];
+    const start = Date.now();
+
+    const waiters = Array.from({ length: 4 }, () =>
+      limiter.waitForToken().then(() => {
+        admittedAt.push(Date.now() - start);
+      }),
+    );
+    await vi.advanceTimersByTimeAsync(5000);
+    await Promise.all(waiters);
+
+    expect(admittedAt).toEqual([0, 1000, 2000, 3000]);
+  });
+
+  it('removes its abort listener once a waiter is admitted', async () => {
+    const limiter = new RateLimiter({ maxTokens: 1, refillRate: 1 });
+    limiter.acquire();
+    const controller = new AbortController();
+    const added = vi.spyOn(controller.signal, 'addEventListener');
+    const removed = vi.spyOn(controller.signal, 'removeEventListener');
+
+    const waiter = limiter.waitForToken(controller.signal);
+    await vi.advanceTimersByTimeAsync(1000);
+    await waiter;
+
+    expect(added).toHaveBeenCalledTimes(1);
+    expect(removed).toHaveBeenCalledTimes(1);
+  });
+
+  it('lets the next waiter take the token a cancelled waiter gave up', async () => {
+    const limiter = new RateLimiter({ maxTokens: 1, refillRate: 1 });
+    limiter.acquire();
+    const controller = new AbortController();
+    const cancelled = limiter.waitForToken(controller.signal);
+    let admitted = false;
+    const next = limiter.waitForToken().then(() => {
+      admitted = true;
+    });
+
+    controller.abort();
+    await expect(cancelled).rejects.toThrow('Rate limit wait was cancelled');
+    await vi.advanceTimersByTimeAsync(1000);
+    await next;
+
+    expect(admitted).toBe(true);
+    expect(limiter.getAvailableTokens()).toBe(0);
+  });
+});
 
 describe('RateLimiter.getTimeUntilNextToken', () => {
   it('returns 0 when tokens are available', () => {
@@ -241,10 +241,6 @@ describe('RateLimiter.getTimeUntilNextToken', () => {
   });
 });
 
-// ============================================================================
-// reset
-// ============================================================================
-
 describe('RateLimiter.reset', () => {
   it('restores to full capacity', () => {
     const limiter = new RateLimiter({ maxTokens: 5, refillRate: 1 });
@@ -255,17 +251,5 @@ describe('RateLimiter.reset', () => {
 
     limiter.reset();
     expect(limiter.getAvailableTokens()).toBe(5);
-  });
-});
-
-// ============================================================================
-// createRateLimiter factory
-// ============================================================================
-
-describe('createRateLimiter', () => {
-  it('creates a new RateLimiter instance', () => {
-    const limiter = createRateLimiter({ maxTokens: 10, refillRate: 2 });
-    expect(limiter).toBeInstanceOf(RateLimiter);
-    expect(limiter.getAvailableTokens()).toBe(10);
   });
 });

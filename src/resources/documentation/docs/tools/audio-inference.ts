@@ -1,10 +1,13 @@
+// Does:  Documents the audioInference tool: audio types, duration and output parameters.
+// Holds: Names the registered audioInference tool; served at runware://docs/tools/audio-inference via registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const audioInferenceDoc: DocResource = {
   id: 'audio-inference',
   category: 'tools',
   title: 'Audio Generation',
-  summary: 'Generate music, sound effects, speech, and ambient audio from text descriptions using ElevenLabs and Mirelo models',
+  summary:
+    'Generate music, sound effects, speech, and ambient audio from text descriptions using ElevenLabs and Mirelo models',
   tags: ['audio', 'music', 'sound effects', 'speech', 'ElevenLabs', 'Mirelo', 'generation'],
   content: {
     description:
@@ -20,7 +23,8 @@ export const audioInferenceDoc: DocResource = {
         type: 'string',
         required: true,
         range: '2-2000 characters',
-        description: 'Text description of the desired audio. For music: genre, mood, instruments, tempo. For SFX: describe the sound. For speech: the text to synthesize.',
+        description:
+          'Text description of the desired audio. For music: genre, mood, instruments, tempo. For SFX: describe the sound. For speech: the text to synthesize.',
       },
       {
         name: 'model',
@@ -60,7 +64,8 @@ export const audioInferenceDoc: DocResource = {
       {
         name: 'elevenlabs',
         type: 'object',
-        description: 'ElevenLabs settings: { compositionPlan: { globalStyle, sections: [{ name, startTime, endTime, prompt, lyrics }] } }.',
+        description:
+          'ElevenLabs settings: { compositionPlan: { globalStyle, sections: [{ name, startTime, endTime, prompt, lyrics }] } }.',
       },
       {
         name: 'mirelo',
@@ -94,7 +99,8 @@ export const audioInferenceDoc: DocResource = {
           duration: 60,
           audioType: 'music',
         },
-        explanation: 'Generates a 60-second electronic music track. The prompt describes genre, instruments, tempo, and mood.',
+        explanation:
+          'Generates a 60-second electronic music track. The prompt describes genre, instruments, tempo, and mood.',
       },
       {
         title: 'Sound effect with Mirelo',

@@ -1,10 +1,12 @@
+// Does:  Defines one session-history entry and the aggregated history document.
+// Holds: Type-only; the history provider serializes SessionHistory as-is to clients.
 export interface SessionHistoryEntry {
   readonly id: string;
   readonly taskType: string;
-  readonly prompt?: string;
-  readonly model?: string;
-  readonly outputURL?: string;
-  readonly cost?: number;
+  readonly prompt?: string | undefined;
+  readonly model?: string | undefined;
+  readonly outputURL?: string | undefined;
+  readonly cost?: number | undefined;
   readonly createdAt: Date;
 }
 

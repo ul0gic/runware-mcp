@@ -1,3 +1,5 @@
+// Does:  Documents IP-Adapters: reference images used as visual prompts alongside text.
+// Holds: Served at runware://docs/features/ip-adapters-guide; listed in featureDocs in features/index.ts.
 import type { DocResource } from '../../types.js';
 
 export const ipAdaptersGuideDoc: DocResource = {
@@ -31,8 +33,7 @@ export const ipAdaptersGuideDoc: DocResource = {
         type: 'array of image inputs',
         required: true,
         range: '1-4 images',
-        description:
-          'Reference images that provide visual guidance. Multiple images blend their features.',
+        description: 'Reference images that provide visual guidance. Multiple images blend their features.',
       },
       {
         name: 'ipAdapters[].weight',

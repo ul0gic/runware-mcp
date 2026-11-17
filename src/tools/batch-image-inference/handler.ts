@@ -1,23 +1,13 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Generates one image per prompt across a batch with bounded concurrency.
+// Holds: A failed prompt is recorded, not thrown, unless stopOnError is set; an all-failed batch is an error result.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
-import {
-  type ToolContext,
-  type ToolResult,
-  errorResult,
-  successResult,
-} from '../../shared/types.js';
+import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 import { mapWithConcurrency, truncate } from '../../shared/utils.js';
 
-import type {
-  BatchImageInferenceOutput,
-  BatchPromptResult,
-  batchImageInferenceInputSchema,
-} from './schema.js';
+import type { BatchImageInferenceOutput, BatchPromptResult, batchImageInferenceInputSchema } from './schema.js';
 import type { z } from 'zod';
 
 type BatchImageInferenceInputType = z.infer<typeof batchImageInferenceInputSchema>;
@@ -31,14 +21,10 @@ interface ImageInferenceApiResponse {
   readonly imageDataURI?: string;
   readonly seed?: number;
   readonly cost?: number;
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response property
   readonly NSFWContent?: boolean;
 }
 
-function buildApiRequest(
-  prompt: string,
-  input: BatchImageInferenceInputType,
-): Record<string, unknown> {
+function buildApiRequest(prompt: string, input: BatchImageInferenceInputType): Record<string, unknown> {
   const request: Record<string, unknown> = {
     positivePrompt: prompt,
     model: input.model,
@@ -86,10 +72,7 @@ async function processPrompt(
     const requestParams = buildApiRequest(prompt, input);
     const task = createTaskRequest('imageInference', requestParams);
 
-    const response = await client.requestSingle<ImageInferenceApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await client.requestSingle<ImageInferenceApiResponse>(task, { signal: context?.signal });
 
     return {
       prompt,
@@ -175,9 +158,10 @@ export async function batchImageInference(
     };
 
     const allFailed = successful === 0 && failed > 0;
-    const statusMessage = failed > 0
-      ? `Generated ${String(successful)}/${String(prompts.length)} images with ${String(failed)} failures`
-      : `Successfully generated ${String(successful)} images`;
+    const statusMessage =
+      failed > 0
+        ? `Generated ${String(successful)}/${String(prompts.length)} images with ${String(failed)} failures`
+        : `Successfully generated ${String(successful)} images`;
 
     return allFailed ? errorResult(statusMessage, output) : successResult(statusMessage, output, totalCost);
   } catch (error) {
@@ -220,7 +204,6 @@ export const batchImageInferenceToolDefinition = {
         type: 'number',
         description: 'Number of diffusion steps (1-100)',
       },
-      // eslint-disable-next-line @typescript-eslint/naming-convention -- API parameter name
       CFGScale: {
         type: 'number',
         description: 'Classifier-Free Guidance scale (0-50)',

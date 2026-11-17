@@ -5,6 +5,53 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.0.0] - 2026-11-17
+
+### Breaking
+
+- `/tmp` is no longer a default allowed file root; it is world-writable, so any local
+  user could plant files or symlinks there. Add it to `ALLOWED_FILE_ROOTS` to opt in.
+- Image URL inputs accept `https:` only. `http:`, `file:`, `javascript:` and non-image
+  `data:` URIs are rejected, including `imageUpload`'s `url` and `dataUri`.
+- Node.js 26.13.1 or newer is required (security release).
+- A response with no balance, caption or transcript is now an error result instead of a
+  success reporting `USD 0.00` or empty text.
+
+### Security
+
+- File and folder paths are confined by their real path: a symlinked parent directory can
+  no longer escape the allowed roots, `/tmpevil` no longer matches root `/tmp`, and roots
+  that are themselves symlinks work.
+- `imageUpload` enforces `MAX_FILE_SIZE_MB` before reading a local file.
+- HTTP errors no longer return the raw response body; `apiCode` carries only the structured
+  Runware code, details are bounded, and the API key is redacted from every error.
+- `hono` 4.13.19 and `@hono/node-server` 2.1.9 resolve all seven open advisories. The
+  production dependency audit reports zero findings.
+
+### Fixed
+
+- Session resources (generated images, videos, audio, session history, analytics) were never
+  populated; successful generations are now recorded.
+- Analytics periods (`day`, `week`, `month`) filter by time instead of all returning session totals.
+- Progress notifications are sent only when the client supplies a `progressToken`, and echo it
+  with its original type.
+- Every cancellation path reports the same `Polling was cancelled` error; polling and the rate
+  limiter no longer leak abort listeners.
+- The rate limiter admits concurrent waiters one token at a time instead of releasing them together.
+- AIR model IDs with dotted or named versions (`klingai:1.5@1`, `sync:1.9.1@1`) are accepted.
+
+### Changed
+
+- TypeScript 7 with a plain `tsc` build; tsup removed.
+- ESLint replaced by Biome with a strict lint and format configuration.
+- All dependencies moved to their latest releases.
+- CI runs only on pull requests (`CI`, `SAST`, `CodeQL`); merging a version bump to `main`
+  publishes to npm and creates the tag and GitHub release. `npm run sast` runs CodeQL locally.
+- The test suite was rebuilt around behaviour that catches bugs: end-to-end MCP protocol tests
+  through an in-process server and security tests on real temp directories replace ~900
+  change-detector tests. Coverage thresholds were removed.
+- Dead code and unused exports removed.
+
 ## [2.0.4] - 2026-10-30
 
 ### Security

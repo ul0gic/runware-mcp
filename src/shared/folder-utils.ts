@@ -1,57 +1,32 @@
-import { type Dirent } from 'node:fs';
+// Does:  Validates a folder against the allowed roots and walks it for files with the given extensions.
+// Holds: Walks yield only regular files and descend only real directories; symlink entries are skipped, never followed.
+
+import type { Dirent } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
 import path from 'node:path';
 
-import { FolderNotFoundError, FileError } from './errors.js';
-import { isPathSafe, resolveAndValidatePath } from './file-utils.js';
+import { FolderNotFoundError, FileError, PathTraversalError } from './errors.js';
+import { resolveAndValidatePath } from './file-utils.js';
 
-/** Lowercase, leading dot included — compare against `path.extname(x).toLowerCase()`. */
-export const IMAGE_EXTENSIONS = new Set([
-  '.jpg',
-  '.jpeg',
-  '.png',
-  '.webp',
-  '.gif',
-  '.bmp',
-]);
-
-export const VIDEO_EXTENSIONS = new Set([
-  '.mp4',
-  '.webm',
-  '.mov',
-]);
-
-export const AUDIO_EXTENSIONS = new Set([
-  '.mp3',
-  '.wav',
-  '.ogg',
-]);
+// Holds: Lowercase with the leading dot, to compare against `path.extname(x).toLowerCase()`.
+export const IMAGE_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp']);
 
 interface WalkFolderOptions {
-  /** Lowercase extensions with leading dot; unset includes every file. */
   readonly extensions?: ReadonlySet<string>;
 
-  /** Default: false. */
   readonly recursive?: boolean;
 
-  /** 1 = immediate children only. Unset means unlimited; ignored unless recursive. */
+  // Holds: 0 lists only the folder itself and each step adds one subdirectory level; ignored unless recursive.
   readonly maxDepth?: number;
 
-  /** Skips dot-prefixed files and directories. Default: true. */
   readonly skipHidden?: boolean;
 }
 
-/** Yields absolute paths of files under an allowed root. */
 async function* walkFolder(
   folderPath: string,
   options: WalkFolderOptions = {},
 ): AsyncGenerator<string, void, undefined> {
-  const {
-    extensions,
-    recursive = false,
-    maxDepth,
-    skipHidden = true,
-  } = options;
+  const { extensions, recursive = false, maxDepth, skipHidden = true } = options;
 
   const resolvedPath = await validateFolder(folderPath);
 
@@ -80,10 +55,7 @@ function shouldYieldFile(fileName: string, extensions: ReadonlySet<string> | und
   return extensions.has(ext);
 }
 
-function shouldRecurse(
-  state: WalkState,
-  currentDepth: number,
-): boolean {
+function shouldRecurse(state: WalkState, currentDepth: number): boolean {
   if (!state.recursive) {
     return false;
   }
@@ -95,7 +67,6 @@ function shouldRecurse(
 
 async function readDirectoryEntries(folderPath: string): Promise<Dirent[]> {
   try {
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- only reached from walkFolder, whose root is validated by validateFolder
     return await readdir(folderPath, { withFileTypes: true });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -128,36 +99,25 @@ async function* walkFolderInternal(
   }
 }
 
-export async function getImagesInFolder(
-  folderPath: string,
-  recursive = false,
-): Promise<string[]> {
-  const images: string[] = await Array.fromAsync(walkFolder(folderPath, {
-    extensions: IMAGE_EXTENSIONS,
-    recursive,
-  }));
+export async function getImagesInFolder(folderPath: string, recursive = false): Promise<string[]> {
+  const images: string[] = await Array.fromAsync(
+    walkFolder(folderPath, {
+      extensions: IMAGE_EXTENSIONS,
+      recursive,
+    }),
+  );
 
   return images;
 }
 
+// Holds: Returns the folder's real path; a folder reached through a symlink must still resolve inside an allowed root.
 export async function validateFolder(folderPath: string): Promise<string> {
-  if (!isPathSafe(folderPath)) {
-    throw new FolderNotFoundError(
-      `Folder path is not under an allowed root: ${folderPath}`,
-      folderPath,
-    );
-  }
-
   try {
     const resolvedPath = await resolveAndValidatePath(folderPath);
-    // eslint-disable-next-line security/detect-non-literal-fs-filename -- path validated above
     const stats = await stat(resolvedPath);
 
     if (!stats.isDirectory()) {
-      throw new FolderNotFoundError(
-        `Path is not a directory: ${folderPath}`,
-        folderPath,
-      );
+      throw new FolderNotFoundError(`Path is not a directory: ${folderPath}`, folderPath);
     }
 
     return resolvedPath;
@@ -165,9 +125,9 @@ export async function validateFolder(folderPath: string): Promise<string> {
     if (error instanceof FolderNotFoundError) {
       throw error;
     }
-    throw new FolderNotFoundError(
-      `Folder not found or not accessible: ${folderPath}`,
-      folderPath,
-    );
+    if (error instanceof PathTraversalError) {
+      throw new FolderNotFoundError(`Folder path is not under an allowed root: ${folderPath}`, folderPath);
+    }
+    throw new FolderNotFoundError(`Folder not found or not accessible: ${folderPath}`, folderPath);
   }
 }

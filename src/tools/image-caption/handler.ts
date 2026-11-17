@@ -1,5 +1,8 @@
+// Does:  Captions an image with a vision-language model in one synchronous caption task.
+// Holds: A response without caption text is an error result, never a success with an empty caption.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
-import { wrapError } from '../../shared/errors.js';
+import { GenerationFailedError, wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, successResult, errorResult } from '../../shared/types.js';
 
@@ -31,8 +34,14 @@ function buildApiRequest(input: ImageCaptionInput): Record<string, unknown> {
 }
 
 function processResponse(response: ImageCaptionApiResponse): ImageCaptionOutput {
+  if (response.text === undefined) {
+    throw new GenerationFailedError('Caption response did not include text', {
+      taskType: response.taskType,
+      taskUUID: response.taskUUID,
+    });
+  }
   return {
-    text: response.text ?? '',
+    text: response.text,
     ...(response.structuredData !== undefined && { structuredData: response.structuredData }),
     ...(response.cost !== undefined && { cost: response.cost }),
   };
@@ -51,10 +60,7 @@ export async function imageCaption(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('caption', requestParams);
 
-    const response = await runwareClient.requestSingle<ImageCaptionApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.requestSingle<ImageCaptionApiResponse>(task, { signal: context?.signal });
 
     const output = processResponse(response);
 

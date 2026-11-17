@@ -18,7 +18,7 @@ validation, reusable prompt templates, and session resources.
 
 ## Requirements
 
-- Node.js 26 or newer
+- Node.js 26.13.1 or newer
 - A [Runware API key](https://runware.ai)
 
 Runware inference and storage operations may incur usage charges.
@@ -43,29 +43,29 @@ Add the server to your MCP client configuration:
 
 Restart the client after saving the configuration.
 
-| Client | Common configuration location |
-|---|---|
-| Claude Code | `~/.claude.json` or project `.mcp.json` |
-| Claude Desktop (macOS) | `~/Library/Application Support/Claude/claude_desktop_config.json` |
-| Claude Desktop (Linux) | `~/.config/Claude/claude_desktop_config.json` |
-| Claude Desktop (Windows) | `%APPDATA%\Claude\claude_desktop_config.json` |
-| Cursor | Project `.cursor/mcp.json` |
-| Codex CLI | `~/.codex/config.toml` or project `.codex/config.toml` |
-| VS Code | Project `.vscode/mcp.json` |
+| Client                   | Common configuration location                                     |
+| ------------------------ | ----------------------------------------------------------------- |
+| Claude Code              | `~/.claude.json` or project `.mcp.json`                           |
+| Claude Desktop (macOS)   | `~/Library/Application Support/Claude/claude_desktop_config.json` |
+| Claude Desktop (Linux)   | `~/.config/Claude/claude_desktop_config.json`                     |
+| Claude Desktop (Windows) | `%APPDATA%\Claude\claude_desktop_config.json`                     |
+| Cursor                   | Project `.cursor/mcp.json`                                        |
+| Codex CLI                | `~/.codex/config.toml` or project `.codex/config.toml`            |
+| VS Code                  | Project `.vscode/mcp.json`                                        |
 
 Configuration formats vary by client. Clients that use TOML require the
 equivalent TOML configuration.
 
 ## Tools
 
-| Area | Tools |
-|---|---|
-| Unified API and discovery | `runInference`, `listModels`, `modelDetails`, `modelExamples`, `modelPricing`, `listCapabilities`, `modelSchema`, `getTaskDetails` |
+| Area                         | Tools                                                                                                                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unified API and discovery    | `runInference`, `listModels`, `modelDetails`, `modelExamples`, `modelPricing`, `listCapabilities`, `modelSchema`, `getTaskDetails`                                                             |
 | Images and creative controls | `imageInference`, `photoMaker`, `imageUpscale`, `imageBackgroundRemoval`, `imageCaption`, `imageMasking`, `imageUpload`, `vectorize`, `promptEnhance`, `controlNetPreprocess`, `styleTransfer` |
-| Video | `videoInference`, `listVideoModels`, `getVideoModelInfo` |
-| Audio, text, and 3D | `audioInference`, `transcription`, `textInference`, `threeDInference` |
-| Models, account, and storage | `modelSearch`, `costEstimate`, `accountBalance`, `accountManagement`, `mediaStorage`, `modelUpload`, `training` |
-| Batch and folders | `processFolder`, `batchImageInference`, `watchFolder` |
+| Video                        | `videoInference`, `listVideoModels`, `getVideoModelInfo`                                                                                                                                       |
+| Audio, text, and 3D          | `audioInference`, `transcription`, `textInference`, `threeDInference`                                                                                                                          |
+| Models, account, and storage | `modelSearch`, `costEstimate`, `accountBalance`, `accountManagement`, `mediaStorage`, `modelUpload`, `training`                                                                                |
+| Batch and folders            | `processFolder`, `batchImageInference`, `watchFolder`                                                                                                                                          |
 
 `listModels` uses Runware's live catalog. `listVideoModels` is an offline
 compatibility catalog and may not reflect newly released models.
@@ -85,14 +85,14 @@ media deletion, or webhook configuration.
 
 The server exposes six MCP resource providers:
 
-| Resource | Purpose |
-|---|---|
-| `runware://images/{id}` | Generated images and metadata |
-| `runware://videos/{id}` | Generated videos and metadata |
-| `runware://audio/{id}` | Generated audio and metadata |
-| `runware://session/history` | Current session history |
-| `runware://analytics/{period}` | Session usage analytics |
-| `runware://docs/...` | Built-in concepts, tools, features, providers, and guides |
+| Resource                       | Purpose                                                   |
+| ------------------------------ | --------------------------------------------------------- |
+| `runware://images/{id}`        | Generated images and metadata                             |
+| `runware://videos/{id}`        | Generated videos and metadata                             |
+| `runware://audio/{id}`         | Generated audio and metadata                              |
+| `runware://session/history`    | Current session history                                   |
+| `runware://analytics/{period}` | Session usage analytics                                   |
+| `runware://docs/...`           | Built-in concepts, tools, features, providers, and guides |
 
 Reusable prompt templates include `product-photo`, `avatar-generator`,
 `video-scene`, `style-transfer`, `ui-mockup`, `thumbnail`, and
@@ -102,18 +102,22 @@ Reusable prompt templates include `product-photo`, `avatar-generator`,
 
 Only `RUNWARE_API_KEY` is required.
 
-| Variable | Default | Purpose |
-|---|---:|---|
-| `RUNWARE_API_KEY` | required | Runware API credential |
-| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, or `error` |
-| `MAX_FILE_SIZE_MB` | `50` | Maximum local upload size |
-| `ALLOWED_FILE_ROOTS` | safe system defaults | Comma-separated permitted filesystem roots |
-| `REQUEST_TIMEOUT_MS` | `60000` | Timeout for individual API requests |
-| `POLL_MAX_ATTEMPTS` | `150` | Maximum async polling attempts |
-| `RATE_LIMIT_MAX_TOKENS` | `10` | Local request burst capacity |
-| `RATE_LIMIT_REFILL_RATE` | `1` | Local tokens restored per second |
-| `WATCH_FOLDERS` | none | Comma-separated folders available to the watcher |
-| `WATCH_DEBOUNCE_MS` | `500` | Folder watcher debounce interval |
+| Variable                 |            Default | Purpose                                          |
+| ------------------------ | -----------------: | ------------------------------------------------ |
+| `RUNWARE_API_KEY`        |           required | Runware API credential                           |
+| `LOG_LEVEL`              |             `info` | `debug`, `info`, `warn`, or `error`              |
+| `MAX_FILE_SIZE_MB`       |               `50` | Maximum local upload size                        |
+| `ALLOWED_FILE_ROOTS`     | home media folders | Comma-separated permitted filesystem roots       |
+| `REQUEST_TIMEOUT_MS`     |            `60000` | Timeout for individual API requests              |
+| `POLL_MAX_ATTEMPTS`      |              `150` | Maximum async polling attempts                   |
+| `RATE_LIMIT_MAX_TOKENS`  |               `10` | Local request burst capacity                     |
+| `RATE_LIMIT_REFILL_RATE` |                `1` | Local tokens restored per second                 |
+| `WATCH_FOLDERS`          |               none | Comma-separated folders available to the watcher |
+| `WATCH_DEBOUNCE_MS`      |              `500` | Folder watcher debounce interval                 |
+
+When `ALLOWED_FILE_ROOTS` is unset, local file access is limited to `~/Pictures`, `~/Images`, `~/Downloads`,
+`~/Documents` and `~/Desktop`. The world-writable `/tmp` is not a default root; add it to `ALLOWED_FILE_ROOTS`
+explicitly if you need it.
 
 ## Security
 
@@ -139,14 +143,14 @@ npm ci
 npm run check
 ```
 
-| Command | Purpose |
-|---|---|
-| `npm run dev` | Run in watch mode |
-| `npm run check` | Typecheck, lint, test, and build |
-| `npm run test:coverage` | Generate the coverage report |
-| `npm run audit:security` | Check known dependency vulnerabilities |
+| Command                    | Purpose                                   |
+| -------------------------- | ----------------------------------------- |
+| `npm run dev`              | Run in watch mode                         |
+| `npm run check`            | Typecheck, lint, test, and build          |
+| `npm run test:coverage`    | Generate the coverage report              |
+| `npm run audit:security`   | Check known dependency vulnerabilities    |
 | `npm run audit:signatures` | Verify registry signatures and provenance |
-| `npm run audit:outdated` | Check production dependency freshness |
+| `npm run audit:outdated`   | Check production dependency freshness     |
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for implementation and testing guidance,
 and [CHANGELOG.md](CHANGELOG.md) for release history.

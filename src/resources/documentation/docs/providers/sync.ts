@@ -1,3 +1,5 @@
+// Does:  Documents Sync.so audio-driven lip-sync and its provider settings.
+// Holds: Served at runware://docs/providers/sync; its biome-ignore lines mark API field paths, not credentials.
 import type { DocResource } from '../../types.js';
 
 export const syncDoc: DocResource = {
@@ -34,6 +36,7 @@ export const syncDoc: DocResource = {
           'Audio segments for multi-audio editing. Each segment specifies a time range (start/end in seconds) and an audio source (URL or UUID). Allows different audio tracks for different parts of the video.',
       },
       {
+        // biome-ignore lint/security/noSecrets: API field path, not a credential.
         name: 'audioSegments[].start',
         type: 'number',
         required: true,
@@ -41,6 +44,7 @@ export const syncDoc: DocResource = {
         description: 'Start time of the audio segment in seconds.',
       },
       {
+        // biome-ignore lint/security/noSecrets: API field path, not a credential.
         name: 'audioSegments[].end',
         type: 'number',
         required: true,
@@ -48,6 +52,7 @@ export const syncDoc: DocResource = {
         description: 'End time of the audio segment in seconds.',
       },
       {
+        // biome-ignore lint/security/noSecrets: API field path, not a credential.
         name: 'audioSegments[].audio',
         type: 'string',
         required: true,
@@ -114,7 +119,7 @@ export const syncDoc: DocResource = {
       'Sync.so works with both video and image inputs. Use a video for natural motion with synced lips, or an image for a talking head from a still photo.',
       'Enable speakerDetection in any scene with more than one person visible. It prevents the model from incorrectly syncing non-speaking faces.',
       'Enable occlusionHandling when the subject is animated or expressive. Hands near the face, microphones, or drinking motions can disrupt lip sync without this.',
-      'Audio segments must not overlap. Ensure each segment\'s end time matches the next segment\'s start time for seamless dubbing.',
+      "Audio segments must not overlap. Ensure each segment's end time matches the next segment's start time for seamless dubbing.",
       'Sync.so supports up to 60 seconds, much longer than other video providers. It is optimized for long-form talking head and dubbing content.',
       'For multi-language dubbing, generate the translated audio first (using audioInference or external TTS), then use Sync.so to match lip movements to the new language.',
     ],

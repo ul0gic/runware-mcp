@@ -1,3 +1,5 @@
+// Does:  Documents sync versus async task delivery and how async results are polled.
+// Holds: States "sync" as the deliveryMethod default; registered directly by registry.ts under concepts/async-delivery.
 import type { DocResource } from '../../types.js';
 
 export const asyncDeliveryDoc: DocResource = {
@@ -26,7 +28,8 @@ export const asyncDeliveryDoc: DocResource = {
       {
         name: 'webhookURL',
         type: 'string',
-        description: 'HTTP endpoint to receive a POST request with the task result when it completes. Supports authentication tokens in query parameters.',
+        description:
+          'HTTP endpoint to receive a POST request with the task result when it completes. Supports authentication tokens in query parameters.',
       },
     ],
     examples: [

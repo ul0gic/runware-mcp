@@ -1,9 +1,9 @@
+// Does:  model schema registry strips internal fields, infers the task type, caches, and maps 404 to undefined.
+// Holds: Global fetch is stubbed; the real registry and its cache run.
+
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  clearModelSchemaCache,
-  resolveModelSchema,
-} from '../../../src/integrations/runware/schema-registry.js';
+import { clearModelSchemaCache, resolveModelSchema } from '../../../src/integrations/runware/schema-registry.js';
 
 describe('Runware model schema registry', () => {
   afterEach(() => {
@@ -12,19 +12,24 @@ describe('Runware model schema registry', () => {
   });
 
   it('removes internal fields, infers task type, and caches results', async () => {
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({
-      requestSchema: {
-        $schema: 'https://json-schema.org/draft/2020-12/schema',
-        type: 'object',
-        properties: {
-          taskType: { const: '3dInference' },
-          taskUUID: { type: 'string' },
-          model: { type: 'string' },
-          positivePrompt: { type: 'string' },
-        },
-        required: ['taskType', 'taskUUID', 'model'],
-      },
-    }), { status: 200 }));
+    const fetchMock = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          requestSchema: {
+            $schema: 'https://json-schema.org/draft/2020-12/schema',
+            type: 'object',
+            properties: {
+              taskType: { const: '3dInference' },
+              taskUUID: { type: 'string' },
+              model: { type: 'string' },
+              positivePrompt: { type: 'string' },
+            },
+            required: ['taskType', 'taskUUID', 'model'],
+          },
+        }),
+        { status: 200 },
+      ),
+    );
     vi.stubGlobal('fetch', fetchMock);
 
     const first = await resolveModelSchema('tripo:v3.1@0');

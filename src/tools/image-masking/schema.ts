@@ -1,3 +1,6 @@
+// Does:  Validates imageMasking input and describes the mask and detections it returns.
+// Holds: confidence is bounded to 0-1, maxDetections to 1-20, and maskBlur can never be negative.
+
 import { z } from 'zod';
 
 import {
@@ -8,21 +11,17 @@ import {
 } from '../../shared/validation.js';
 
 export const imageMaskingInputSchema = z.object({
-  /** Accepts an image UUID, URL, base64 payload, or data URI. */
   inputImage: imageInputSchema,
 
-  /** Default is face_yolov8n. */
   model: z.string().optional().default('runware:35@1'),
 
-  /** Lower values yield more detections, higher values fewer but more accurate ones. */
   confidence: z.number().min(0).max(1).optional().default(0.25),
 
   maxDetections: z.number().int().min(1).max(20).optional().default(6),
 
-  /** Pixels added to the mask area; negative values shrink it. */
+  // Why: Negative padding is valid and shrinks the mask, so this field has no lower bound.
   maskPadding: z.number().int().optional().default(4),
 
-  /** Edge fade-out in pixels. */
   maskBlur: z.number().int().min(0).optional().default(4),
 
   outputType: outputTypeSchema.optional(),
@@ -35,17 +34,12 @@ export const imageMaskingInputSchema = z.object({
 });
 
 const detectionBoxSchema = z.object({
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   x_min: z.number(),
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   y_min: z.number(),
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   x_max: z.number(),
-  // eslint-disable-next-line @typescript-eslint/naming-convention -- API response field
   y_max: z.number(),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const imageMaskingOutputSchema = z.object({
   inputImageUUID: z.string().optional(),
 
@@ -59,7 +53,6 @@ const imageMaskingOutputSchema = z.object({
 
   detections: z.array(detectionBoxSchema),
 
-  /** Cost in USD. */
   cost: z.number().optional(),
 });
 

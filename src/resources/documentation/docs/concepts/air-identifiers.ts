@@ -1,3 +1,5 @@
+// Does:  Documents the AIR `provider:model@version` identifier format models are referenced by.
+// Holds: Served at runware://docs/concepts/air-identifiers; registered by a direct registerDoc call in registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const airIdentifiersDoc: DocResource = {
@@ -45,8 +47,7 @@ export const airIdentifiersDoc: DocResource = {
       {
         title: 'ControlNet model',
         input: { model: 'civitai:272689@307084' },
-        explanation:
-          'ControlNet models follow the same AIR format. Use in the controlNet array with a guideImage.',
+        explanation: 'ControlNet models follow the same AIR format. Use in the controlNet array with a guideImage.',
       },
     ],
     tips: [

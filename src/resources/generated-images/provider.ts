@@ -1,3 +1,5 @@
+// Does:  Keeps this session's generated images in memory and serves them at runware://images/{id}.
+// Holds: In-process only and capped at 10,000 entries, evicting the earliest-inserted id first.
 import { truncate } from '../../shared/utils.js';
 
 import type { GeneratedImageEntry } from './types.js';
@@ -22,7 +24,7 @@ export function getSessionImages(): readonly GeneratedImageEntry[] {
   return SESSION_IMAGES.values().toArray();
 }
 
-/** Test-support hook — production code never clears the store. */
+// Why: Tests reset the store with this; production code never clears it, so it is not dead code.
 export function clearSessionImages(): void {
   SESSION_IMAGES.clear();
 }
@@ -38,11 +40,9 @@ export const generatedImagesProvider: ResourceProvider = {
   mimeType: 'application/json',
 
   list(): Promise<readonly ResourceEntry[]> {
-    const entries: ResourceEntry[] = Array.from(SESSION_IMAGES.values(), image => ({
+    const entries: ResourceEntry[] = Array.from(SESSION_IMAGES.values(), (image) => ({
       uri: `${URI_PREFIX}${image.id}`,
-      name: image.prompt.length > 0
-        ? truncate(image.prompt, MAX_PROMPT_DISPLAY_LENGTH)
-        : `Image ${image.id}`,
+      name: image.prompt.length > 0 ? truncate(image.prompt, MAX_PROMPT_DISPLAY_LENGTH) : `Image ${image.id}`,
       description: `${String(image.width)}x${String(image.height)} via ${image.model}`,
       mimeType: 'application/json',
     }));

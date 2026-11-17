@@ -1,7 +1,10 @@
+// Does:  Builds the thumbnail prompt with platform-specific dimensions.
+// Holds: An unknown platform falls back to YouTube 1280x720 dimensions.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'thumbnail';
-const PROMPT_DESCRIPTION = 'Create engaging thumbnails for YouTube, blogs, social media, and more with platform-optimized dimensions.';
+const PROMPT_DESCRIPTION =
+  'Create engaging thumbnails for YouTube, blogs, social media, and more with platform-optimized dimensions.';
 
 const DEFAULT_PLATFORM = 'youtube';
 const DEFAULT_STYLE = 'bold-text';
@@ -102,9 +105,10 @@ export const thumbnail: PromptTemplate = {
     const dimensionHeight = dimensions?.height ?? 720;
     const dimensionLabel = dimensions?.label ?? 'thumbnail';
 
-    const textClause = textOverlay !== undefined && textOverlay.length > 0
-      ? ` Bold text overlay reading "${textOverlay}" in large, impactful font.`
-      : '';
+    const textClause =
+      textOverlay !== undefined && textOverlay.length > 0
+        ? ` Bold text overlay reading "${textOverlay}" in large, impactful font.`
+        : '';
 
     const prompt = [
       `Eye-catching thumbnail about "${topic}".`,

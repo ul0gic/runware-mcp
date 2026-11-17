@@ -1,10 +1,13 @@
+// Does:  Documents the imageUpload tool and reuse of the returned image UUID in other tools.
+// Holds: Served at runware://docs/tools/image-upload; registered by a direct registerDoc call in registry.ts.
 import type { DocResource } from '../../types.js';
 
 export const imageUploadDoc: DocResource = {
   id: 'image-upload',
   category: 'tools',
   title: 'Image Upload',
-  summary: 'Upload images to Runware for use in subsequent operations like img2img, upscaling, background removal, and masking',
+  summary:
+    'Upload images to Runware for use in subsequent operations like img2img, upscaling, background removal, and masking',
   tags: ['upload', 'image', 'preparation', 'UUID', 'file'],
   content: {
     description:
@@ -53,7 +56,8 @@ export const imageUploadDoc: DocResource = {
         input: {
           filePath: '/home/user/images/reference.png',
         },
-        explanation: 'Uploads a local file. The MCP server reads the file and sends it as base64 to Runware. Returns an imageUUID.',
+        explanation:
+          'Uploads a local file. The MCP server reads the file and sends it as base64 to Runware. Returns an imageUUID.',
       },
     ],
     tips: [

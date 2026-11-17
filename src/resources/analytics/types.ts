@@ -1,3 +1,5 @@
+// Does:  Defines the usage-analytics document and its per-task, per-provider and per-model rows.
+// Holds: Type-only; period is one of day, week, month or all.
 export type AnalyticsPeriod = 'day' | 'week' | 'month' | 'all';
 
 export interface TaskTypeUsage {

@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/naming-convention -- CFGScale is the Runware API parameter name */
+// Does:  Guides combining ControlNet, LoRA, IP-Adapters and identity features in one request.
+// Holds: Parameter-free guide served at runware://docs/guides/combining-features; links to every feature it combines.
 import type { DocResource } from '../../types.js';
 
 const EXAMPLE_CHECKPOINT = 'civitai:101195@128078';
@@ -11,7 +12,8 @@ export const combiningFeaturesDoc: DocResource = {
   id: 'combining-features',
   category: 'guides',
   title: 'Combining Features',
-  summary: 'How to stack ControlNet, LoRA, IP-Adapters, embeddings, and identity preservation features together with weight balancing and compatibility rules',
+  summary:
+    'How to stack ControlNet, LoRA, IP-Adapters, embeddings, and identity preservation features together with weight balancing and compatibility rules',
   tags: ['ControlNet', 'LoRA', 'IP-Adapters', 'PuLID', 'embeddings', 'stacking', 'composition'],
   content: {
     description:

@@ -1,8 +1,7 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Converts a raster image to SVG in one synchronous vectorize task.
+// Holds: Unknown models are rejected locally before a rate-limit token is spent or any request is sent.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { RunwareApiError, wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
@@ -20,11 +19,10 @@ interface VectorizeApiResponse {
 }
 
 function validateModel(model: string): void {
-  if (!(VECTORIZE_MODELS as readonly string[]).includes(model)) {
-    throw new RunwareApiError(
-      `Invalid vectorize model: ${model}. Valid models: ${VECTORIZE_MODELS.join(', ')}`,
-      { apiCode: 'INVALID_MODEL' },
-    );
+  if (!VECTORIZE_MODELS.some((known) => known === model)) {
+    throw new RunwareApiError(`Invalid vectorize model: ${model}. Valid models: ${VECTORIZE_MODELS.join(', ')}`, {
+      apiCode: 'INVALID_MODEL',
+    });
   }
 }
 
@@ -55,7 +53,6 @@ function processResponse(response: VectorizeApiResponse): VectorizeOutput {
   };
 }
 
-/** Synchronous raster-to-SVG conversion — no polling involved. */
 export async function vectorize(
   input: VectorizeInput,
   client?: RunwareClient,

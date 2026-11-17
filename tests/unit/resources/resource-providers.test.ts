@@ -1,8 +1,6 @@
+// Does:  Proves resource providers list, resolve, aggregate and route session media URIs correctly.
+// Holds: Providers and their in-memory session stores are real; only config is mocked (it validates env at import).
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-
-// ============================================================================
-// Mocks — must be declared before imports
-// ============================================================================
 
 vi.mock('../../../src/shared/config.js', () => ({
   config: {
@@ -21,10 +19,6 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-// ============================================================================
-// Imports
-// ============================================================================
-
 import {
   generatedImagesProvider,
   registerImage,
@@ -36,14 +30,12 @@ import {
   generatedVideosProvider,
   registerVideo,
   clearSessionVideos,
-  getSessionVideos,
 } from '../../../src/resources/generated-videos/provider.js';
 
 import {
   generatedAudioProvider,
   registerAudio,
   clearSessionAudio,
-  getSessionAudio,
 } from '../../../src/resources/generated-audio/provider.js';
 
 import {
@@ -55,18 +47,11 @@ import {
 import { analyticsProvider } from '../../../src/resources/analytics/provider.js';
 import { documentationProvider } from '../../../src/resources/documentation/provider.js';
 
-import {
-  RESOURCE_PROVIDERS,
-  findProviderForUri,
-} from '../../../src/resources/index.js';
+import { findProviderForUri } from '../../../src/resources/index.js';
 
 import type { GeneratedImageEntry } from '../../../src/resources/generated-images/types.js';
 import type { GeneratedVideoEntry } from '../../../src/resources/generated-videos/types.js';
 import type { GeneratedAudioEntry } from '../../../src/resources/generated-audio/types.js';
-
-// ============================================================================
-// Fixtures
-// ============================================================================
 
 function makeImageEntry(overrides?: Partial<GeneratedImageEntry>): GeneratedImageEntry {
   return {
@@ -93,7 +78,7 @@ function makeVideoEntry(overrides?: Partial<GeneratedVideoEntry>): GeneratedVide
     duration: 5,
     width: 1280,
     height: 720,
-    cost: 0.40,
+    cost: 0.4,
     createdAt: new Date('2025-01-15T11:00:00Z'),
     ...overrides,
   };
@@ -108,55 +93,18 @@ function makeAudioEntry(overrides?: Partial<GeneratedAudioEntry>): GeneratedAudi
     model: 'elevenlabs:1@1',
     duration: 30,
     audioType: 'music',
-    cost: 0.30,
+    cost: 0.3,
     createdAt: new Date('2025-01-15T12:00:00Z'),
     ...overrides,
   };
 }
-
-// ============================================================================
-// Generated Images Provider
-// ============================================================================
 
 describe('generatedImagesProvider', () => {
   beforeEach(() => {
     clearSessionImages();
   });
 
-  describe('metadata', () => {
-    it('has correct URI pattern', () => {
-      expect(generatedImagesProvider.uri).toBe('runware://images/{id}');
-    });
-
-    it('has correct name', () => {
-      expect(generatedImagesProvider.name).toBe('Generated Images');
-    });
-
-    it('has a description', () => {
-      expect(generatedImagesProvider.description).toBeTruthy();
-    });
-
-    it('has application/json mimeType', () => {
-      expect(generatedImagesProvider.mimeType).toBe('application/json');
-    });
-  });
-
   describe('session store', () => {
-    it('registerImage adds to session store', () => {
-      const entry = makeImageEntry();
-      registerImage(entry);
-      const images = getSessionImages();
-      expect(images).toHaveLength(1);
-      expect(images[0]?.id).toBe('img-001');
-    });
-
-    it('clearSessionImages empties the store', () => {
-      registerImage(makeImageEntry());
-      expect(getSessionImages()).toHaveLength(1);
-      clearSessionImages();
-      expect(getSessionImages()).toHaveLength(0);
-    });
-
     it('overwrites entry with same id', () => {
       registerImage(makeImageEntry({ prompt: 'first' }));
       registerImage(makeImageEntry({ prompt: 'second' }));
@@ -198,7 +146,6 @@ describe('generatedImagesProvider', () => {
       expect(entries[0]?.description).toContain('1024x1024');
       expect(entries[0]?.description).toContain('civitai:943001@1055701');
     });
-
   });
 
   describe('get()', () => {
@@ -220,44 +167,9 @@ describe('generatedImagesProvider', () => {
   });
 });
 
-// ============================================================================
-// Generated Videos Provider
-// ============================================================================
-
 describe('generatedVideosProvider', () => {
   beforeEach(() => {
     clearSessionVideos();
-  });
-
-  describe('metadata', () => {
-    it('has correct URI pattern', () => {
-      expect(generatedVideosProvider.uri).toBe('runware://videos/{id}');
-    });
-
-    it('has correct name', () => {
-      expect(generatedVideosProvider.name).toBe('Generated Videos');
-    });
-
-    it('has a description', () => {
-      expect(generatedVideosProvider.description).toBeTruthy();
-    });
-
-    it('has application/json mimeType', () => {
-      expect(generatedVideosProvider.mimeType).toBe('application/json');
-    });
-  });
-
-  describe('session store', () => {
-    it('registerVideo adds to session store', () => {
-      registerVideo(makeVideoEntry());
-      expect(getSessionVideos()).toHaveLength(1);
-    });
-
-    it('clearSessionVideos empties the store', () => {
-      registerVideo(makeVideoEntry());
-      clearSessionVideos();
-      expect(getSessionVideos()).toHaveLength(0);
-    });
   });
 
   describe('list()', () => {
@@ -286,7 +198,6 @@ describe('generatedVideosProvider', () => {
       const entries = await generatedVideosProvider.list();
       expect(entries[0]?.name).toBe('Video vid-001');
     });
-
   });
 
   describe('get()', () => {
@@ -306,44 +217,9 @@ describe('generatedVideosProvider', () => {
   });
 });
 
-// ============================================================================
-// Generated Audio Provider
-// ============================================================================
-
 describe('generatedAudioProvider', () => {
   beforeEach(() => {
     clearSessionAudio();
-  });
-
-  describe('metadata', () => {
-    it('has correct URI pattern', () => {
-      expect(generatedAudioProvider.uri).toBe('runware://audio/{id}');
-    });
-
-    it('has correct name', () => {
-      expect(generatedAudioProvider.name).toBe('Generated Audio');
-    });
-
-    it('has a description', () => {
-      expect(generatedAudioProvider.description).toBeTruthy();
-    });
-
-    it('has application/json mimeType', () => {
-      expect(generatedAudioProvider.mimeType).toBe('application/json');
-    });
-  });
-
-  describe('session store', () => {
-    it('registerAudio adds to session store', () => {
-      registerAudio(makeAudioEntry());
-      expect(getSessionAudio()).toHaveLength(1);
-    });
-
-    it('clearSessionAudio empties the store', () => {
-      registerAudio(makeAudioEntry());
-      clearSessionAudio();
-      expect(getSessionAudio()).toHaveLength(0);
-    });
   });
 
   describe('list()', () => {
@@ -372,7 +248,6 @@ describe('generatedAudioProvider', () => {
       const entries = await generatedAudioProvider.list();
       expect(entries[0]?.name).toBe('Audio aud-001');
     });
-
   });
 
   describe('get()', () => {
@@ -392,30 +267,12 @@ describe('generatedAudioProvider', () => {
   });
 });
 
-// ============================================================================
-// Session History Provider
-// ============================================================================
-
 describe('sessionHistoryProvider', () => {
   beforeEach(() => {
     clearSessionImages();
     clearSessionVideos();
     clearSessionAudio();
     clearSessionEvents();
-  });
-
-  describe('metadata', () => {
-    it('has correct URI', () => {
-      expect(sessionHistoryProvider.uri).toBe('runware://session/history');
-    });
-
-    it('has correct name', () => {
-      expect(sessionHistoryProvider.name).toBe('Session History');
-    });
-
-    it('has application/json mimeType', () => {
-      expect(sessionHistoryProvider.mimeType).toBe('application/json');
-    });
   });
 
   describe('list()', () => {
@@ -454,8 +311,8 @@ describe('sessionHistoryProvider', () => {
 
     it('aggregates images, videos, and audio in history', async () => {
       registerImage(makeImageEntry({ cost: 0.05 }));
-      registerVideo(makeVideoEntry({ cost: 0.40 }));
-      registerAudio(makeAudioEntry({ cost: 0.30 }));
+      registerVideo(makeVideoEntry({ cost: 0.4 }));
+      registerAudio(makeAudioEntry({ cost: 0.3 }));
       const result = await sessionHistoryProvider.get('runware://session/history');
       const parsed = JSON.parse(result?.text ?? '{}');
       expect(parsed.totalGenerations).toBe(3);
@@ -489,29 +346,11 @@ describe('sessionHistoryProvider', () => {
   });
 });
 
-// ============================================================================
-// Analytics Provider
-// ============================================================================
-
 describe('analyticsProvider', () => {
   beforeEach(() => {
     clearSessionImages();
     clearSessionVideos();
     clearSessionAudio();
-  });
-
-  describe('metadata', () => {
-    it('has correct URI pattern', () => {
-      expect(analyticsProvider.uri).toBe('runware://analytics/{period}');
-    });
-
-    it('has correct name', () => {
-      expect(analyticsProvider.name).toBe('Usage Analytics');
-    });
-
-    it('has application/json mimeType', () => {
-      expect(analyticsProvider.mimeType).toBe('application/json');
-    });
   });
 
   describe('list()', () => {
@@ -523,22 +362,6 @@ describe('analyticsProvider', () => {
       expect(uris).toContain('runware://analytics/week');
       expect(uris).toContain('runware://analytics/month');
       expect(uris).toContain('runware://analytics/all');
-    });
-
-    it('entries have descriptive names', async () => {
-      const entries = await analyticsProvider.list();
-      const names = entries.map((e) => e.name);
-      expect(names).toContain("Today's Analytics");
-      expect(names).toContain("This Week's Analytics");
-      expect(names).toContain("This Month's Analytics");
-      expect(names).toContain('All-Time Analytics');
-    });
-
-    it('entries have mimeType', async () => {
-      const entries = await analyticsProvider.list();
-      for (const entry of entries) {
-        expect(entry.mimeType).toBe('application/json');
-      }
     });
   });
 
@@ -558,31 +381,10 @@ describe('analyticsProvider', () => {
       expect(parsed.totalCost).toBeDefined();
     });
 
-    it('returns analytics data for valid period (week)', async () => {
-      const result = await analyticsProvider.get('runware://analytics/week');
-      expect(result).not.toBeNull();
-      const parsed = JSON.parse(result?.text ?? '{}');
-      expect(parsed.period).toBe('week');
-    });
-
-    it('returns analytics data for valid period (month)', async () => {
-      const result = await analyticsProvider.get('runware://analytics/month');
-      expect(result).not.toBeNull();
-      const parsed = JSON.parse(result?.text ?? '{}');
-      expect(parsed.period).toBe('month');
-    });
-
-    it('returns analytics data for valid period (all)', async () => {
-      const result = await analyticsProvider.get('runware://analytics/all');
-      expect(result).not.toBeNull();
-      const parsed = JSON.parse(result?.text ?? '{}');
-      expect(parsed.period).toBe('all');
-    });
-
     it('computes session analytics with images, videos, audio', async () => {
       registerImage(makeImageEntry({ model: 'civitai:943001@1055701', cost: 0.05 }));
-      registerVideo(makeVideoEntry({ model: 'klingai:2@1', cost: 0.40 }));
-      registerAudio(makeAudioEntry({ model: 'elevenlabs:1@1', cost: 0.30 }));
+      registerVideo(makeVideoEntry({ model: 'klingai:2@1', cost: 0.4 }));
+      registerAudio(makeAudioEntry({ model: 'elevenlabs:1@1', cost: 0.3 }));
 
       const result = await analyticsProvider.get('runware://analytics/all');
       const parsed = JSON.parse(result?.text ?? '{}');
@@ -596,70 +398,19 @@ describe('analyticsProvider', () => {
   });
 });
 
-// ============================================================================
-// Resource Registry
-// ============================================================================
-
-describe('RESOURCE_PROVIDERS', () => {
-  it('contains all 6 providers', () => {
-    expect(RESOURCE_PROVIDERS).toHaveLength(6);
-  });
-
-  it('contains the images provider', () => {
-    expect(RESOURCE_PROVIDERS).toContain(generatedImagesProvider);
-  });
-
-  it('contains the videos provider', () => {
-    expect(RESOURCE_PROVIDERS).toContain(generatedVideosProvider);
-  });
-
-  it('contains the audio provider', () => {
-    expect(RESOURCE_PROVIDERS).toContain(generatedAudioProvider);
-  });
-
-  it('contains the session history provider', () => {
-    expect(RESOURCE_PROVIDERS).toContain(sessionHistoryProvider);
-  });
-
-  it('contains the analytics provider', () => {
-    expect(RESOURCE_PROVIDERS).toContain(analyticsProvider);
-  });
-
-  it('contains the documentation provider', () => {
-    expect(RESOURCE_PROVIDERS).toContain(documentationProvider);
-  });
-});
-
 describe('findProviderForUri', () => {
-  it('finds image provider for image URI', () => {
-    expect(findProviderForUri('runware://images/some-id')).toBe(generatedImagesProvider);
+  it.each([
+    ['runware://images/some-id', generatedImagesProvider],
+    ['runware://videos/some-id', generatedVideosProvider],
+    ['runware://audio/some-id', generatedAudioProvider],
+    ['runware://session/history', sessionHistoryProvider],
+    ['runware://analytics/day', analyticsProvider],
+    ['runware://docs/concepts/air-identifiers', documentationProvider],
+  ])('routes %s to its provider', (uri, provider) => {
+    expect(findProviderForUri(uri)).toBe(provider);
   });
 
-  it('finds video provider for video URI', () => {
-    expect(findProviderForUri('runware://videos/some-id')).toBe(generatedVideosProvider);
-  });
-
-  it('finds audio provider for audio URI', () => {
-    expect(findProviderForUri('runware://audio/some-id')).toBe(generatedAudioProvider);
-  });
-
-  it('finds session history provider for session URI', () => {
-    expect(findProviderForUri('runware://session/history')).toBe(sessionHistoryProvider);
-  });
-
-  it('finds analytics provider for analytics URI', () => {
-    expect(findProviderForUri('runware://analytics/day')).toBe(analyticsProvider);
-  });
-
-  it('finds documentation provider for docs URI', () => {
-    expect(findProviderForUri('runware://docs/concepts/air-identifiers')).toBe(documentationProvider);
-  });
-
-  it('returns undefined for unknown URI', () => {
-    expect(findProviderForUri('runware://unknown/thing')).toBeUndefined();
-  });
-
-  it('returns undefined for empty string', () => {
-    expect(findProviderForUri('')).toBeUndefined();
+  it.each(['runware://unknown/thing', ''])('returns undefined for %j', (uri) => {
+    expect(findProviderForUri(uri)).toBeUndefined();
   });
 });

@@ -4,24 +4,19 @@ on:
   pull_request:
     branches:
       - main
-  push:
-    branches:
-      - main
-  schedule:
-    - cron: '37 9 * * 3'
 
 permissions:
   contents: read
 
 concurrency:
-  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  group: codeql-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   analyze:
     name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 15
     permissions:
       actions: read
       contents: read
@@ -50,18 +45,14 @@ jobs:
         with:
           category: /language:${{ matrix.language }}
 
-  required:
-    name: CodeQL / Required
+  sast:
+    name: SAST
     if: always()
-    needs:
-      - analyze
+    needs: analyze
     runs-on: ubuntu-24.04
     timeout-minutes: 2
-    env:
-      ANALYZE_RESULT: ${{ needs.analyze.result }}
     steps:
-      - name: Confirm CodeQL analyses passed
-        run: |
-          if [[ "$ANALYZE_RESULT" != "success" ]]; then
-            exit 1
-          fi
+      - name: Require every language analysis to succeed
+        env:
+          RESULT: ${{ needs.analyze.result }}
+        run: test "$RESULT" = success

@@ -1,25 +1,22 @@
-import {
-  type RunwareClient,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Applies an art style to an image by captioning it if needed, then running img2img on it.
+// Holds: Reported cost covers both the caption and the generation; a failed caption stops before any generation runs.
+
+import { z } from 'zod';
+
+import { type RunwareClient, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
-import {
-  type ToolContext,
-  type ToolResult,
-  errorResult,
-  successResult,
-} from '../../shared/types.js';
+import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 import { imageCaption } from '../image-caption/index.js';
 import { imageInference } from '../image-inference/index.js';
 
-import type {
-  ArtStyle,
-  ColorPalette,
-  Intensity,
-  StyleTransferOutput,
-  styleTransferInputSchema,
-} from './schema.js';
-import type { z } from 'zod';
+import type { ArtStyle, ColorPalette, Intensity, StyleTransferOutput, styleTransferInputSchema } from './schema.js';
+
+const captionDataSchema = z.object({ text: z.string().optional() });
+
+const inferenceDataSchema = z.object({
+  images: z.array(z.object({ imageUUID: z.string(), imageURL: z.string().optional() })).optional(),
+  cost: z.number().optional(),
+});
 
 type StyleTransferInput = z.infer<typeof styleTransferInputSchema>;
 
@@ -106,12 +103,7 @@ function getCfgScale(intensity: Intensity): number {
   }
 }
 
-function buildStyledPrompt(
-  subject: string,
-  style: ArtStyle,
-  intensity: Intensity,
-  colorPalette: ColorPalette,
-): string {
+function buildStyledPrompt(subject: string, style: ArtStyle, intensity: Intensity, colorPalette: ColorPalette): string {
   const styleDesc = getStyleDescriptor(style);
   const intensityDesc = getIntensityDescriptor(intensity);
   const paletteDesc = getPaletteDescriptor(colorPalette);
@@ -144,8 +136,8 @@ async function captionImage(
     return errorResult(`Auto-caption failed: ${captionResult.message}`);
   }
 
-  const captionData = captionResult.data as { readonly text?: string } | undefined;
-  const captionText = captionData?.text ?? 'an image';
+  const captionData = captionDataSchema.safeParse(captionResult.data);
+  const captionText = (captionData.success ? captionData.data.text : undefined) ?? 'an image';
 
   return {
     caption: captionText,
@@ -165,7 +157,6 @@ function buildInferenceInput(
     height: input.height ?? 1024,
     seedImage: input.inputImage,
     strength: input.strength,
-    // eslint-disable-next-line @typescript-eslint/naming-convention -- Runware API parameter name
     CFGScale: cfgScale,
     numberResults: 1,
     includeCost: input.includeCost,
@@ -182,12 +173,8 @@ function extractOutput(
   captionUsed: string | undefined,
   captionCost: number,
 ): ToolResult {
-  const inferenceData = inferenceResult.data as {
-    readonly images?: readonly (
-      { readonly imageUUID: string; readonly imageURL?: string }
-    )[];
-    readonly cost?: number;
-  } | undefined;
+  const parsed = inferenceDataSchema.safeParse(inferenceResult.data);
+  const inferenceData = parsed.success ? parsed.data : undefined;
 
   const firstImage = inferenceData?.images?.[0];
   if (firstImage === undefined) {
@@ -206,14 +193,9 @@ function extractOutput(
     ...(input.includeCost && totalCost > 0 && { cost: totalCost }),
   };
 
-  return successResult(
-    `Applied ${input.style} style successfully`,
-    output,
-    input.includeCost ? totalCost : undefined,
-  );
+  return successResult(`Applied ${input.style} style successfully`, output, input.includeCost ? totalCost : undefined);
 }
 
-/** Auto-captions the source image when no subject is given, then runs img2img with it as seed. */
 export async function styleTransfer(
   input: StyleTransferInput,
   client?: RunwareClient,
@@ -270,9 +252,16 @@ export const styleTransferToolDefinition = {
       style: {
         type: 'string',
         enum: [
-          'oil-painting', 'watercolor', 'pencil-sketch', 'pop-art',
-          'impressionist', 'cyberpunk', 'studio-ghibli', 'art-deco',
-          'minimalist', 'surrealist',
+          'oil-painting',
+          'watercolor',
+          'pencil-sketch',
+          'pop-art',
+          'impressionist',
+          'cyberpunk',
+          'studio-ghibli',
+          'art-deco',
+          'minimalist',
+          'surrealist',
         ],
         description: 'Artistic style to apply',
       },

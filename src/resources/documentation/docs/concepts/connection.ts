@@ -1,3 +1,5 @@
+// Does:  Documents API-key authentication and how the server reaches the Runware REST API.
+// Holds: Served at runware://docs/concepts/connection; its relatedDocs point only at other concepts docs.
 import type { DocResource } from '../../types.js';
 
 export const connectionDoc: DocResource = {
@@ -38,7 +40,16 @@ export const connectionDoc: DocResource = {
           method: 'POST',
           url: 'https://api.runware.ai/v1',
           headers: { contentType: 'application/json', authorization: 'Bearer <API_KEY>' },
-          body: [{ taskType: 'imageInference', taskUUID: 'uuid-here', positivePrompt: 'a cat', model: 'runware:101@1', width: 1024, height: 1024 }],
+          body: [
+            {
+              taskType: 'imageInference',
+              taskUUID: 'uuid-here',
+              positivePrompt: 'a cat',
+              model: 'runware:101@1',
+              width: 1024,
+              height: 1024,
+            },
+          ],
         },
         explanation:
           'The MCP server constructs HTTP REST requests internally. Each request is a POST with a JSON array of task objects. You do not need to make HTTP calls directly.',
@@ -50,10 +61,7 @@ export const connectionDoc: DocResource = {
       'The MCP server validates the API key at startup — if it is missing or invalid, the server will not start.',
       'Create separate API keys for development and production environments to track usage independently.',
     ],
-    relatedDocs: [
-      'runware://docs/concepts/task-responses',
-      'runware://docs/concepts/async-delivery',
-    ],
+    relatedDocs: ['runware://docs/concepts/task-responses', 'runware://docs/concepts/async-delivery'],
   },
   lastUpdated: '2026-02-05',
 };

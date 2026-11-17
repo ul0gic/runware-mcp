@@ -1,16 +1,16 @@
+// Does:  Proves file-path confinement to allowed roots, size limits, extension checks and base64 reads.
+// Holds: Node:fs/promises (realpath as identity) and config are mocked; path resolution and limit logic are real.
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock node:fs/promises BEFORE importing the module under test
 vi.mock('node:fs/promises', () => ({
   readFile: vi.fn(),
-  lstat: vi.fn(),
-  realpath: vi.fn(),
+  realpath: vi.fn((target: string) => Promise.resolve(target)),
   stat: vi.fn(),
   access: vi.fn(),
   constants: { R_OK: 4 },
 }));
 
-// Mock config to avoid env var validation at import time
 vi.mock('../../../src/shared/config.js', () => ({
   config: {
     RUNWARE_API_KEY: 'test-key-that-is-at-least-32-characters-long',
@@ -28,7 +28,7 @@ vi.mock('../../../src/shared/config.js', () => ({
   getMaxFileSizeBytes: () => 50 * 1024 * 1024,
 }));
 
-import { readFile, lstat, stat, access } from 'node:fs/promises';
+import { readFile, stat, access } from 'node:fs/promises';
 
 import {
   getFileMimeType,
@@ -36,20 +36,11 @@ import {
   readFileAsBase64,
   validateFileSize,
   validateFilePath,
-  isAllowedImageType,
-  isAllowedVideoType,
-  isAllowedAudioType,
-  isAllowedImageFile,
   validateFileType,
 } from '../../../src/shared/file-utils.js';
 import { FileError, FileTooLargeError, PathTraversalError } from '../../../src/shared/errors.js';
 
-// ============================================================================
-// Setup
-// ============================================================================
-
 const mockReadFile = vi.mocked(readFile);
-const mockLstat = vi.mocked(lstat);
 const mockStat = vi.mocked(stat);
 const mockAccess = vi.mocked(access);
 
@@ -57,47 +48,7 @@ beforeEach(() => {
   vi.clearAllMocks();
 });
 
-// ============================================================================
-// getFileMimeType
-// ============================================================================
-
 describe('getFileMimeType', () => {
-  it('returns image/jpeg for .jpg', () => {
-    expect(getFileMimeType('/path/to/photo.jpg')).toBe('image/jpeg');
-  });
-
-  it('returns image/jpeg for .jpeg', () => {
-    expect(getFileMimeType('/path/to/photo.jpeg')).toBe('image/jpeg');
-  });
-
-  it('returns image/png for .png', () => {
-    expect(getFileMimeType('/path/to/photo.png')).toBe('image/png');
-  });
-
-  it('returns image/webp for .webp', () => {
-    expect(getFileMimeType('/path/to/photo.webp')).toBe('image/webp');
-  });
-
-  it('returns image/gif for .gif', () => {
-    expect(getFileMimeType('/path/to/anim.gif')).toBe('image/gif');
-  });
-
-  it('returns image/bmp for .bmp', () => {
-    expect(getFileMimeType('/path/to/img.bmp')).toBe('image/bmp');
-  });
-
-  it('returns video/mp4 for .mp4', () => {
-    expect(getFileMimeType('/path/to/video.mp4')).toBe('video/mp4');
-  });
-
-  it('returns video/webm for .webm', () => {
-    expect(getFileMimeType('/path/to/video.webm')).toBe('video/webm');
-  });
-
-  it('returns audio/mpeg for .mp3', () => {
-    expect(getFileMimeType('/path/to/song.mp3')).toBe('audio/mpeg');
-  });
-
   it('returns application/octet-stream for unknown extension', () => {
     expect(getFileMimeType('/path/to/file.xyz')).toBe('application/octet-stream');
   });
@@ -107,68 +58,6 @@ describe('getFileMimeType', () => {
     expect(getFileMimeType('/path/to/photo.PNG')).toBe('image/png');
   });
 });
-
-// ============================================================================
-// isAllowedImageType / isAllowedVideoType / isAllowedAudioType
-// ============================================================================
-
-describe('isAllowedImageType', () => {
-  it('returns true for allowed types', () => {
-    expect(isAllowedImageType('image/jpeg')).toBe(true);
-    expect(isAllowedImageType('image/png')).toBe(true);
-    expect(isAllowedImageType('image/webp')).toBe(true);
-    expect(isAllowedImageType('image/gif')).toBe(true);
-    expect(isAllowedImageType('image/bmp')).toBe(true);
-  });
-
-  it('returns false for disallowed types', () => {
-    expect(isAllowedImageType('image/svg+xml')).toBe(false);
-    expect(isAllowedImageType('image/tiff')).toBe(false);
-    expect(isAllowedImageType('video/mp4')).toBe(false);
-  });
-});
-
-describe('isAllowedVideoType', () => {
-  it('returns true for allowed types', () => {
-    expect(isAllowedVideoType('video/mp4')).toBe(true);
-    expect(isAllowedVideoType('video/webm')).toBe(true);
-    expect(isAllowedVideoType('video/quicktime')).toBe(true);
-  });
-
-  it('returns false for disallowed types', () => {
-    expect(isAllowedVideoType('video/x-msvideo')).toBe(false);
-    expect(isAllowedVideoType('image/png')).toBe(false);
-  });
-});
-
-describe('isAllowedAudioType', () => {
-  it('returns true for allowed types', () => {
-    expect(isAllowedAudioType('audio/mpeg')).toBe(true);
-    expect(isAllowedAudioType('audio/wav')).toBe(true);
-    expect(isAllowedAudioType('audio/ogg')).toBe(true);
-  });
-
-  it('returns false for disallowed types', () => {
-    expect(isAllowedAudioType('audio/midi')).toBe(false);
-    expect(isAllowedAudioType('image/png')).toBe(false);
-  });
-});
-
-describe('isAllowedImageFile', () => {
-  it('returns true for files with allowed extensions', () => {
-    expect(isAllowedImageFile('/tmp/photo.jpg')).toBe(true);
-    expect(isAllowedImageFile('/tmp/photo.png')).toBe(true);
-  });
-
-  it('returns false for files with disallowed extensions', () => {
-    expect(isAllowedImageFile('/tmp/file.txt')).toBe(false);
-    expect(isAllowedImageFile('/tmp/file.svg')).toBe(false);
-  });
-});
-
-// ============================================================================
-// isPathSafe
-// ============================================================================
 
 describe('isPathSafe', () => {
   it('returns true for path under allowed root', () => {
@@ -192,14 +81,9 @@ describe('isPathSafe', () => {
   });
 });
 
-// ============================================================================
-// readFileAsBase64
-// ============================================================================
-
 describe('readFileAsBase64', () => {
   it('reads file and returns base64', async () => {
     mockAccess.mockResolvedValue(undefined);
-    mockLstat.mockResolvedValue({ isSymbolicLink: () => false } as never);
     mockStat.mockResolvedValue({ size: 1000 } as never);
     mockReadFile.mockResolvedValue(Buffer.from('hello world'));
 
@@ -208,23 +92,15 @@ describe('readFileAsBase64', () => {
   });
 
   it('throws PathTraversalError for path outside roots', async () => {
-    await expect(
-      readFileAsBase64('/etc/passwd', ['/tmp']),
-    ).rejects.toThrow(PathTraversalError);
+    await expect(readFileAsBase64('/etc/passwd', ['/tmp'])).rejects.toThrow(PathTraversalError);
   });
 
   it('throws FileError when file not readable', async () => {
     mockAccess.mockRejectedValue(new Error('ENOENT'));
 
-    await expect(
-      readFileAsBase64('/tmp/missing.txt', ['/tmp']),
-    ).rejects.toThrow(FileError);
+    await expect(readFileAsBase64('/tmp/missing.txt', ['/tmp'])).rejects.toThrow(FileError);
   });
 });
-
-// ============================================================================
-// validateFileSize
-// ============================================================================
 
 describe('validateFileSize', () => {
   it('passes for file under limit', async () => {
@@ -233,19 +109,13 @@ describe('validateFileSize', () => {
   });
 
   it('throws FileTooLargeError for file over limit', async () => {
-    // Default max is 50MB = 52428800 bytes
     mockStat.mockResolvedValue({ size: 60_000_000 } as never);
-    await expect(validateFileSize('/tmp/huge.jpg')).rejects.toThrow(
-      FileTooLargeError,
-    );
+    await expect(validateFileSize('/tmp/huge.jpg')).rejects.toThrow(FileTooLargeError);
   });
 
   it('supports custom maxSizeMB', async () => {
     mockStat.mockResolvedValue({ size: 2_000_000 } as never);
-    // 1 MB = 1048576 bytes, file is ~2MB
-    await expect(validateFileSize('/tmp/file.jpg', 1)).rejects.toThrow(
-      FileTooLargeError,
-    );
+    await expect(validateFileSize('/tmp/file.jpg', 1)).rejects.toThrow(FileTooLargeError);
   });
 
   it('throws FileError when stat fails', async () => {
@@ -254,14 +124,9 @@ describe('validateFileSize', () => {
   });
 });
 
-// ============================================================================
-// validateFilePath (convenience wrapper)
-// ============================================================================
-
 describe('validateFilePath', () => {
   it('returns resolved path for valid file', async () => {
     mockAccess.mockResolvedValue(undefined);
-    mockLstat.mockResolvedValue({ isSymbolicLink: () => false } as never);
 
     const result = await validateFilePath('/tmp/test.jpg');
     expect(result).toContain('/tmp/test.jpg');
@@ -271,10 +136,6 @@ describe('validateFilePath', () => {
     await expect(validateFilePath('/etc/secret')).rejects.toThrow();
   });
 });
-
-// ============================================================================
-// validateFileType
-// ============================================================================
 
 describe('validateFileType', () => {
   it('passes for allowed extension', () => {

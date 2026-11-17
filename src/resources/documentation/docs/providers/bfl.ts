@@ -1,3 +1,5 @@
+// Does:  Documents Black Forest Labs FLUX image models and their provider settings.
+// Holds: Served at runware://docs/providers/bfl; the safety-filtering feature doc links here.
 import type { DocResource } from '../../types.js';
 
 export const bflDoc: DocResource = {
@@ -79,7 +81,7 @@ export const bflDoc: DocResource = {
     tips: [
       'FLUX excels at text rendering in images. Use it when the generated image needs readable text (signs, labels, posters).',
       'safetyTolerance scale: 0-1 for children/family content, 2 (default) for general audiences, 3-4 for art/creative platforms, 5-6 for unrestricted contexts.',
-      'Raw mode disables the model\'s aesthetic polish. The result looks more like a real photograph and less like AI-generated art.',
+      "Raw mode disables the model's aesthetic polish. The result looks more like a real photograph and less like AI-generated art.",
       'Prompt upsampling and raw mode serve opposite goals. Upsampling adds polish; raw removes it. Do not enable both simultaneously.',
       'FLUX is a transformer model, so TeaCache acceleration works well with it but DeepCache does not.',
     ],

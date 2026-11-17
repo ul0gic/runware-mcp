@@ -1,3 +1,5 @@
+// Does:  Documents Ideogram image models, style presets and their provider settings.
+// Holds: Served at runware://docs/providers/ideogram; links to the other three image providers.
 import type { DocResource } from '../../types.js';
 
 export const ideogramDoc: DocResource = {
@@ -71,8 +73,7 @@ export const ideogramDoc: DocResource = {
       {
         title: 'Brand-aligned design with custom color palette',
         input: {
-          positivePrompt:
-            'modern minimalist logo design for a tech startup, clean geometric shapes',
+          positivePrompt: 'modern minimalist logo design for a tech startup, clean geometric shapes',
           model: 'ideogram:1@1',
           width: 1024,
           height: 1024,

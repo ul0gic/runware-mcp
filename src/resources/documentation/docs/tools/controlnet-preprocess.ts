@@ -1,3 +1,5 @@
+// Does:  Documents the controlNetPreprocess tool and its preprocessor options.
+// Holds: Served at runware://docs/tools/controlnet-preprocess; the features/controlnet-guide doc links back here.
 import type { DocResource } from '../../types.js';
 
 export const controlnetPreprocessDoc: DocResource = {
@@ -26,7 +28,8 @@ export const controlnetPreprocessDoc: DocResource = {
         name: 'preprocessor',
         type: 'string',
         required: true,
-        description: 'Preprocessing algorithm: "canny", "depth", "mlsd", "normalbae", "openpose", "tile", "seg", "lineart", "lineart_anime", "shuffle", "scribble", "softedge".',
+        description:
+          'Preprocessing algorithm: "canny", "depth", "mlsd", "normalbae", "openpose", "tile", "seg", "lineart", "lineart_anime", "shuffle", "scribble", "softedge".',
       },
       {
         name: 'height',
@@ -55,7 +58,8 @@ export const controlnetPreprocessDoc: DocResource = {
       {
         name: 'includeHandsAndFaceOpenPose',
         type: 'boolean',
-        description: 'Include detailed hand and face outlines in OpenPose output. Only used when preprocessor is "openpose".',
+        description:
+          'Include detailed hand and face outlines in OpenPose output. Only used when preprocessor is "openpose".',
       },
       {
         name: 'outputType',
@@ -92,7 +96,8 @@ export const controlnetPreprocessDoc: DocResource = {
           lowThresholdCanny: 100,
           highThresholdCanny: 200,
         },
-        explanation: 'Extracts edges from the reference image. Use the resulting guideImageUUID in imageInference controlNet array for edge-guided generation.',
+        explanation:
+          'Extracts edges from the reference image. Use the resulting guideImageUUID in imageInference controlNet array for edge-guided generation.',
       },
       {
         title: 'OpenPose for human pose transfer',
@@ -103,7 +108,8 @@ export const controlnetPreprocessDoc: DocResource = {
           width: 1024,
           height: 1024,
         },
-        explanation: 'Extracts human pose skeleton with hands and face detail. The guide image drives pose-accurate generation in imageInference.',
+        explanation:
+          'Extracts human pose skeleton with hands and face detail. The guide image drives pose-accurate generation in imageInference.',
       },
     ],
     tips: [

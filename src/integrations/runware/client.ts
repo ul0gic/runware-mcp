@@ -1,4 +1,9 @@
+// Does:  Posts task batches to the Runware REST API with bearer auth and maps every failure to RunwareApiError.
+// Holds: Requests abort at their timeout, body read included; errors carry no raw body and never the API key.
+
 import { randomUUID } from 'node:crypto';
+
+import { z } from 'zod';
 
 import { API_BASE_URL, config } from '../../shared/config.js';
 import { RunwareApiError } from '../../shared/errors.js';
@@ -13,33 +18,26 @@ import {
 export interface RunwareClientOptions {
   readonly apiKey: ApiKey;
 
-  /** Defaults to config.REQUEST_TIMEOUT_MS. */
   readonly timeoutMs?: number;
 
-  /** Defaults to the official API endpoint. */
   readonly baseUrl?: string;
 }
 
 export interface RequestOptions {
-  readonly signal?: AbortSignal;
+  readonly signal?: AbortSignal | undefined;
 
-  /** Overrides the client default for this request only. */
-  readonly timeoutMs?: number;
+  readonly timeoutMs?: number | undefined;
 }
 
-function wrapRequestError(
-  error: unknown,
-  timeout: number,
-  wasUserCancelled: boolean,
-): RunwareApiError {
+function wrapRequestError(error: unknown, timeout: number, wasUserCancelled: boolean): RunwareApiError {
   if (error instanceof RunwareApiError) {
     return error;
   }
 
   if (error instanceof Error && error.name === 'AbortError') {
-    return new RunwareApiError(wasUserCancelled
-      ? 'Request was cancelled'
-      : `Request timed out after ${String(timeout)}ms`);
+    return new RunwareApiError(
+      wasUserCancelled ? 'Request was cancelled' : `Request timed out after ${String(timeout)}ms`,
+    );
   }
 
   if (error instanceof TypeError && error.message.includes('fetch')) {
@@ -50,29 +48,70 @@ function wrapRequestError(
   return new RunwareApiError(message);
 }
 
+const MAX_ERROR_DETAIL_LENGTH = 200;
+
+const MAX_API_CODE_LENGTH = 64;
+
+const REDACTED = '[REDACTED]';
+
+const runwareErrorBodySchema = z.object({
+  errors: z.array(z.object({ code: z.string().optional(), message: z.string().optional() })).min(1),
+});
+
+function truncate(text: string, maxLength: number): string {
+  return text.length > maxLength ? `${text.slice(0, maxLength)}…` : text;
+}
+
 async function readErrorBody(response: Response): Promise<string> {
   try {
     return await response.text();
   } catch {
-    return 'Unknown error';
+    return '';
+  }
+}
+
+function parseErrorBody(body: string): { code?: string | undefined; message?: string | undefined } | undefined {
+  try {
+    const parsed = runwareErrorBodySchema.safeParse(JSON.parse(body));
+    return parsed.success ? parsed.data.errors[0] : undefined;
+  } catch {
+    return undefined;
   }
 }
 
 async function createHttpError(response: Response): Promise<RunwareApiError> {
-  const errorText = await readErrorBody(response);
-  return new RunwareApiError(
-    `API request failed: ${String(response.status)} ${response.statusText}`,
-    {
-      statusCode: response.status,
-      apiCode: errorText,
-    },
-  );
+  const body = await readErrorBody(response);
+  const structured = parseErrorBody(body);
+  const detail = truncate((structured?.message ?? body).trim(), MAX_ERROR_DETAIL_LENGTH);
+  const summary = `API request failed: ${String(response.status)} ${response.statusText}`;
+  return new RunwareApiError(detail === '' ? summary : `${summary}: ${detail}`, {
+    statusCode: response.status,
+    apiCode: structured?.code === undefined ? undefined : truncate(structured.code, MAX_API_CODE_LENGTH),
+  });
 }
 
-function createApiLevelError(errors: readonly { message: string; code?: string; taskUUID?: string }[]): RunwareApiError {
+function redact(text: string | undefined, secret: string): string | undefined {
+  return text?.replaceAll(secret, REDACTED);
+}
+
+function redactError(error: RunwareApiError, secret: string): RunwareApiError {
+  const fields = [error.message, error.data.apiCode, error.data.taskUUID];
+  if (secret === '' || !fields.some((field) => field?.includes(secret) === true)) {
+    return error;
+  }
+  return new RunwareApiError(redact(error.message, secret) ?? '', {
+    apiCode: redact(error.data.apiCode, secret),
+    taskUUID: redact(error.data.taskUUID, secret),
+    statusCode: error.data.statusCode,
+  });
+}
+
+function createApiLevelError(
+  errors: readonly { message: string; code?: string; taskUUID?: string }[],
+): RunwareApiError {
   const firstError = errors[0];
-  return new RunwareApiError(firstError?.message ?? 'Unknown API error', {
-    apiCode: firstError?.code,
+  return new RunwareApiError(truncate(firstError?.message ?? 'Unknown API error', MAX_ERROR_DETAIL_LENGTH), {
+    apiCode: firstError?.code === undefined ? undefined : truncate(firstError.code, MAX_API_CODE_LENGTH),
     taskUUID: firstError?.taskUUID,
   });
 }
@@ -92,11 +131,7 @@ export class RunwareClient {
     return createTaskUUID(randomUUID());
   }
 
-  /** Throws RunwareApiError on API errors, network failures, timeout, or cancellation. */
-  async request<T>(
-    tasks: readonly BaseTaskRequest[],
-    options?: RequestOptions,
-  ): Promise<RunwareResponse<T>> {
+  async request<T>(tasks: readonly BaseTaskRequest[], options?: RequestOptions): Promise<RunwareResponse<T>> {
     const timeout = options?.timeoutMs ?? this.timeoutMs;
     const userSignal = options?.signal;
 
@@ -105,10 +140,9 @@ export class RunwareClient {
       timeoutController.abort();
     }, timeout);
 
-    // AbortSignal.any() (Node >= 20) tears down its listeners correctly; manual listener wiring leaks.
-    const combinedSignal = userSignal === undefined
-      ? timeoutController.signal
-      : AbortSignal.any([userSignal, timeoutController.signal]);
+    // Why: AbortSignal.any() releases its listeners; hand-wired abort listeners leak one per request.
+    const combinedSignal =
+      userSignal === undefined ? timeoutController.signal : AbortSignal.any([userSignal, timeoutController.signal]);
 
     try {
       const response = await this.executeRequest<T>(tasks, combinedSignal);
@@ -117,20 +151,15 @@ export class RunwareClient {
     } catch (error) {
       clearTimeout(timeoutId);
       const wasUserCancelled = userSignal?.aborted === true;
-      throw wrapRequestError(error, timeout, wasUserCancelled);
+      throw redactError(wrapRequestError(error, timeout, wasUserCancelled), this.apiKey);
     }
   }
 
-  private async executeRequest<T>(
-    tasks: readonly BaseTaskRequest[],
-    signal: AbortSignal,
-  ): Promise<RunwareResponse<T>> {
+  private async executeRequest<T>(tasks: readonly BaseTaskRequest[], signal: AbortSignal): Promise<RunwareResponse<T>> {
     const response = await fetch(this.baseUrl, {
       method: 'POST',
       headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention -- HTTP header names are not camelCase by spec
         'Content-Type': 'application/json',
-        // eslint-disable-next-line @typescript-eslint/naming-convention -- HTTP header names are not camelCase by spec
         Authorization: `Bearer ${this.apiKey}`,
       },
       body: JSON.stringify(tasks),
@@ -141,6 +170,7 @@ export class RunwareClient {
       throw await createHttpError(response);
     }
 
+    // biome-ignore lint/nursery/noUnsafeTypeAssertion: T is the caller-declared task result; Runware publishes no per-task response schema to validate against.
     const result = (await response.json()) as RunwareResponse<T>;
 
     if (result.errors !== undefined && result.errors.length > 0) {
@@ -150,11 +180,8 @@ export class RunwareClient {
     return result;
   }
 
-  /** Throws RunwareApiError when the response carries no result — unsuitable for async submissions that return an empty data array. */
-  async requestSingle<T>(
-    task: BaseTaskRequest,
-    options?: RequestOptions,
-  ): Promise<T> {
+  // Holds: Rejects an empty data array, so async submissions must go through request() instead.
+  async requestSingle<T>(task: BaseTaskRequest, options?: RequestOptions): Promise<T> {
     const response = await this.request<T>([task], options);
 
     if (response.data.length === 0) {
@@ -170,10 +197,7 @@ export class RunwareClient {
   }
 }
 
-/** Uses the API key from environment configuration. */
-export function createRunwareClient(
-  options?: Partial<Omit<RunwareClientOptions, 'apiKey'>>,
-): RunwareClient {
+export function createRunwareClient(options?: Partial<Omit<RunwareClientOptions, 'apiKey'>>): RunwareClient {
   return new RunwareClient({
     apiKey: config.RUNWARE_API_KEY,
     ...options,
@@ -182,7 +206,6 @@ export function createRunwareClient(
 
 let defaultClient: RunwareClient | undefined;
 
-/** Constructed on first call, not at import time, so importing this module has no config side effects. */
 export function getDefaultClient(): RunwareClient {
   defaultClient ??= createRunwareClient();
   return defaultClient;
@@ -191,10 +214,10 @@ export function getDefaultClient(): RunwareClient {
 export function createTaskRequest<T extends Record<string, unknown>>(
   taskType: string,
   params: T,
-): BaseTaskRequest & T & { taskUUID: string } {
+): BaseTaskRequest & T & { taskUUID: TaskUUID } {
   return {
     ...params,
     taskType,
-    taskUUID: randomUUID(),
+    taskUUID: createTaskUUID(randomUUID()),
   };
 }

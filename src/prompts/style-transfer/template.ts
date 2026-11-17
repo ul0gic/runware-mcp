@@ -1,30 +1,48 @@
+// Does:  Builds the style-transfer prompt that renders a subject in a chosen art style.
+// Holds: intensity maps to CFGScale 5, 7 or 10; any unknown intensity gets 7.
 import type { PromptMessage, PromptTemplate } from '../types.js';
 
 const PROMPT_NAME = 'style-transfer';
-const PROMPT_DESCRIPTION = 'Apply artistic styles to image generation with configurable style, intensity, and color palette.';
+const PROMPT_DESCRIPTION =
+  'Apply artistic styles to image generation with configurable style, intensity, and color palette.';
 
 const DEFAULT_INTENSITY = 'moderate';
 const DEFAULT_COLOR_PALETTE = 'vibrant';
 
 const VALID_STYLES = [
-  'oil-painting', 'watercolor', 'pencil-sketch', 'pop-art',
-  'impressionist', 'cyberpunk', 'studio-ghibli', 'art-deco',
-  'minimalist', 'surrealist',
+  'oil-painting',
+  'watercolor',
+  'pencil-sketch',
+  'pop-art',
+  'impressionist',
+  'cyberpunk',
+  'studio-ghibli',
+  'art-deco',
+  'minimalist',
+  'surrealist',
 ] as const;
 const VALID_INTENSITIES = ['subtle', 'moderate', 'strong'] as const;
 const VALID_PALETTES = ['warm', 'cool', 'monochrome', 'vibrant', 'pastel'] as const;
 
 const STYLE_DESCRIPTORS: Record<string, string> = {
   'oil-painting': 'classical oil painting, visible brushstrokes, rich texture, canvas feel, impasto technique',
-  watercolor: 'delicate watercolor painting, soft color bleeds, translucent washes, wet-on-wet technique, paper texture',
-  'pencil-sketch': 'detailed pencil sketch, fine hatching, cross-hatching shading, graphite on paper, hand-drawn quality',
+  watercolor:
+    'delicate watercolor painting, soft color bleeds, translucent washes, wet-on-wet technique, paper texture',
+  'pencil-sketch':
+    'detailed pencil sketch, fine hatching, cross-hatching shading, graphite on paper, hand-drawn quality',
   'pop-art': 'bold pop art style, Ben-Day dots, strong outlines, flat vivid colors, Andy Warhol inspired',
-  impressionist: 'impressionist painting, loose brushwork, emphasis on light and color, Monet-inspired, plein air quality',
-  cyberpunk: 'cyberpunk aesthetic, neon glow, holographic elements, dystopian tech, rain-slicked surfaces, chromatic aberration',
-  'studio-ghibli': 'Studio Ghibli anime style, whimsical, lush environments, hand-painted backgrounds, Miyazaki-inspired',
-  'art-deco': 'Art Deco design, geometric patterns, gold accents, symmetrical composition, 1920s glamour, luxurious feel',
-  minimalist: 'minimalist art, clean lines, negative space, reduced color palette, essential forms only, modern simplicity',
-  surrealist: 'surrealist art, dreamlike imagery, impossible geometry, melting forms, Dali-inspired, subconscious symbolism',
+  impressionist:
+    'impressionist painting, loose brushwork, emphasis on light and color, Monet-inspired, plein air quality',
+  cyberpunk:
+    'cyberpunk aesthetic, neon glow, holographic elements, dystopian tech, rain-slicked surfaces, chromatic aberration',
+  'studio-ghibli':
+    'Studio Ghibli anime style, whimsical, lush environments, hand-painted backgrounds, Miyazaki-inspired',
+  'art-deco':
+    'Art Deco design, geometric patterns, gold accents, symmetrical composition, 1920s glamour, luxurious feel',
+  minimalist:
+    'minimalist art, clean lines, negative space, reduced color palette, essential forms only, modern simplicity',
+  surrealist:
+    'surrealist art, dreamlike imagery, impossible geometry, melting forms, Dali-inspired, subconscious symbolism',
 };
 
 const INTENSITY_DESCRIPTORS: Record<string, string> = {

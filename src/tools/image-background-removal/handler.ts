@@ -1,3 +1,6 @@
+// Does:  Removes an image's background in one synchronous removeBackground task.
+// Holds: Alpha-matting settings are flattened onto the request top level, and only schema-known keys can reach it.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -66,10 +69,9 @@ export async function imageBackgroundRemoval(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('removeBackground', requestParams);
 
-    const response = await runwareClient.requestSingle<ImageBackgroundRemovalApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.requestSingle<ImageBackgroundRemovalApiResponse>(task, {
+      signal: context?.signal,
+    });
 
     const output = processResponse(response);
 

@@ -1,18 +1,11 @@
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+// Does:  Transcribes a video by submitting a caption task and polling for the transcript.
+// Holds: The transcript comes only from the polled result; a result without text is an error result.
+
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
-import { wrapError } from '../../shared/errors.js';
+import { GenerationFailedError, wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
-import {
-  type TaskUUID,
-  type ToolContext,
-  type ToolResult,
-  errorResult,
-  successResult,
-} from '../../shared/types.js';
+import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 
 import type { TranscriptionInput, TranscriptionOutput } from './schema.js';
 
@@ -25,7 +18,7 @@ interface TranscriptionApiResponse {
   readonly cost?: number;
 }
 
-// The memories:1@1 model takes the video source as `inputs: { video: "..." }`.
+// Why: Memories:1@1 reads its source from inputs.video, not the inputs.image used by image caption models.
 function buildApiRequest(input: TranscriptionInput): Record<string, unknown> {
   const request: Record<string, unknown> = {
     inputs: { video: input.inputMedia },
@@ -45,8 +38,14 @@ function processResponse(
   pollingAttempts: number,
   elapsedMs: number,
 ): TranscriptionOutput {
+  if (response.text === undefined) {
+    throw new GenerationFailedError('Transcription result did not include text', {
+      taskType: response.taskType,
+      taskUUID: response.taskUUID,
+    });
+  }
   return {
-    text: response.text ?? '',
+    text: response.text,
     ...(response.structuredData !== undefined && { structuredData: response.structuredData }),
     ...(response.cost !== undefined && { cost: response.cost }),
     pollingAttempts,
@@ -54,7 +53,6 @@ function processResponse(
   };
 }
 
-/** Transcribes video via the caption taskType; the transcript arrives from the poll, not the submit. */
 export async function transcription(
   input: TranscriptionInput,
   client?: RunwareClient,
@@ -68,11 +66,8 @@ export async function transcription(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('caption', requestParams);
 
-    // The submit response is only an acknowledgment; the text comes from polling.
-    await runwareClient.requestSingle<TranscriptionApiResponse>(
-      task,
-      { signal: context?.signal },
-    );
+    // Why: The submit response is only an acknowledgment; the text arrives through polling.
+    await runwareClient.requestSingle<TranscriptionApiResponse>(task, { signal: context?.signal });
 
     context?.progress?.report({
       progress: 0,
@@ -80,7 +75,7 @@ export async function transcription(
       message: 'Transcription task submitted, polling for result...',
     });
 
-    const pollResult = await pollForResult<TranscriptionApiResponse>(task.taskUUID as TaskUUID, {
+    const pollResult = await pollForResult<TranscriptionApiResponse>(task.taskUUID, {
       client: runwareClient,
       signal: context?.signal,
       progress: context?.progress,
@@ -108,8 +103,7 @@ export async function transcription(
 
 export const transcriptionToolDefinition = {
   name: 'transcription',
-  description:
-    'Transcribe video content to text. Supports multiple languages with auto-detection.',
+  description: 'Transcribe video content to text. Supports multiple languages with auto-detection.',
   inputSchema: {
     type: 'object',
     properties: {

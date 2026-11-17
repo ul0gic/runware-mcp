@@ -1,11 +1,28 @@
+// Does:  Guides picking an image or video provider by strength, cost and capability.
+// Holds: Its relatedDocs cover all nine provider docs; registered by register-guides.ts.
 import type { DocResource } from '../../types.js';
 
 export const choosingProvidersDoc: DocResource = {
   id: 'choosing-providers',
   category: 'guides',
   title: 'Choosing Providers',
-  summary: 'Decision matrix for selecting the right Runware provider by use case: commercial photography, artistic images, professional video, lip sync, and more',
-  tags: ['providers', 'selection', 'comparison', 'decision', 'BFL', 'Bria', 'Ideogram', 'KlingAI', 'PixVerse', 'Veo', 'Sync', 'ByteDance', 'Alibaba'],
+  summary:
+    'Decision matrix for selecting the right Runware provider by use case: commercial photography, artistic images, professional video, lip sync, and more',
+  tags: [
+    'providers',
+    'selection',
+    'comparison',
+    'decision',
+    'BFL',
+    'Bria',
+    'Ideogram',
+    'KlingAI',
+    'PixVerse',
+    'Veo',
+    'Sync',
+    'ByteDance',
+    'Alibaba',
+  ],
   content: {
     description:
       'Runware aggregates multiple AI providers, each with different strengths. Choosing the right provider for ' +

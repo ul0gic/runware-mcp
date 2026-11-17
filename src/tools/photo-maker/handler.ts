@@ -1,3 +1,6 @@
+// Does:  Generates identity-preserving images from one to four reference photos.
+// Holds: The prompt always contains the img trigger word before it is sent; cost is omitted when the API reports none.
+
 import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
@@ -72,9 +75,7 @@ function buildApiRequest(input: PhotoMakerInput): Record<string, unknown> {
   return request;
 }
 
-function processResponse(
-  responses: readonly PhotoMakerApiResponse[],
-): PhotoMakerOutput {
+function processResponse(responses: readonly PhotoMakerApiResponse[]): PhotoMakerOutput {
   let totalCost = 0;
 
   const images = responses.map((response) => {
@@ -110,17 +111,15 @@ export async function photoMaker(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('photoMaker', requestParams);
 
-    const response = await runwareClient.request<PhotoMakerApiResponse>(
-      [task],
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.request<PhotoMakerApiResponse>([task], { signal: context?.signal });
 
     const output = processResponse(response.data);
     const imageCount = output.images.length;
 
-    const message = imageCount === 1
-      ? 'Generated 1 identity-preserving image'
-      : `Generated ${String(imageCount)} identity-preserving images`;
+    const message =
+      imageCount === 1
+        ? 'Generated 1 identity-preserving image'
+        : `Generated ${String(imageCount)} identity-preserving images`;
 
     return successResult(message, output, output.cost);
   } catch (error) {
@@ -131,7 +130,8 @@ export async function photoMaker(
 
 export const photoMakerToolDefinition = {
   name: 'photoMaker',
-  description: 'Generate identity-preserving images from 1-4 reference photos. Maintains facial identity while allowing creative transformations.',
+  description:
+    'Generate identity-preserving images from 1-4 reference photos. Maintains facial identity while allowing creative transformations.',
   inputSchema: {
     type: 'object',
     properties: {

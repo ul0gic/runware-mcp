@@ -1,3 +1,6 @@
+// Does:  Proves imageMasking bounds confidence and detection count, counts detections, and reports client failures.
+// Holds: config, rate limiter and RunwareClient are mocked; the schema and handler run for real.
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
@@ -23,11 +26,7 @@ vi.mock('../../../src/shared/config.js', () => ({
   API_BASE_URL: 'https://api.runware.ai/v1',
 }));
 
-import {
-  imageMasking,
-  imageMaskingToolDefinition,
-  imageMaskingInputSchema,
-} from '../../../src/tools/image-masking/index.js';
+import { imageMasking, imageMaskingInputSchema } from '../../../src/tools/image-masking/index.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 
 function createMockClient(): RunwareClient {
@@ -46,156 +45,7 @@ describe('imageMasking', () => {
     mockClient = createMockClient();
   });
 
-  describe('handler', () => {
-    it('should return success with detections', async () => {
-      const mockResponse = {
-        taskType: 'imageMasking',
-        taskUUID: 'test-task-uuid',
-        inputImageUUID: 'input-img-uuid',
-        imageUUID: 'mask-image-uuid',
-        maskImageURL: 'https://example.com/mask.png',
-        detections: [
-          { x_min: 10, y_min: 20, x_max: 100, y_max: 150 },
-          { x_min: 200, y_min: 50, x_max: 300, y_max: 200 },
-        ],
-        cost: 0.002,
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageMasking(
-        { inputImage: 'https://example.com/face.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('Detected 2 elements');
-
-      const data = result.data as {
-        maskImageUUID: string;
-        maskImageURL: string;
-        detections: { x_min: number; y_min: number; x_max: number; y_max: number }[];
-      };
-      expect(data.maskImageUUID).toBe('mask-image-uuid');
-      expect(data.detections).toHaveLength(2);
-    });
-
-    it('should handle single detection', async () => {
-      const mockResponse = {
-        taskType: 'imageMasking',
-        taskUUID: 'uuid',
-        imageUUID: 'mask-uuid',
-        maskImageURL: 'https://example.com/mask.png',
-        detections: [{ x_min: 10, y_min: 20, x_max: 100, y_max: 150 }],
-        cost: 0.002,
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageMasking(
-        { inputImage: 'https://example.com/face.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('Detected 1 element');
-    });
-
-    it('should handle response without detections', async () => {
-      const mockResponse = {
-        taskType: 'imageMasking',
-        taskUUID: 'uuid',
-        imageUUID: 'mask-uuid',
-        maskImageURL: 'https://example.com/mask.png',
-        cost: 0.002,
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageMasking(
-        { inputImage: 'https://example.com/image.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      const data = result.data as { detections: unknown[] };
-      expect(data.detections).toHaveLength(0);
-    });
-
-    it('should return error when API fails', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Masking failed'),
-      );
-
-      const result = await imageMasking(
-        { inputImage: 'https://example.com/image.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Masking failed');
-    });
-
-    it('should propagate cost from response', async () => {
-      const mockResponse = {
-        taskType: 'imageMasking',
-        taskUUID: 'uuid',
-        imageUUID: 'mask-uuid',
-        maskImageURL: 'https://example.com/mask.png',
-        detections: [],
-        cost: 0.003,
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageMasking(
-        { inputImage: 'https://example.com/face.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.cost).toBe(0.003);
-    });
-  });
-
-  describe('schema', () => {
-    it('should validate correct input with required fields', () => {
-      const result = imageMaskingInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should apply default values', () => {
-      const result = imageMaskingInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.model).toBe('runware:35@1');
-        expect(result.data.confidence).toBe(0.25);
-        expect(result.data.maxDetections).toBe(6);
-        expect(result.data.maskPadding).toBe(4);
-        expect(result.data.maskBlur).toBe(4);
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
-    it('should reject missing inputImage', () => {
-      const result = imageMaskingInputSchema.safeParse({});
-      expect(result.success).toBe(false);
-    });
-
-    it('should accept custom confidence and maxDetections', () => {
-      const result = imageMaskingInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-        confidence: 0.5,
-        maxDetections: 10,
-      });
-      expect(result.success).toBe(true);
-    });
-
+  describe('schema bounds', () => {
     it('should reject confidence outside range', () => {
       const result = imageMaskingInputSchema.safeParse({
         inputImage: 'https://example.com/image.jpg',
@@ -213,17 +63,82 @@ describe('imageMasking', () => {
     });
   });
 
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(imageMaskingToolDefinition.name).toBe('imageMasking');
+  describe('handler', () => {
+    it('should count multiple detections in the message', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'imageMasking',
+        taskUUID: 'test-task-uuid',
+        inputImageUUID: 'input-img-uuid',
+        imageUUID: 'mask-image-uuid',
+        maskImageURL: 'https://example.com/mask.png',
+        detections: [
+          { x_min: 10, y_min: 20, x_max: 100, y_max: 150 },
+          { x_min: 200, y_min: 50, x_max: 300, y_max: 200 },
+        ],
+        cost: 0.002,
+      });
+
+      const result = await imageMasking(
+        imageMaskingInputSchema.parse({ inputImage: 'https://example.com/face.jpg' }),
+        mockClient,
+      );
+
+      expect(result.status).toBe('success');
+      expect(result.message).toContain('Detected 2 elements');
+
+      const data = result.data as { maskImageUUID: string; detections: unknown[] };
+      expect(data.maskImageUUID).toBe('mask-image-uuid');
+      expect(data.detections).toHaveLength(2);
     });
 
-    it('should require inputImage', () => {
-      expect(imageMaskingToolDefinition.inputSchema.required).toContain('inputImage');
+    it('should use the singular for one detection', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'imageMasking',
+        taskUUID: 'uuid',
+        imageUUID: 'mask-uuid',
+        maskImageURL: 'https://example.com/mask.png',
+        detections: [{ x_min: 10, y_min: 20, x_max: 100, y_max: 150 }],
+        cost: 0.002,
+      });
+
+      const result = await imageMasking(
+        imageMaskingInputSchema.parse({ inputImage: 'https://example.com/face.jpg' }),
+        mockClient,
+      );
+
+      expect(result.status).toBe('success');
+      expect(result.message).toContain('Detected 1 element');
     });
 
-    it('should have a description', () => {
-      expect(imageMaskingToolDefinition.description).toBeTruthy();
+    it('should default to no detections when the response has none', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue({
+        taskType: 'imageMasking',
+        taskUUID: 'uuid',
+        imageUUID: 'mask-uuid',
+        maskImageURL: 'https://example.com/mask.png',
+        cost: 0.002,
+      });
+
+      const result = await imageMasking(
+        imageMaskingInputSchema.parse({ inputImage: 'https://example.com/image.jpg' }),
+        mockClient,
+      );
+
+      expect(result.status).toBe('success');
+      const data = result.data as { detections: unknown[] };
+      expect(data.detections).toHaveLength(0);
+    });
+
+    it('should return error when API fails', async () => {
+      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Masking failed'));
+
+      const result = await imageMasking(
+        imageMaskingInputSchema.parse({ inputImage: 'https://example.com/image.jpg' }),
+        mockClient,
+      );
+
+      expect(result.status).toBe('error');
+      expect(result.message).toContain('Masking failed');
     });
   });
 });

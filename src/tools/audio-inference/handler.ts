@@ -1,19 +1,12 @@
+// Does:  Generates music, speech, sound effects or ambient audio via an async task plus polling.
+// Holds: model and voice are checked locally first; audioType is never forwarded to the API.
+
 import { isValidAudioModel, isValidTTSVoice } from '../../constants/audio-models.js';
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
 import { RunwareApiError, wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
-import {
-  type TaskUUID,
-  type ToolContext,
-  type ToolResult,
-  errorResult,
-  successResult,
-} from '../../shared/types.js';
+import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 
 import type { AudioInferenceInput, AudioInferenceOutput } from './schema.js';
 
@@ -53,20 +46,21 @@ function validateVoice(voice: string | undefined, audioType: string | undefined)
   }
 
   if (voice !== undefined && audioType !== undefined && audioType !== 'speech') {
-    // Voice applies only to speech generation; other types ignore it rather than erroring.
+    // Why: A voice on non-speech audio is ignored by the API, so it is allowed rather than rejected here.
   }
 }
 
 function buildApiRequest(input: AudioInferenceInput): Record<string, unknown> {
+  // Why: Audio generation routinely outlives a sync request, so it is always submitted async and polled.
   const request: Record<string, unknown> = {
     positivePrompt: input.positivePrompt,
     model: input.model,
     duration: input.duration,
-    deliveryMethod: 'async', // Audio often requires async processing
+    deliveryMethod: 'async',
     includeCost: input.includeCost,
   };
 
-  // audioType is never sent: Runware rejects it as an unsupported parameter.
+  // Why: Runware rejects audioType as an unsupported parameter, so it is never sent.
   if (input.voice !== undefined) {
     request.voice = input.voice;
   }
@@ -136,7 +130,7 @@ export async function audioInference(
     const requestParams = buildApiRequest(input);
     const task = createTaskRequest('audioInference', requestParams);
 
-    // request() not requestSingle(): async submission may return { data: [] }, which requestSingle() rejects.
+    // Why: An async submit may return { data: [] }, which requestSingle() rejects, so request() is used.
     await runwareClient.request<AudioInferenceApiResponse>([task], {
       signal: context?.signal,
     });
@@ -147,7 +141,7 @@ export async function audioInference(
       message: 'Audio generation task submitted, polling for result...',
     });
 
-    const pollResult = await pollForResult<AudioInferenceApiResponse>(task.taskUUID as TaskUUID, {
+    const pollResult = await pollForResult<AudioInferenceApiResponse>(task.taskUUID, {
       client: runwareClient,
       signal: context?.signal,
       progress: context?.progress,

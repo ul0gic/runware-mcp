@@ -1,3 +1,6 @@
+// Does:  Serves the curated model catalog, examples, pricing, capabilities and live model schemas.
+// Holds: Never touches the inference client or the rate limiter; a missing model is an error result, not a throw.
+
 import {
   getCuratedModel,
   getModelExamples as fetchModelExamples,
@@ -9,12 +12,7 @@ import { getModelSchema as fetchModelSchema } from '../../integrations/runware/s
 import { wrapError } from '../../shared/errors.js';
 import { type ToolContext, type ToolResult, errorResult, successResult } from '../../shared/types.js';
 
-import type {
-  ListModelsInput,
-  ModelExamplesInput,
-  ModelIdentifierInput,
-  ModelSchemaInput,
-} from './schema.js';
+import type { ListModelsInput, ModelExamplesInput, ModelIdentifierInput, ModelSchemaInput } from './schema.js';
 
 export async function listModels(
   input: ListModelsInput,

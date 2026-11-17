@@ -1,3 +1,5 @@
+// Does:  Documents Compel prompt-weighting syntax for raising or lowering term influence.
+// Holds: Served at runware://docs/features/prompt-weighting; registered via featureDocs, not registry.ts.
 import type { DocResource } from '../../types.js';
 
 const PROMPT_SYNTAX_TYPE = 'prompt syntax';
@@ -56,8 +58,7 @@ export const promptWeightingDoc: DocResource = {
       {
         title: 'Blending two art styles',
         input: {
-          positivePrompt:
-            '("watercolor painting of flowers", "oil painting of flowers").blend(0.6, 0.4)',
+          positivePrompt: '("watercolor painting of flowers", "oil painting of flowers").blend(0.6, 0.4)',
           model: 'civitai:133005@357609',
           width: 1024,
           height: 1024,

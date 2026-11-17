@@ -1,3 +1,6 @@
+// Does:  Validates training input, including the import metadata for the trained model.
+// Holds: importModel always needs an AIR and a 2-255 character name; private defaults to true.
+
 import { z } from 'zod';
 
 import { inferenceParametersSchema } from '../run-inference/schema.js';

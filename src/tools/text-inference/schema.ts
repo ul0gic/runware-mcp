@@ -1,3 +1,6 @@
+// Does:  Validates textInference messages, inputs and delivery options.
+// Holds: At least one non-empty message is required, and numberResults is bounded to 1-10.
+
 import { z } from 'zod';
 
 const textMessageSchema = z.object({

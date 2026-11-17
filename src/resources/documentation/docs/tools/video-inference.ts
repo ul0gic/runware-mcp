@@ -1,10 +1,13 @@
+// Does:  Documents the videoInference tool: text, image and video inputs and async delivery.
+// Holds: States fps 24, outputFormat MP4 and outputQuality 95 as defaults; links to async-delivery for polling.
 import type { DocResource } from '../../types.js';
 
 export const videoInferenceDoc: DocResource = {
   id: 'video-inference',
   category: 'tools',
   title: 'Video Generation',
-  summary: 'Generate videos from text prompts, images, or existing videos using KlingAI, PixVerse, Alibaba, Veo, and Sync.so providers',
+  summary:
+    'Generate videos from text prompts, images, or existing videos using KlingAI, PixVerse, Alibaba, Veo, and Sync.so providers',
   tags: ['video', 'generation', 'text-to-video', 'image-to-video', 'async', 'KlingAI', 'PixVerse', 'Alibaba', 'Veo'],
   content: {
     description:
@@ -74,7 +77,8 @@ export const videoInferenceDoc: DocResource = {
       {
         name: 'frameImages',
         type: 'array',
-        description: 'Constrained frame images at specific positions. Each has inputImage and frame ("first", "last", or frame number).',
+        description:
+          'Constrained frame images at specific positions. Each has inputImage and frame ("first", "last", or frame number).',
       },
       {
         name: 'referenceImages',
@@ -155,7 +159,8 @@ export const videoInferenceDoc: DocResource = {
           width: 1280,
           height: 720,
         },
-        explanation: 'Simple text-to-video with KlingAI. The MCP server handles async polling and returns the final video URL.',
+        explanation:
+          'Simple text-to-video with KlingAI. The MCP server handles async polling and returns the final video URL.',
       },
       {
         title: 'Image-to-video with PixVerse effects',
@@ -166,7 +171,8 @@ export const videoInferenceDoc: DocResource = {
           frameImages: [{ inputImage: 'abc12345-uuid-here', frame: 'first' }],
           pixverse: { effect: 'jiggle' },
         },
-        explanation: 'Animates a still image using PixVerse viral effects. The first frame is constrained to the input image.',
+        explanation:
+          'Animates a still image using PixVerse viral effects. The first frame is constrained to the input image.',
       },
     ],
     tips: [

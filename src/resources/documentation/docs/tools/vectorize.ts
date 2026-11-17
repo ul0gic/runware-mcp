@@ -1,3 +1,5 @@
+// Does:  Documents the vectorize tool for converting raster images to SVG.
+// Holds: Lists recraft:1@1 as the default model and SVG as the output format; served at runware://docs/tools/vectorize.
 import type { DocResource } from '../../types.js';
 
 export const vectorizeDoc: DocResource = {
@@ -24,7 +26,8 @@ export const vectorizeDoc: DocResource = {
         name: 'model',
         type: 'string',
         default: 'recraft:1@1',
-        description: 'Vectorization model: "recraft:1@1" (Recraft Vectorize) or "picsart:1@1" (Picsart Image Vectorizer).',
+        description:
+          'Vectorization model: "recraft:1@1" (Recraft Vectorize) or "picsart:1@1" (Picsart Image Vectorizer).',
       },
       {
         name: 'outputType',
@@ -52,7 +55,8 @@ export const vectorizeDoc: DocResource = {
           inputImage: 'https://example.com/logo.png',
           model: 'recraft:1@1',
         },
-        explanation: 'Converts a PNG logo to SVG using Recraft. The result is a scalable vector that looks sharp at any size.',
+        explanation:
+          'Converts a PNG logo to SVG using Recraft. The result is a scalable vector that looks sharp at any size.',
       },
       {
         title: 'Vectorize with Picsart model',

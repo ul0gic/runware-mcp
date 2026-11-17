@@ -1,3 +1,6 @@
+// Does:  Validates imageUpscale input and describes the upscaled image it returns.
+// Holds: upscaleFactor is limited to 2 or 4 and defaults to 2.
+
 import { z } from 'zod';
 
 import {
@@ -9,13 +12,11 @@ import {
 } from '../../shared/validation.js';
 
 export const imageUpscaleInputSchema = z.object({
-  /** Maximum input size: 1,048,576 pixels (1024x1024). */
   inputImage: imageInputSchema,
 
-  /** Only SwinIR and Real-ESRGAN support 4x. */
+  // Holds: 4x is checked only by the API, which accepts it from SwinIR and Real-ESRGAN alone.
   upscaleFactor: upscaleFactorSchema.optional().default(2),
 
-  /** Clarity Upscaler (runware:xxx@1), SwinIR (@2), Real-ESRGAN (@3); @2 and @3 support 4x. */
   model: z.string().optional(),
 
   outputType: outputTypeSchema.optional(),
@@ -27,7 +28,6 @@ export const imageUpscaleInputSchema = z.object({
   includeCost: z.boolean().optional().default(true),
 });
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars -- Runtime schema is the source of the inferred handler output type.
 const imageUpscaleOutputSchema = z.object({
   imageUUID: z.string(),
 

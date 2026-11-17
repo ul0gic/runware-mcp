@@ -1,20 +1,15 @@
+// Does:  Runs any allowed inference taskType against a model, validating parameters with its live JSON Schema.
+// Holds: With validate on, no request is sent unless the live schema exists and the parameters pass it.
+
 import { Ajv, type ErrorObject } from 'ajv';
 
-import {
-  type RunwareClient,
-  createTaskRequest,
-  getDefaultClient,
-} from '../../integrations/runware/client.js';
+import { type RunwareClient, createTaskRequest, getDefaultClient } from '../../integrations/runware/client.js';
 import { pollForResult } from '../../integrations/runware/polling.js';
-import {
-  type JsonSchema,
-  resolveModelSchema,
-} from '../../integrations/runware/schema-registry.js';
+import { type JsonSchema, resolveModelSchema } from '../../integrations/runware/schema-registry.js';
 import { wrapError } from '../../shared/errors.js';
 import { defaultRateLimiter } from '../../shared/rate-limiter.js';
 import {
   type AsyncTaskResponse,
-  type TaskUUID,
   type ToolContext,
   type ToolResult,
   errorResult,
@@ -28,16 +23,17 @@ const ALLOWED_TASK_TYPES = new Set<string>(INFERENCE_TASK_TYPES);
 const ajv = new Ajv({ allErrors: true, strict: false });
 
 function formatValidationErrors(errors: readonly ErrorObject[] | null | undefined): string {
-  return errors?.map((error) => {
-    const location = error.instancePath.length === 0 ? 'request' : error.instancePath;
-    return `${location} ${error.message ?? 'is invalid'}`;
-  }).join('; ') ?? 'request does not match the model schema';
+  return (
+    errors
+      ?.map((error) => {
+        const location = error.instancePath.length === 0 ? 'request' : error.instancePath;
+        return `${location} ${error.message ?? 'is invalid'}`;
+      })
+      .join('; ') ?? 'request does not match the model schema'
+  );
 }
 
-function validateAgainstModelSchema(
-  schema: JsonSchema,
-  parameters: Record<string, unknown>,
-): void {
+function validateAgainstModelSchema(schema: JsonSchema, parameters: Record<string, unknown>): void {
   const validate = ajv.compile(schema);
   if (!validate(parameters)) {
     throw new Error(`Model parameter validation failed: ${formatValidationErrors(validate.errors)}`);
@@ -57,9 +53,7 @@ export async function runInference(
     const resolution = await resolveModelSchema(input.model, context?.signal);
     const taskType = input.taskType ?? resolution?.taskType;
     if (taskType === undefined) {
-      return errorResult(
-        'Could not infer taskType from the model schema; provide an allowed taskType explicitly',
-      );
+      return errorResult('Could not infer taskType from the model schema; provide an allowed taskType explicitly');
     }
     if (!ALLOWED_TASK_TYPES.has(taskType)) {
       return errorResult(`Task type "${taskType}" is not allowed by runInference`);
@@ -72,8 +66,7 @@ export async function runInference(
       return errorResult(`No live schema is available for ${input.model}; set validate=false to proceed`);
     }
 
-    const deliveryMethod = input.deliveryMethod
-      ?? (ASYNC_DEFAULT_TASK_TYPES.has(taskType) ? 'async' : 'sync');
+    const deliveryMethod = input.deliveryMethod ?? (ASYNC_DEFAULT_TASK_TYPES.has(taskType) ? 'async' : 'sync');
     const task = createTaskRequest(taskType, {
       ...requestParameters,
       deliveryMethod,
@@ -81,7 +74,7 @@ export async function runInference(
 
     if (deliveryMethod === 'async') {
       await runwareClient.request([task], { signal: context?.signal });
-      const polled = await pollForResult<AsyncTaskResponse>(task.taskUUID as TaskUUID, {
+      const polled = await pollForResult<AsyncTaskResponse>(task.taskUUID, {
         client: runwareClient,
         progress: context?.progress,
         signal: context?.signal,
@@ -98,16 +91,11 @@ export async function runInference(
       );
     }
 
-    const response = await runwareClient.request<Record<string, unknown>>(
-      [task],
-      { signal: context?.signal },
-    );
+    const response = await runwareClient.request<Record<string, unknown>>([task], { signal: context?.signal });
     const costs = response.data
       .map((result) => result.cost)
       .filter((resultCost): resultCost is number => typeof resultCost === 'number');
-    const cost = costs.length === 0
-      ? undefined
-      : costs.reduce((total, resultCost) => total + resultCost, 0);
+    const cost = costs.length === 0 ? undefined : costs.reduce((total, resultCost) => total + resultCost, 0);
     return successResult(
       `${taskType} completed with ${String(response.data.length)} result(s)`,
       { taskUUID: task.taskUUID, results: response.data },

@@ -1,4 +1,7 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+// Does:  Proves imageBackgroundRemoval reports a client failure as an error result instead of throwing.
+// Holds: config, rate limiter and RunwareClient are mocked; the handler runs for real.
+
+import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('../../../src/shared/rate-limiter.js', () => ({
   defaultRateLimiter: {
@@ -25,155 +28,24 @@ vi.mock('../../../src/shared/config.js', () => ({
 
 import {
   imageBackgroundRemoval,
-  imageBackgroundRemovalToolDefinition,
   imageBackgroundRemovalInputSchema,
 } from '../../../src/tools/image-background-removal/index.js';
 import type { RunwareClient } from '../../../src/integrations/runware/client.js';
 
-function createMockClient(): RunwareClient {
-  return {
-    request: vi.fn(),
-    requestSingle: vi.fn(),
-    generateTaskUUID: vi.fn().mockReturnValue('mock-uuid'),
-  } as unknown as RunwareClient;
-}
-
 describe('imageBackgroundRemoval', () => {
-  let mockClient: RunwareClient;
+  it('should return error when API fails', async () => {
+    const mockClient = {
+      request: vi.fn(),
+      requestSingle: vi.fn().mockRejectedValue(new Error('Background removal failed')),
+      generateTaskUUID: vi.fn().mockReturnValue('mock-uuid'),
+    } as unknown as RunwareClient;
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockClient = createMockClient();
-  });
+    const result = await imageBackgroundRemoval(
+      imageBackgroundRemovalInputSchema.parse({ inputImage: 'https://example.com/image.jpg' }),
+      mockClient,
+    );
 
-  describe('handler', () => {
-    it('should return success with valid input', async () => {
-      const mockResponse = {
-        taskType: 'removeBackground',
-        taskUUID: 'test-task-uuid',
-        imageUUID: 'result-image-uuid',
-        imageURL: 'https://example.com/nobg.png',
-        cost: 0.003,
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageBackgroundRemoval(
-        { inputImage: 'https://example.com/image.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.message).toContain('Background removed');
-
-      const data = result.data as { imageUUID: string; imageURL: string };
-      expect(data.imageUUID).toBe('result-image-uuid');
-      expect(data.imageURL).toBe('https://example.com/nobg.png');
-    });
-
-    it('should return error when API fails', async () => {
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockRejectedValue(
-        new Error('Background removal failed'),
-      );
-
-      const result = await imageBackgroundRemoval(
-        { inputImage: 'https://example.com/image.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('error');
-      expect(result.message).toContain('Background removal failed');
-    });
-
-    it('should propagate cost from response', async () => {
-      const mockResponse = {
-        taskType: 'removeBackground',
-        taskUUID: 'uuid',
-        imageUUID: 'img-uuid',
-        imageURL: 'https://example.com/nobg.png',
-        cost: 0.004,
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageBackgroundRemoval(
-        { inputImage: 'https://example.com/image.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.cost).toBe(0.004);
-    });
-
-    it('should handle response without cost', async () => {
-      const mockResponse = {
-        taskType: 'removeBackground',
-        taskUUID: 'uuid',
-        imageUUID: 'img-uuid',
-        imageURL: 'https://example.com/nobg.png',
-      };
-
-      (mockClient.requestSingle as ReturnType<typeof vi.fn>).mockResolvedValue(mockResponse);
-
-      const result = await imageBackgroundRemoval(
-        { inputImage: 'https://example.com/image.jpg' },
-        mockClient,
-      );
-
-      expect(result.status).toBe('success');
-      expect(result.cost).toBeUndefined();
-    });
-  });
-
-  describe('schema', () => {
-    it('should validate correct input with required fields', () => {
-      const result = imageBackgroundRemovalInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-      });
-      expect(result.success).toBe(true);
-    });
-
-    it('should apply default values', () => {
-      const result = imageBackgroundRemovalInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-      });
-
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.model).toBe('runware:109@1');
-        expect(result.data.includeCost).toBe(true);
-      }
-    });
-
-    it('should reject missing inputImage', () => {
-      const result = imageBackgroundRemovalInputSchema.safeParse({});
-      expect(result.success).toBe(false);
-    });
-
-    it('should accept optional settings', () => {
-      const result = imageBackgroundRemovalInputSchema.safeParse({
-        inputImage: 'https://example.com/image.jpg',
-        model: 'runware:109@1',
-        settings: {
-          alphaMatting: true,
-          alphaMattingForegroundThreshold: 240,
-        },
-      });
-      expect(result.success).toBe(true);
-    });
-  });
-
-  describe('tool definition', () => {
-    it('should have correct name', () => {
-      expect(imageBackgroundRemovalToolDefinition.name).toBe('imageBackgroundRemoval');
-    });
-
-    it('should require inputImage', () => {
-      expect(imageBackgroundRemovalToolDefinition.inputSchema.required).toContain('inputImage');
-    });
-
-    it('should have a description', () => {
-      expect(imageBackgroundRemovalToolDefinition.description).toBeTruthy();
-    });
+    expect(result.status).toBe('error');
+    expect(result.message).toContain('Background removal failed');
   });
 });

@@ -1,11 +1,12 @@
+// Does:  Documents Google Veo video models and their provider settings.
+// Holds: Served at runware://docs/providers/veo; links to the kling-ai and alibaba video provider docs.
 import type { DocResource } from '../../types.js';
 
 export const veoDoc: DocResource = {
   id: 'veo',
   category: 'providers',
   title: 'Google Veo (Video)',
-  summary:
-    'Google video generation with Veo 2/3 models offering prompt enhancement and native audio generation',
+  summary: 'Google video generation with Veo 2/3 models offering prompt enhancement and native audio generation',
   tags: ['veo', 'google', 'video', 'provider', 'prompt-enhancement', 'audio'],
   content: {
     description:
@@ -17,7 +18,7 @@ export const veoDoc: DocResource = {
         type: 'boolean',
         required: false,
         description:
-          'Enable automatic prompt enhancement. Google\'s AI rewrites the prompt for optimal video generation results. Always enabled for Veo 3 regardless of this setting.',
+          "Enable automatic prompt enhancement. Google's AI rewrites the prompt for optimal video generation results. Always enabled for Veo 3 regardless of this setting.",
       },
       {
         name: 'providerSettings.veo.generateAudio',
@@ -49,8 +50,7 @@ export const veoDoc: DocResource = {
       {
         title: 'Veo 3 with native audio',
         input: {
-          positivePrompt:
-            'a thunderstorm rolling over a prairie at sunset, dramatic clouds, lightning in the distance',
+          positivePrompt: 'a thunderstorm rolling over a prairie at sunset, dramatic clouds, lightning in the distance',
           model: 'veo:3@1',
           width: 1920,
           height: 1080,
