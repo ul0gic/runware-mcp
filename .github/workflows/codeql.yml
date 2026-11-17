@@ -14,13 +14,19 @@ concurrency:
 
 jobs:
   analyze:
-    name: SAST
+    name: Analyze (${{ matrix.language }})
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
       actions: read
       contents: read
       security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language:
+          - actions
+          - javascript-typescript
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -32,7 +38,21 @@ jobs:
         with:
           build-mode: none
           config-file: ./.github/codeql/codeql-config.yml
-          languages: actions, javascript-typescript
+          languages: ${{ matrix.language }}
 
       - name: Analyze
         uses: github/codeql-action/analyze@e4fba868fa4b1b91e1fdab776edc8cfbe6e9fb81 # v4.37.3
+        with:
+          category: /language:${{ matrix.language }}
+
+  sast:
+    name: SAST
+    if: always()
+    needs: analyze
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require every language analysis to succeed
+        env:
+          RESULT: ${{ needs.analyze.result }}
+        run: test "$RESULT" = success
